@@ -287,6 +287,7 @@ class _HomeButton extends StatelessWidget {
   }
 }
 
+
 class DiscoverPage extends StatefulWidget {
   const DiscoverPage({super.key});
   @override
@@ -295,6 +296,30 @@ class DiscoverPage extends StatefulWidget {
 
 class _DiscoverPageState extends State<DiscoverPage> {
   String q = '';
+  String recipient = 'All';
+  double maxBudget = 150;
+  bool nzMadeOnly = false;
+
+  Future<List<Map<String,dynamic>>> loadGifts() async {
+    final rows = await Supabase.instance.client
+        .from('gift_ideas')
+        .select('id,title,description,image_url,recipient_group,price_min,price_max,nz_made,product_url,affiliate_url,featured,sponsored')
+        .eq('status','published')
+        .order('featured', ascending: false)
+        .limit(50);
+    return List<Map<String,dynamic>>.from(rows);
+  }
+
+  Future<List<Map<String,dynamic>>> loadContent() async {
+    final rows = await Supabase.instance.client
+        .from('content_items')
+        .select('id,title,summary,body,image_url,external_url,content_type,featured,sponsored,sponsor_label')
+        .eq('status','published')
+        .order('featured', ascending: false)
+        .order('published_at', ascending: false)
+        .limit(40);
+    return List<Map<String,dynamic>>.from(rows);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -303,53 +328,173 @@ class _DiscoverPageState extends State<DiscoverPage> {
         padding: const EdgeInsets.all(18),
         children: [
           Text('Discover', style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w900)),
-          const SizedBox(height: 12),
-          TextField(onChanged: (v) => setState(() => q = v.toLowerCase()), decoration: const InputDecoration(prefixIcon: Icon(Icons.search), hintText: 'What are you looking for?')),
-          const SizedBox(height: 16),
-          FutureBuilder<List<Map<String, dynamic>>>(
-            future: Supabase.instance.client.from('categories').select('name,slug,description').eq('is_active', true).order('sort_order'),
-            builder: (context, snap) {
-              if (snap.connectionState == ConnectionState.waiting) return const Center(child: Padding(padding: EdgeInsets.all(30), child: CircularProgressIndicator()));
-              final items = (snap.data ?? []).where((e) => ('${e['name']} ${e['description'] ?? ''}').toLowerCase().contains(q)).toList();
-              if (items.isEmpty) return const Padding(padding: EdgeInsets.all(24), child: Text('No categories found.'));
-              return GridView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 2, childAspectRatio: 1.25, crossAxisSpacing: 10, mainAxisSpacing: 10),
-                itemCount: items.length,
-                itemBuilder: (_, i) {
-                  final item = items[i];
-                  return Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(14),
-                      child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisAlignment: MainAxisAlignment.center, children: [
-                        const Text('🎄', style: TextStyle(fontSize: 26)),
-                        const SizedBox(height: 6),
-                        Text(item['name'] ?? 'Christmas', style: const TextStyle(fontWeight: FontWeight.w800)),
-                        const SizedBox(height: 4),
-                        Text(item['description'] ?? '', maxLines: 2, overflow: TextOverflow.ellipsis, style: Theme.of(context).textTheme.bodySmall),
-                      ]),
-                    ),
-                  );
-                },
-              );
-            },
+          const SizedBox(height: 10),
+          TextField(
+            onChanged: (v) => setState(() => q = v.toLowerCase()),
+            decoration: const InputDecoration(prefixIcon: Icon(Icons.search), hintText: 'Search Christmas ideas and gifts'),
           ),
-          const SizedBox(height: 20),
-          const Text('🎁 Gift Finder', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 18)),
+          const SizedBox(height: 18),
+          const Text('🎁 Gift Finder', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 20)),
           const SizedBox(height: 8),
-          FutureBuilder<List<Map<String, dynamic>>>(
-            future: Supabase.instance.client.from('gift_ideas').select('title,description,recipient_group,price_min,price_max,nz_made').eq('status','published').limit(8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: ['All','Kids','Teens','Her','Him','Grandparents','Teachers','Secret Santa'].map((r) =>
+              ChoiceChip(label: Text(r), selected: recipient == r, onSelected: (_) => setState(() => recipient = r))
+            ).toList(),
+          ),
+          const SizedBox(height: 12),
+          Text('Budget up to NZ\$' + maxBudget.round().toString(), style: const TextStyle(fontWeight: FontWeight.w700)),
+          Slider(
+            value: maxBudget,
+            min: 20,
+            max: 250,
+            divisions: 23,
+            label: 'NZ\$' + maxBudget.round().toString(),
+            onChanged: (v) => setState(() => maxBudget = v),
+          ),
+          SwitchListTile(
+            contentPadding: EdgeInsets.zero,
+            title: const Text('NZ-made only'),
+            value: nzMadeOnly,
+            onChanged: (v) => setState(() => nzMadeOnly = v),
+          ),
+          FutureBuilder<List<Map<String,dynamic>>>(
+            future: loadGifts(),
             builder: (context, snap) {
               if (snap.connectionState == ConnectionState.waiting) return const LinearProgressIndicator();
-              final gifts = snap.data ?? [];
-              return Column(children: gifts.map((g) => Card(child: ListTile(
-                leading: const CircleAvatar(child: Text('🎁')),
-                title: Text(g['title'] ?? 'Gift idea', style: const TextStyle(fontWeight: FontWeight.w800)),
-                subtitle: Text("${g['recipient_group'] ?? ''} • NZ\${g['price_min'] ?? ''}${g['nz_made'] == true ? ' • NZ Made' : ''}"),
+              var gifts = snap.data ?? [];
+              gifts = gifts.where((g) {
+                final title = (g['title'] ?? '').toString().toLowerCase();
+                final desc = (g['description'] ?? '').toString().toLowerCase();
+                final rec = (g['recipient_group'] ?? '').toString();
+                final pmin = double.tryParse((g['price_min'] ?? '0').toString()) ?? 0;
+                return (q.isEmpty || title.contains(q) || desc.contains(q))
+                    && (recipient == 'All' || rec.toLowerCase() == recipient.toLowerCase())
+                    && pmin <= maxBudget
+                    && (!nzMadeOnly || g['nz_made'] == true);
+              }).toList();
+
+              if (gifts.isEmpty) {
+                return const Card(child: Padding(padding: EdgeInsets.all(18), child: Text('No gifts match those filters yet.')));
+              }
+              return Column(children: gifts.map((g) {
+                final price = 'NZ\$' + (g['price_min'] ?? '').toString()
+                    + (g['price_max'] != null ? '–' + g['price_max'].toString() : '');
+                final subtitle = (g['recipient_group'] ?? '').toString()
+                    + ' • ' + price
+                    + (g['nz_made'] == true ? ' • NZ Made' : '');
+                return Card(
+                  child: ListTile(
+                    leading: const CircleAvatar(child: Text('🎁')),
+                    title: Text(g['title'] ?? 'Gift idea', style: const TextStyle(fontWeight: FontWeight.w800)),
+                    subtitle: Text(subtitle),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => GiftDetailPage(gift: g))),
+                  ),
+                );
+              }).toList());
+            },
+          ),
+          const SizedBox(height: 24),
+          const Text('✨ Christmas Ideas', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 20)),
+          const SizedBox(height: 8),
+          FutureBuilder<List<Map<String,dynamic>>>(
+            future: loadContent(),
+            builder: (context, snap) {
+              if (snap.connectionState == ConnectionState.waiting) return const LinearProgressIndicator();
+              var items = snap.data ?? [];
+              items = items.where((item) {
+                final hay = ((item['title'] ?? '').toString() + ' ' + (item['summary'] ?? '').toString() + ' ' + (item['body'] ?? '').toString()).toLowerCase();
+                return q.isEmpty || hay.contains(q);
+              }).toList();
+              if (items.isEmpty) return const Card(child: Padding(padding: EdgeInsets.all(18), child: Text('No ideas match that search yet.')));
+              return Column(children: items.map((item) => Card(child: ListTile(
+                leading: const CircleAvatar(child: Text('🎄')),
+                title: Text(item['title'] ?? 'Christmas idea', style: const TextStyle(fontWeight: FontWeight.w800)),
+                subtitle: Text((item['summary'] ?? '').toString(), maxLines: 2, overflow: TextOverflow.ellipsis),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ContentDetailPage(item: item))),
               ))).toList());
             },
           ),
+        ],
+      ),
+    );
+  }
+}
+
+class GiftDetailPage extends StatelessWidget {
+  final Map<String,dynamic> gift;
+  const GiftDetailPage({super.key, required this.gift});
+
+  Future<void> openLink(BuildContext context) async {
+    final raw = (gift['affiliate_url'] ?? gift['product_url'] ?? '').toString();
+    final uri = Uri.tryParse(raw);
+    if (uri == null || raw.isEmpty || !await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+      if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Retailer link is not available yet.')));
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final price = 'NZ\$' + (gift['price_min'] ?? '').toString()
+        + (gift['price_max'] != null ? '–' + gift['price_max'].toString() : '');
+    return Scaffold(
+      appBar: AppBar(title: const Text('Gift Idea')),
+      body: ListView(
+        padding: const EdgeInsets.all(18),
+        children: [
+          const Center(child: Text('🎁', style: TextStyle(fontSize: 72))),
+          const SizedBox(height: 12),
+          if (gift['sponsored'] == true) const Chip(label: Text('Sponsored')),
+          Text(gift['title'] ?? 'Gift idea', style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w900)),
+          const SizedBox(height: 8),
+          Text((gift['recipient_group'] ?? '').toString() + ' • ' + price + (gift['nz_made'] == true ? ' • NZ Made 🇳🇿' : ''),
+            style: const TextStyle(fontWeight: FontWeight.w700)),
+          const SizedBox(height: 14),
+          Text((gift['description'] ?? '').toString()),
+          const SizedBox(height: 22),
+          FilledButton.icon(onPressed: () => openLink(context), icon: const Icon(Icons.shopping_bag_outlined), label: const Text('View retailer')),
+        ],
+      ),
+    );
+  }
+}
+
+class ContentDetailPage extends StatelessWidget {
+  final Map<String,dynamic> item;
+  const ContentDetailPage({super.key, required this.item});
+
+  Future<void> openExternal() async {
+    final raw = (item['external_url'] ?? '').toString();
+    final uri = Uri.tryParse(raw);
+    if (uri != null && raw.isNotEmpty) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Christmas Idea')),
+      body: ListView(
+        padding: const EdgeInsets.all(18),
+        children: [
+          const Center(child: Text('🎄', style: TextStyle(fontSize: 72))),
+          const SizedBox(height: 12),
+          if (item['sponsored'] == true) Chip(label: Text((item['sponsor_label'] ?? 'Sponsored').toString())),
+          Text(item['title'] ?? 'Christmas idea', style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w900)),
+          if ((item['summary'] ?? '').toString().isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Text((item['summary'] ?? '').toString(), style: const TextStyle(fontWeight: FontWeight.w700)),
+          ],
+          const SizedBox(height: 16),
+          Text((item['body'] ?? item['summary'] ?? '').toString()),
+          if ((item['external_url'] ?? '').toString().isNotEmpty) ...[
+            const SizedBox(height: 22),
+            FilledButton.icon(onPressed: openExternal, icon: const Icon(Icons.open_in_new), label: const Text('Open link')),
+          ],
         ],
       ),
     );
