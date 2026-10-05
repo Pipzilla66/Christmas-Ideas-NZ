@@ -8,6 +8,9 @@ on:
       - 'test_app/**'
       - '.github/workflows/android.yml'
 
+permissions:
+  contents: write
+
 jobs:
   build-android:
     runs-on: ubuntu-latest
@@ -52,3 +55,15 @@ jobs:
           name: christmas-ideas-nz-test-apk
           path: generated_app/build/app/outputs/flutter-apk/app-debug.apk
           if-no-files-found: error
+
+      - name: Publish direct APK download
+        uses: ncipollo/release-action@v1
+        with:
+          tag: latest-test
+          name: Christmas Ideas NZ - Latest Test Build
+          body: Latest Android test build for Christmas Ideas NZ.
+          artifacts: generated_app/build/app/outputs/flutter-apk/app-debug.apk
+          prerelease: true
+          allowUpdates: true
+          replacesArtifacts: true
+          makeLatest: false
