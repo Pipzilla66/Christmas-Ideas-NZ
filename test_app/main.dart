@@ -312,6 +312,31 @@ class HomePage extends StatelessWidget {
     return List<Map<String,dynamic>>.from(rows);
   }
 
+  Future<Map<String,dynamic>?> dailyIdea() async {
+    final now = DateTime.now();
+    final date = now.toIso8601String().substring(0,10);
+    final scheduled = await Supabase.instance.client
+      .from('content_items')
+      .select('id,title,summary,body,image_url,external_url,content_type,featured,sponsored,sponsor_label,idea_of_day_date')
+      .eq('status','published')
+      .eq('idea_of_day_date', date)
+      .limit(1);
+    final scheduledRows = List<Map<String,dynamic>>.from(scheduled);
+    if (scheduledRows.isNotEmpty) return scheduledRows.first;
+
+    final rows = await Supabase.instance.client
+      .from('content_items')
+      .select('id,title,summary,body,image_url,external_url,content_type,featured,sponsored,sponsor_label,idea_of_day_date')
+      .eq('status','published')
+      .order('created_at', ascending:true)
+      .limit(100);
+    final items = List<Map<String,dynamic>>.from(rows);
+    if (items.isEmpty) return null;
+    final start = DateTime(now.year,1,1);
+    final day = now.difference(start).inDays;
+    return items[day % items.length];
+  }
+
   @override
   Widget build(BuildContext context) {
     return SafeArea(
@@ -351,6 +376,75 @@ class HomePage extends StatelessWidget {
                 const Icon(Icons.auto_awesome,color:Color(0xFFC9A44D),size:30),
               ],
             ),
+          ),
+          const SizedBox(height:24),
+          FutureBuilder<Map<String,dynamic>?>(
+            future:dailyIdea(),
+            builder:(context,snap){
+              if(snap.connectionState==ConnectionState.waiting) {
+                return const Padding(
+                  padding:EdgeInsets.symmetric(horizontal:20),
+                  child:LinearProgressIndicator(),
+                );
+              }
+              final item=snap.data;
+              if(item==null) return const SizedBox.shrink();
+              final image=(item['image_url']??'').toString();
+              return Padding(
+                padding:const EdgeInsets.symmetric(horizontal:20),
+                child:InkWell(
+                  onTap:()=>Navigator.push(context,MaterialPageRoute(builder:(_)=>ContentDetailPage(item:item))),
+                  child:Container(
+                    decoration:BoxDecoration(
+                      color:const Color(0xFFFFFCF6),
+                      border:Border.all(color:const Color(0xFFE4DCCF)),
+                      borderRadius:BorderRadius.circular(7),
+                    ),
+                    child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+                      if(image.isNotEmpty)
+                        ClipRRect(
+                          borderRadius:const BorderRadius.vertical(top:Radius.circular(6)),
+                          child:AspectRatio(
+                            aspectRatio:16/8,
+                            child:Image.network(
+                              image,
+                              fit:BoxFit.cover,
+                              errorBuilder:(_,__,___)=>Container(
+                                color:const Color(0xFF9E1B32),
+                                child:const Center(child:Icon(Icons.auto_awesome,color:Colors.white,size:44)),
+                              ),
+                            ),
+                          ),
+                        )
+                      else
+                        Container(
+                          height:120,
+                          width:double.infinity,
+                          decoration:const BoxDecoration(
+                            color:Color(0xFF9E1B32),
+                            borderRadius:BorderRadius.vertical(top:Radius.circular(6)),
+                          ),
+                          child:const Center(child:Icon(Icons.auto_awesome,color:Colors.white,size:44)),
+                        ),
+                      Padding(
+                        padding:const EdgeInsets.all(16),
+                        child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+                          const Text('IDEA OF THE DAY',style:TextStyle(fontSize:10,fontWeight:FontWeight.w800,letterSpacing:1.2,color:Color(0xFF8B6F2E))),
+                          const SizedBox(height:6),
+                          Text((item['title']??'Christmas idea').toString(),style:Theme.of(context).textTheme.headlineSmall?.copyWith(fontSize:22)),
+                          if((item['summary']??'').toString().isNotEmpty)...[
+                            const SizedBox(height:6),
+                            Text((item['summary']??'').toString(),maxLines:2,overflow:TextOverflow.ellipsis),
+                          ],
+                          const SizedBox(height:8),
+                          const Text('READ THE IDEA →',style:TextStyle(fontSize:11,fontWeight:FontWeight.w800,letterSpacing:.8,color:Color(0xFF9E1B32))),
+                        ]),
+                      ),
+                    ]),
+                  ),
+                ),
+              );
+            },
           ),
           const SizedBox(height:28),
           _SectionHeading(title:'Gift inspiration', action:'Find a gift', onTap:()=>goTo(1)),
