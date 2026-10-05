@@ -556,9 +556,9 @@ class _ShellState extends State<Shell> {
         onTap: (i) => setState(() => index = i),
         type: BottomNavigationBarType.fixed,
         backgroundColor: const Color(0xFFFFFCF6),
-        selectedItemColor: const Color(0xFF0F4C45),
+        selectedItemColor: const Color(0xFFA80F24),
         unselectedItemColor: const Color(0xFF77736D),
-        elevation: 8,
+        elevation: 2,
         selectedLabelStyle: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 11),
         unselectedLabelStyle: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 11),
         items: const [
@@ -975,12 +975,21 @@ class _DiscoverPageState extends State<DiscoverPage> {
             decoration:const InputDecoration(prefixIcon:Icon(Icons.search),hintText:'Search gifts and Christmas ideas'),
           ),
           const SizedBox(height:28),
-          Row(children:[
-            Expanded(child:Text('Gift Finder',style:Theme.of(context).textTheme.headlineSmall?.copyWith(fontSize:26))),
-            const Icon(Icons.card_giftcard_outlined,color:Color(0xFF9E1B32)),
-          ]),
-          const SizedBox(height:6),
-          const Text('Start with who you are shopping for, then narrow it down.'),
+          Container(
+            padding:const EdgeInsets.fromLTRB(18,18,18,16),
+            decoration:BoxDecoration(
+              color:const Color(0xFF173B36),
+              borderRadius:BorderRadius.circular(10),
+            ),
+            child:Row(children:[
+              Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+                Text('Gift Finder',style:GoogleFonts.playfairDisplay(color:Colors.white,fontSize:28,fontWeight:FontWeight.w700)),
+                const SizedBox(height:5),
+                Text('Thoughtful finds for everyone on your list.',style:GoogleFonts.inter(color:Colors.white70,fontSize:12)),
+              ])),
+              const Icon(Icons.card_giftcard_outlined,color:Color(0xFFC69A3A),size:34),
+            ]),
+          ),
           const SizedBox(height:14),
           SingleChildScrollView(
             scrollDirection:Axis.horizontal,
@@ -1060,25 +1069,46 @@ class _DiscoverPageState extends State<DiscoverPage> {
                 final hay=((item['title']??'').toString() + ' ' + (item['summary']??'').toString() + ' ' + (item['body']??'').toString()).toLowerCase();
                 return q.isEmpty||hay.contains(q);
               }).toList();
-              return Column(children:items.map((item)=>ListTile(
-                contentPadding:const EdgeInsets.symmetric(vertical:6),
-                leading:ClipRRect(
-                  borderRadius:BorderRadius.circular(4),
-                  child:(item['image_url']??'').toString().isNotEmpty
-                    ? Image.network(
-                        (item['image_url']??'').toString(),
-                        width:58,
-                        height:58,
-                        fit:BoxFit.cover,
-                        errorBuilder:(_,__,___)=>Container(width:58,height:58,color:const Color(0xFF9E1B32),child:const Icon(Icons.star_outline,color:Colors.white)),
-                      )
-                    : Container(width:58,height:58,color:const Color(0xFF9E1B32),child:const Icon(Icons.star_outline,color:Colors.white)),
-                ),
-                title:Text((item['title']??'Christmas idea').toString(),style:const TextStyle(fontWeight:FontWeight.w800)),
-                subtitle:Text((item['summary']??'').toString(),maxLines:2,overflow:TextOverflow.ellipsis),
-                trailing:const Icon(Icons.arrow_forward,size:18),
-                onTap:()=>Navigator.push(context,MaterialPageRoute(builder:(_)=>ContentDetailPage(item:item))),
-              )).toList());
+              return Column(
+                children:items.map((item){
+                  final image=(item['image_url']??'').toString();
+                  return InkWell(
+                    onTap:()=>Navigator.push(context,MaterialPageRoute(builder:(_)=>ContentDetailPage(item:item))),
+                    child:Container(
+                      margin:const EdgeInsets.only(bottom:14),
+                      clipBehavior:Clip.antiAlias,
+                      decoration:BoxDecoration(
+                        color:const Color(0xFFFFFCF6),
+                        border:Border.all(color:const Color(0xFFE4DCCF)),
+                        borderRadius:BorderRadius.circular(8),
+                      ),
+                      child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+                        SizedBox(
+                          height:145,
+                          width:double.infinity,
+                          child:image.isNotEmpty
+                            ? Image.network(image,fit:BoxFit.cover,errorBuilder:(_,__,___)=>Container(color:const Color(0xFFA80F24),child:const Center(child:Icon(Icons.star_outline,color:Colors.white,size:46))))
+                            : Container(color:const Color(0xFFA80F24),child:const Center(child:Icon(Icons.star_outline,color:Colors.white,size:46))),
+                        ),
+                        Padding(
+                          padding:const EdgeInsets.fromLTRB(14,13,14,14),
+                          child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+                            Text((item['content_type']??'IDEA').toString().toUpperCase(),style:const TextStyle(fontSize:9,fontWeight:FontWeight.w900,letterSpacing:1.1,color:Color(0xFF8B6F2E))),
+                            const SizedBox(height:5),
+                            Text((item['title']??'Christmas idea').toString(),style:GoogleFonts.playfairDisplay(fontSize:20,fontWeight:FontWeight.w700,color:const Color(0xFF173B36))),
+                            if((item['summary']??'').toString().isNotEmpty)...[
+                              const SizedBox(height:5),
+                              Text((item['summary']??'').toString(),maxLines:2,overflow:TextOverflow.ellipsis,style:const TextStyle(fontSize:12.5)),
+                            ],
+                            const SizedBox(height:8),
+                            const Text('READ MORE  →',style:TextStyle(fontSize:9.5,fontWeight:FontWeight.w900,letterSpacing:.8,color:Color(0xFFA80F24))),
+                          ]),
+                        ),
+                      ]),
+                    ),
+                  );
+                }).toList(),
+              );
             },
           ),
         ],
@@ -1316,14 +1346,16 @@ class NearMePage extends StatelessWidget {
       child:ListView(
         padding:const EdgeInsets.fromLTRB(20,20,20,28),
         children:[
-          Text('Near Me',style:Theme.of(context).textTheme.headlineLarge),
+          const Text('EXPLORE YOUR AREA',style:TextStyle(fontSize:10,fontWeight:FontWeight.w900,letterSpacing:1.4,color:Color(0xFF8B6F2E))),
+          const SizedBox(height:4),
+          Text('Christmas Near You',style:Theme.of(context).textTheme.headlineLarge),
           const SizedBox(height:6),
-          const Text('Christmas lights, markets and local festive finds around Aotearoa.'),
+          const Text('Lights, markets, Santa visits and festive finds around Aotearoa.'),
           const SizedBox(height:18),
           Container(
             height:180,
             decoration:BoxDecoration(
-              color:const Color(0xFFDDE5DD),
+              color:const Color(0xFFE9E1D2),
               border:Border.all(color:const Color(0xFFC5D0C7)),
               borderRadius:BorderRadius.circular(6),
             ),
@@ -1332,7 +1364,7 @@ class NearMePage extends StatelessWidget {
               Positioned(left:14,bottom:12,child:Container(
                 padding:const EdgeInsets.symmetric(horizontal:10,vertical:7),
                 color:const Color(0xFFFFFCF6),
-                child:const Text('Interactive map coming in the next build',style:TextStyle(fontSize:11,fontWeight:FontWeight.w700)),
+                child:const Text('THE CHRISTMAS MAP',style:TextStyle(fontSize:10,fontWeight:FontWeight.w900,letterSpacing:1)),
               )),
             ]),
           ),
@@ -1412,9 +1444,11 @@ class _SavedPageState extends State<SavedPage> {
       child:ListView(
         padding:const EdgeInsets.fromLTRB(20,20,20,28),
         children:[
-          Text('Saved',style:Theme.of(context).textTheme.headlineLarge),
+          const Text('YOUR CHRISTMAS',style:TextStyle(fontSize:10,fontWeight:FontWeight.w900,letterSpacing:1.4,color:Color(0xFF8B6F2E))),
+          const SizedBox(height:4),
+          Text('Saved Collections',style:Theme.of(context).textTheme.headlineLarge),
           const SizedBox(height:6),
-          const Text('Your own little Christmas library.'),
+          const Text('Keep the gifts, recipes and ideas you want to come back to.'),
           const SizedBox(height:22),
           if(user==null)
             Container(
@@ -1452,11 +1486,15 @@ class _SavedPageState extends State<SavedPage> {
                         borderRadius:BorderRadius.circular(6),
                       ),
                       child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
-                        const Icon(Icons.bookmark_outline,color:Color(0xFF0F4C45)),
+                        Row(children:[
+                          const Icon(Icons.bookmark_outline,color:Color(0xFFA80F24)),
+                          const Spacer(),
+                          Text((b['emoji']??'✦').toString(),style:const TextStyle(fontSize:18)),
+                        ]),
                         const Spacer(),
-                        Text((b['name']??'Board').toString(),style:GoogleFonts.playfairDisplay(fontWeight:FontWeight.w700,fontSize:18)),
+                        Text((b['name']??'Board').toString(),style:GoogleFonts.playfairDisplay(fontWeight:FontWeight.w700,fontSize:19,color:const Color(0xFF173B36))),
                         const SizedBox(height:3),
-                        const Text('Open collection',style:TextStyle(fontSize:11,color:Color(0xFF77736D))),
+                        const Text('OPEN COLLECTION  →',style:TextStyle(fontSize:9.5,fontWeight:FontWeight.w800,letterSpacing:.7,color:Color(0xFF8B6F2E))),
                       ]),
                     ),
                   )).toList(),
