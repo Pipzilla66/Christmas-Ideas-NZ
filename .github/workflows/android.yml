@@ -1,0 +1,51 @@
+name: Build Christmas Ideas NZ Android APK
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'app_source_bundle.b64'
+      - '.github/workflows/android.yml'
+
+jobs:
+  build-android:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Restore app source
+        run: |
+          rm -rf app
+          mkdir -p app
+          base64 -d app_source_bundle.b64 > /tmp/christmas_ideas_app.tgz
+          tar -xzf /tmp/christmas_ideas_app.tgz -C app
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Generate Android project files
+        working-directory: app
+        run: flutter create . --platforms=android --project-name christmas_ideas_nz --org nz.co.christmasideas
+
+      - name: Get packages
+        working-directory: app
+        run: flutter pub get
+
+      - name: Analyze
+        working-directory: app
+        run: flutter analyze
+
+      - name: Build debug APK
+        working-directory: app
+        run: flutter build apk --debug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: christmas-ideas-nz-debug-apk
+          path: app/build/app/outputs/flutter-apk/app-debug.apk
+          if-no-files-found: error
