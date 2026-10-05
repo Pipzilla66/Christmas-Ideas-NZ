@@ -198,19 +198,6 @@ class _OnboardingState extends State<Onboarding> {
                   const Text('A name helps us make the app feel more personal. You can browse without creating an account.'),
                   const SizedBox(height: 22),
                   TextField(controller: controller, decoration: const InputDecoration(labelText: 'Your name')),
-                  const SizedBox(height: 24),
-                  const Text('CHOOSE A LOOK', style: TextStyle(fontWeight: FontWeight.w800, letterSpacing: 1.4, fontSize: 12)),
-                  const SizedBox(height: 12),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: [
-                      _ThemeOption(label:'Kiwi', selected:widget.theme==XmasTheme.kiwi, onTap:()=>widget.onThemeChanged(XmasTheme.kiwi)),
-                      _ThemeOption(label:'Classic', selected:widget.theme==XmasTheme.classic, onTap:()=>widget.onThemeChanged(XmasTheme.classic)),
-                      _ThemeOption(label:'Grinchy', selected:widget.theme==XmasTheme.grinchy, onTap:()=>widget.onThemeChanged(XmasTheme.grinchy)),
-                      _ThemeOption(label:'Winter', selected:widget.theme==XmasTheme.winter, onTap:()=>widget.onThemeChanged(XmasTheme.winter)),
-                    ],
-                  ),
                   const SizedBox(height: 28),
                   SizedBox(
                     width: double.infinity,
@@ -362,36 +349,52 @@ class HomePage extends StatelessWidget {
         padding: EdgeInsets.zero,
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(20, 20, 20, 14),
+            padding: const EdgeInsets.fromLTRB(20, 18, 20, 12),
             child: Row(
               children: [
-                Expanded(child: Column(crossAxisAlignment:CrossAxisAlignment.start, children:[
-                  Text('CHRISTMAS IDEAS NZ', style:GoogleFonts.inter(fontSize:11,fontWeight:FontWeight.w800,letterSpacing:1.7,color:const Color(0xFF8B6F2E))),
-                  const SizedBox(height:5),
-                  Text('Kia ora, ' + name, style:Theme.of(context).textTheme.headlineMedium),
-                ])),
-                IconButton(onPressed:()=>goTo(4), icon:const Icon(Icons.person_outline)),
+                const Text('✦', style: TextStyle(color:Color(0xFFC69A3A),fontSize:20)),
+                const SizedBox(width:8),
+                Expanded(child:Text('Christmas Ideas NZ',style:GoogleFonts.playfairDisplay(fontSize:22,fontWeight:FontWeight.w700,color:const Color(0xFF173B36)))),
+                IconButton(onPressed:()=>goTo(4),icon:const Icon(Icons.person_outline,color:Color(0xFF173B36))),
               ],
             ),
           ),
           Container(
-            margin: const EdgeInsets.symmetric(horizontal:20),
-            padding: const EdgeInsets.fromLTRB(22, 24, 22, 22),
-            decoration: BoxDecoration(
-              color: const Color(0xFF0F4C45),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Row(
-              crossAxisAlignment:CrossAxisAlignment.end,
+            margin: const EdgeInsets.symmetric(horizontal:14),
+            height: 290,
+            clipBehavior: Clip.antiAlias,
+            decoration:BoxDecoration(borderRadius:BorderRadius.circular(12)),
+            child:Stack(
+              fit:StackFit.expand,
               children:[
-                Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
-                  Text('THE COUNTDOWN',style:GoogleFonts.inter(color:Colors.white70,fontSize:11,fontWeight:FontWeight.w800,letterSpacing:1.4)),
-                  const SizedBox(height:7),
-                  Text(daysUntilChristmas().toString() + ' days',style:GoogleFonts.playfairDisplay(color:Colors.white,fontSize:34,fontWeight:FontWeight.w700)),
-                  const SizedBox(height:2),
-                  Text('until Christmas Day',style:GoogleFonts.inter(color:Colors.white70,fontSize:14)),
-                ])),
-                const Icon(Icons.auto_awesome,color:Color(0xFFC9A44D),size:30),
+                Image.memory(base64Decode(_coverPhotoBase64),fit:BoxFit.cover),
+                Container(decoration:const BoxDecoration(
+                  gradient:LinearGradient(
+                    begin:Alignment.topCenter,
+                    end:Alignment.bottomCenter,
+                    colors:[Color(0x22000000),Color(0xCC000000)],
+                  ),
+                )),
+                Padding(
+                  padding:const EdgeInsets.fromLTRB(22,22,22,18),
+                  child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+                    Text('✦  MAKE THIS CHRISTMAS',style:GoogleFonts.inter(color:Colors.white,fontSize:10,fontWeight:FontWeight.w800,letterSpacing:1.4)),
+                    const Spacer(),
+                    Text('More\nMeaningful',style:GoogleFonts.playfairDisplay(color:Colors.white,fontSize:42,fontWeight:FontWeight.w600,fontStyle:FontStyle.italic,height:.92)),
+                    const SizedBox(height:10),
+                    Text('Inspiration, gifts, food and ideas for a Christmas you’ll love in New Zealand.',style:GoogleFonts.inter(color:Colors.white,fontSize:13,height:1.35)),
+                    const SizedBox(height:14),
+                    Container(
+                      padding:const EdgeInsets.symmetric(horizontal:14,vertical:10),
+                      decoration:BoxDecoration(color:const Color(0xFFF7F2E8).withValues(alpha:.94),borderRadius:BorderRadius.circular(8)),
+                      child:Row(mainAxisSize:MainAxisSize.min,children:[
+                        Text(daysUntilChristmas().toString(),style:GoogleFonts.playfairDisplay(fontSize:25,fontWeight:FontWeight.w700,color:const Color(0xFF173B36))),
+                        const SizedBox(width:7),
+                        const Text('DAYS\nUNTIL CHRISTMAS',style:TextStyle(fontSize:8.5,fontWeight:FontWeight.w800,letterSpacing:.8,color:Color(0xFF6B6F6C))),
+                      ]),
+                    ),
+                  ]),
+                ),
               ],
             ),
           ),
@@ -465,7 +468,7 @@ class HomePage extends StatelessWidget {
             },
           ),
           const SizedBox(height:28),
-          _SectionHeading(title:'Gift inspiration', action:'Find a gift', onTap:()=>goTo(1)),
+          _SectionHeading(title:'Featured Gifts', action:'See all', onTap:()=>goTo(1)),
           const SizedBox(height:12),
           SizedBox(
             height: 190,
@@ -530,7 +533,7 @@ class HomePage extends StatelessWidget {
             ),
           ),
           const SizedBox(height:28),
-          _SectionHeading(title:'Christmas ideas', action:'Explore all', onTap:()=>goTo(1)),
+          _SectionHeading(title:'Christmas Ideas', action:'See all', onTap:()=>goTo(1)),
           const SizedBox(height:10),
           FutureBuilder<List<Map<String,dynamic>>>(
             future: latestIdeas(),
@@ -677,7 +680,7 @@ class _DiscoverPageState extends State<DiscoverPage> {
         children: [
           Text('Discover', style: Theme.of(context).textTheme.headlineLarge),
           const SizedBox(height:6),
-          const Text('Ideas for a Christmas that feels like yours.'),
+          const Text('GIFTS, IDEAS, RECIPES AND MORE FOR A BRIGHTER CHRISTMAS.', style: TextStyle(fontSize:11,fontWeight:FontWeight.w700,letterSpacing:1.1,color:Color(0xFF6B6F6C))),
           const SizedBox(height:18),
           TextField(
             onChanged:(v)=>setState(()=>q=v.toLowerCase()),
@@ -1754,19 +1757,7 @@ class _MePageState extends State<MePage> {
           const SizedBox(height: 5),
           const Text('Your Christmas preferences, account and contributions.'),
           const SizedBox(height: 22),
-          const Text('CHRISTMAS STYLE', style: TextStyle(fontSize:10,fontWeight:FontWeight.w800,letterSpacing:1.2,color:Color(0xFF8B6F2E))),
           const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              ChoiceChip(label: const Text('Kiwi'), selected: widget.theme == XmasTheme.kiwi, onSelected: (_) => widget.onThemeChanged(XmasTheme.kiwi)),
-              ChoiceChip(label: const Text('Classic ✨'), selected: widget.theme == XmasTheme.classic, onSelected: (_) => widget.onThemeChanged(XmasTheme.classic)),
-              ChoiceChip(label: const Text('Grinchy 💚'), selected: widget.theme == XmasTheme.grinchy, onSelected: (_) => widget.onThemeChanged(XmasTheme.grinchy)),
-              ChoiceChip(label: const Text('Winter ❄️'), selected: widget.theme == XmasTheme.winter, onSelected: (_) => widget.onThemeChanged(XmasTheme.winter)),
-            ],
-          ),
-          const SizedBox(height: 22),
           if (user == null) ...[
             const Text('Sign in', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 18)),
             const SizedBox(height: 6),
