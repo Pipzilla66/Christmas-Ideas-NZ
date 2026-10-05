@@ -295,7 +295,7 @@ class HomePage extends StatelessWidget {
   Future<List<Map<String,dynamic>>> featuredGifts() async {
     final rows = await Supabase.instance.client
       .from('gift_ideas')
-      .select('id,title,description,recipient_group,price_min,price_max,nz_made,product_url,affiliate_url,featured,sponsored')
+      .select('id,title,description,image_url,recipient_group,price_min,price_max,nz_made,product_url,affiliate_url,featured,sponsored')
       .eq('status','published')
       .order('featured', ascending:false)
       .limit(6);
@@ -473,14 +473,27 @@ class HomePage extends StatelessWidget {
                           borderRadius:BorderRadius.circular(7),
                         ),
                         child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
-                          Container(
-                            height:86,
-                            width:double.infinity,
-                            decoration:const BoxDecoration(
-                              color:Color(0xFFE9E2D4),
-                              borderRadius:BorderRadius.vertical(top:Radius.circular(6)),
-                            ),
-                            child:const Icon(Icons.card_giftcard,size:34,color:Color(0xFF0F4C45)),
+                          ClipRRect(
+                            borderRadius:const BorderRadius.vertical(top:Radius.circular(6)),
+                            child:(g['image_url']??'').toString().isNotEmpty
+                              ? Image.network(
+                                  (g['image_url']??'').toString(),
+                                  height:86,
+                                  width:double.infinity,
+                                  fit:BoxFit.cover,
+                                  errorBuilder:(_,__,___)=>Container(
+                                    height:86,
+                                    width:double.infinity,
+                                    color:const Color(0xFFE9E2D4),
+                                    child:const Icon(Icons.card_giftcard,size:34,color:Color(0xFF0F4C45)),
+                                  ),
+                                )
+                              : Container(
+                                  height:86,
+                                  width:double.infinity,
+                                  color:const Color(0xFFE9E2D4),
+                                  child:const Icon(Icons.card_giftcard,size:34,color:Color(0xFF0F4C45)),
+                                ),
                           ),
                           Padding(
                             padding:const EdgeInsets.all(10),
