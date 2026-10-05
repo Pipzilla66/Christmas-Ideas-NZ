@@ -491,7 +491,7 @@ class DiscoverPage extends StatefulWidget {
 class _DiscoverPageState extends State<DiscoverPage> {
   String q = '';
   String recipient = 'All';
-  double maxBudget = 150;
+  double maxBudget = 250;
   bool nzMadeOnly = false;
 
   Future<List<Map<String,dynamic>>> loadGifts() async {
@@ -500,7 +500,7 @@ class _DiscoverPageState extends State<DiscoverPage> {
         .select('id,title,description,image_url,recipient_group,price_min,price_max,nz_made,product_url,affiliate_url,featured,sponsored')
         .eq('status','published')
         .order('featured', ascending: false)
-        .limit(50);
+        .limit(200);
     return List<Map<String,dynamic>>.from(rows);
   }
 
@@ -510,106 +510,127 @@ class _DiscoverPageState extends State<DiscoverPage> {
         .select('id,title,summary,body,image_url,external_url,content_type,featured,sponsored,sponsor_label')
         .eq('status','published')
         .order('featured', ascending: false)
-        .order('published_at', ascending: false)
         .limit(40);
     return List<Map<String,dynamic>>.from(rows);
+  }
+
+  Widget recipientTab(String value){
+    final selected=recipient==value;
+    return InkWell(
+      onTap:()=>setState(()=>recipient=value),
+      child:Container(
+        padding:const EdgeInsets.symmetric(horizontal:12,vertical:9),
+        decoration:BoxDecoration(
+          color:selected?const Color(0xFF0F4C45):Colors.transparent,
+          border:Border.all(color:selected?const Color(0xFF0F4C45):const Color(0xFFCFC5B5)),
+          borderRadius:BorderRadius.circular(4),
+        ),
+        child:Text(value,style:TextStyle(color:selected?Colors.white:const Color(0xFF343936),fontWeight:FontWeight.w700,fontSize:12)),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return SafeArea(
       child: ListView(
-        padding: const EdgeInsets.all(18),
+        padding: const EdgeInsets.fromLTRB(20,20,20,28),
         children: [
-          Text('Discover', style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w900)),
-          const SizedBox(height: 10),
+          Text('Discover', style: Theme.of(context).textTheme.headlineLarge),
+          const SizedBox(height:6),
+          const Text('Ideas for a Christmas that feels like yours.'),
+          const SizedBox(height:18),
           TextField(
-            onChanged: (v) => setState(() => q = v.toLowerCase()),
-            decoration: const InputDecoration(prefixIcon: Icon(Icons.search), hintText: 'Search Christmas ideas and gifts'),
+            onChanged:(v)=>setState(()=>q=v.toLowerCase()),
+            decoration:const InputDecoration(prefixIcon:Icon(Icons.search),hintText:'Search gifts and Christmas ideas'),
           ),
-          const SizedBox(height: 18),
-          const Text('🎁 Gift Finder', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 20)),
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: ['All','Kids','Teens','Her','Him','Grandparents','Teachers','Secret Santa'].map((r) =>
-              ChoiceChip(label: Text(r), selected: recipient == r, onSelected: (_) => setState(() => recipient = r))
-            ).toList(),
+          const SizedBox(height:28),
+          Row(children:[
+            Expanded(child:Text('Gift Finder',style:Theme.of(context).textTheme.headlineSmall?.copyWith(fontSize:26))),
+            const Icon(Icons.card_giftcard_outlined,color:Color(0xFF9E1B32)),
+          ]),
+          const SizedBox(height:6),
+          const Text('Start with who you are shopping for, then narrow it down.'),
+          const SizedBox(height:14),
+          SingleChildScrollView(
+            scrollDirection:Axis.horizontal,
+            child:Row(
+              children:['All','Kids','Teens','Her','Him','Grandparents','Teachers','Secret Santa']
+                .map((r)=>Padding(padding:const EdgeInsets.only(right:7),child:recipientTab(r))).toList(),
+            ),
           ),
-          const SizedBox(height: 12),
-          Text('Budget up to NZ\$' + maxBudget.round().toString(), style: const TextStyle(fontWeight: FontWeight.w700)),
-          Slider(
-            value: maxBudget,
-            min: 20,
-            max: 250,
-            divisions: 23,
-            label: 'NZ\$' + maxBudget.round().toString(),
-            onChanged: (v) => setState(() => maxBudget = v),
-          ),
-          SwitchListTile(
-            contentPadding: EdgeInsets.zero,
-            title: const Text('NZ-made only'),
-            value: nzMadeOnly,
-            onChanged: (v) => setState(() => nzMadeOnly = v),
-          ),
+          const SizedBox(height:18),
+          Row(children:[
+            const Text('Budget',style:TextStyle(fontWeight:FontWeight.w800)),
+            const Spacer(),
+            Text('Up to NZ\\$' + maxBudget.round().toString(),style:const TextStyle(fontWeight:FontWeight.w700,color:Color(0xFF8B6F2E))),
+          ]),
+          Slider(value:maxBudget,min:20,max:500,divisions:24,onChanged:(v)=>setState(()=>maxBudget=v)),
+          Row(children:[
+            const Expanded(child:Text('Only show NZ-made gifts',style:TextStyle(fontWeight:FontWeight.w600))),
+            Switch(value:nzMadeOnly,onChanged:(v)=>setState(()=>nzMadeOnly=v)),
+          ]),
+          const Divider(height:30),
           FutureBuilder<List<Map<String,dynamic>>>(
-            future: loadGifts(),
-            builder: (context, snap) {
-              if (snap.connectionState == ConnectionState.waiting) return const LinearProgressIndicator();
-              var gifts = snap.data ?? [];
-              gifts = gifts.where((g) {
-                final title = (g['title'] ?? '').toString().toLowerCase();
-                final desc = (g['description'] ?? '').toString().toLowerCase();
-                final rec = (g['recipient_group'] ?? '').toString();
-                final pmin = double.tryParse((g['price_min'] ?? '0').toString()) ?? 0;
-                return (q.isEmpty || title.contains(q) || desc.contains(q))
-                    && (recipient == 'All' || rec.toLowerCase() == recipient.toLowerCase())
-                    && pmin <= maxBudget
-                    && (!nzMadeOnly || g['nz_made'] == true);
+            future:loadGifts(),
+            builder:(context,snap){
+              if(snap.connectionState==ConnectionState.waiting) return const LinearProgressIndicator();
+              var gifts=snap.data??[];
+              gifts=gifts.where((g){
+                final title=(g['title']??'').toString().toLowerCase();
+                final desc=(g['description']??'').toString().toLowerCase();
+                final rec=(g['recipient_group']??'').toString();
+                final pmin=double.tryParse((g['price_min']??'0').toString())??0;
+                return (q.isEmpty||title.contains(q)||desc.contains(q))
+                  &&(recipient=='All'||rec.toLowerCase()==recipient.toLowerCase())
+                  &&pmin<=maxBudget&&(!nzMadeOnly||g['nz_made']==true);
               }).toList();
-
-              if (gifts.isEmpty) {
-                return const Card(child: Padding(padding: EdgeInsets.all(18), child: Text('No gifts match those filters yet.')));
-              }
-              return Column(children: gifts.map((g) {
-                final price = 'NZ\$' + (g['price_min'] ?? '').toString()
-                    + (g['price_max'] != null ? '–' + g['price_max'].toString() : '');
-                final subtitle = (g['recipient_group'] ?? '').toString()
-                    + ' • ' + price
-                    + (g['nz_made'] == true ? ' • NZ Made' : '');
-                return Card(
-                  child: ListTile(
-                    leading: const CircleAvatar(child: Text('🎁')),
-                    title: Text(g['title'] ?? 'Gift idea', style: const TextStyle(fontWeight: FontWeight.w800)),
-                    subtitle: Text(subtitle),
-                    trailing: const Icon(Icons.chevron_right),
-                    onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => GiftDetailPage(gift: g))),
+              if(gifts.isEmpty) return const Padding(padding:EdgeInsets.symmetric(vertical:20),child:Text('No gifts match those filters yet.'));
+              return Column(
+                children:gifts.map((g)=>InkWell(
+                  onTap:()=>Navigator.push(context,MaterialPageRoute(builder:(_)=>GiftDetailPage(gift:g))),
+                  child:Container(
+                    margin:const EdgeInsets.only(bottom:9),
+                    padding:const EdgeInsets.all(12),
+                    decoration:BoxDecoration(
+                      color:const Color(0xFFFFFCF6),
+                      border:Border.all(color:const Color(0xFFE4DCCF)),
+                      borderRadius:BorderRadius.circular(6),
+                    ),
+                    child:Row(children:[
+                      Container(width:58,height:58,color:const Color(0xFFECE4D7),child:const Icon(Icons.card_giftcard,color:Color(0xFF0F4C45))),
+                      const SizedBox(width:12),
+                      Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+                        Text((g['title']??'Gift idea').toString(),style:const TextStyle(fontWeight:FontWeight.w800,fontSize:14)),
+                        const SizedBox(height:4),
+                        Text((g['recipient_group']??'').toString() + '  ·  NZ\\$' + (g['price_min']??'').toString() + (g['nz_made']==true?'  ·  NZ made':''),style:const TextStyle(fontSize:11.5,color:Color(0xFF6B6F6C))),
+                      ])),
+                      const Icon(Icons.chevron_right,size:20),
+                    ]),
                   ),
-                );
-              }).toList());
+                )).toList(),
+              );
             },
           ),
-          const SizedBox(height: 24),
-          const Text('✨ Christmas Ideas', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 20)),
-          const SizedBox(height: 8),
+          const SizedBox(height:30),
+          Text('Christmas Ideas',style:Theme.of(context).textTheme.headlineSmall?.copyWith(fontSize:26)),
+          const SizedBox(height:10),
           FutureBuilder<List<Map<String,dynamic>>>(
-            future: loadContent(),
-            builder: (context, snap) {
-              if (snap.connectionState == ConnectionState.waiting) return const LinearProgressIndicator();
-              var items = snap.data ?? [];
-              items = items.where((item) {
-                final hay = ((item['title'] ?? '').toString() + ' ' + (item['summary'] ?? '').toString() + ' ' + (item['body'] ?? '').toString()).toLowerCase();
-                return q.isEmpty || hay.contains(q);
+            future:loadContent(),
+            builder:(context,snap){
+              if(snap.connectionState==ConnectionState.waiting) return const LinearProgressIndicator();
+              var items=snap.data??[];
+              items=items.where((item){
+                final hay=((item['title']??'').toString() + ' ' + (item['summary']??'').toString() + ' ' + (item['body']??'').toString()).toLowerCase();
+                return q.isEmpty||hay.contains(q);
               }).toList();
-              if (items.isEmpty) return const Card(child: Padding(padding: EdgeInsets.all(18), child: Text('No ideas match that search yet.')));
-              return Column(children: items.map((item) => Card(child: ListTile(
-                leading: const CircleAvatar(child: Text('🎄')),
-                title: Text(item['title'] ?? 'Christmas idea', style: const TextStyle(fontWeight: FontWeight.w800)),
-                subtitle: Text((item['summary'] ?? '').toString(), maxLines: 2, overflow: TextOverflow.ellipsis),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ContentDetailPage(item: item))),
-              ))).toList());
+              return Column(children:items.map((item)=>ListTile(
+                contentPadding:const EdgeInsets.symmetric(vertical:4),
+                title:Text((item['title']??'Christmas idea').toString(),style:const TextStyle(fontWeight:FontWeight.w800)),
+                subtitle:Text((item['summary']??'').toString(),maxLines:2,overflow:TextOverflow.ellipsis),
+                trailing:const Icon(Icons.arrow_forward,size:18),
+                onTap:()=>Navigator.push(context,MaterialPageRoute(builder:(_)=>ContentDetailPage(item:item))),
+              )).toList());
             },
           ),
         ],
@@ -617,7 +638,6 @@ class _DiscoverPageState extends State<DiscoverPage> {
     );
   }
 }
-
 
 Future<void> saveItemToBoard(BuildContext context, String itemType, dynamic itemId) async {
   final user = Supabase.instance.client.auth.currentUser;
@@ -772,8 +792,8 @@ class NearMePage extends StatelessWidget {
   const NearMePage({super.key});
 
   Future<List<Map<String, dynamic>>> load() async {
-    final events = await Supabase.instance.client.from('events').select('name,city,region,start_at').eq('status','published').limit(12);
-    final lights = await Supabase.instance.client.from('light_displays').select('name,city,region,start_date').eq('status','published').limit(12);
+    final events = await Supabase.instance.client.from('events').select('name,city,region,start_at').eq('status','published').limit(20);
+    final lights = await Supabase.instance.client.from('light_displays').select('name,city,region,start_date').eq('status','published').limit(20);
     return [
       ...List<Map<String,dynamic>>.from(events).map((e) => {...e, '_type':'Event'}),
       ...List<Map<String,dynamic>>.from(lights).map((e) => {...e, '_type':'Lights'}),
@@ -783,24 +803,57 @@ class NearMePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SafeArea(
-      child: ListView(
-        padding: const EdgeInsets.all(18),
-        children: [
-          Text('Christmas Near Me', style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w900)),
-          const SizedBox(height: 8),
-          const Text('The full map is coming next. This test build is already connected to your approved NZ listings.'),
-          const SizedBox(height: 16),
+      child:ListView(
+        padding:const EdgeInsets.fromLTRB(20,20,20,28),
+        children:[
+          Text('Near Me',style:Theme.of(context).textTheme.headlineLarge),
+          const SizedBox(height:6),
+          const Text('Christmas lights, markets and local festive finds around Aotearoa.'),
+          const SizedBox(height:18),
+          Container(
+            height:180,
+            decoration:BoxDecoration(
+              color:const Color(0xFFDDE5DD),
+              border:Border.all(color:const Color(0xFFC5D0C7)),
+              borderRadius:BorderRadius.circular(6),
+            ),
+            child:Stack(children:[
+              const Center(child:Icon(Icons.map_outlined,size:58,color:Color(0xFF0F4C45))),
+              Positioned(left:14,bottom:12,child:Container(
+                padding:const EdgeInsets.symmetric(horizontal:10,vertical:7),
+                color:const Color(0xFFFFFCF6),
+                child:const Text('Interactive map coming in the next build',style:TextStyle(fontSize:11,fontWeight:FontWeight.w700)),
+              )),
+            ]),
+          ),
+          const SizedBox(height:22),
+          Text('Festive finds',style:Theme.of(context).textTheme.headlineSmall?.copyWith(fontSize:25)),
+          const SizedBox(height:10),
           FutureBuilder<List<Map<String,dynamic>>>(
-            future: load(),
-            builder: (context, snap) {
-              if (snap.connectionState == ConnectionState.waiting) return const Center(child: CircularProgressIndicator());
-              final items = snap.data ?? [];
-              if (items.isEmpty) return const Card(child: Padding(padding: EdgeInsets.all(20), child: Text('No published events or light displays yet.')));
-              return Column(children: items.map((e) => Card(child: ListTile(
-                leading: CircleAvatar(child: Text(e['_type'] == 'Lights' ? '✨' : '🎪')),
-                title: Text(e['name'] ?? 'Christmas listing', style: const TextStyle(fontWeight: FontWeight.w800)),
-                subtitle: Text('${e['city'] ?? ''}${e['region'] != null ? ', ${e['region']}' : ''}'),
-              ))).toList());
+            future:load(),
+            builder:(context,snap){
+              if(snap.connectionState==ConnectionState.waiting) return const Center(child:CircularProgressIndicator());
+              final items=snap.data??[];
+              if(items.isEmpty) return Container(
+                padding:const EdgeInsets.all(18),
+                decoration:BoxDecoration(color:const Color(0xFFFFFCF6),border:Border.all(color:const Color(0xFFE4DCCF)),borderRadius:BorderRadius.circular(6)),
+                child:const Text('We are building the national Christmas map. Events and light displays will appear here as they are approved.'),
+              );
+              return Column(children:items.map((e)=>Container(
+                margin:const EdgeInsets.only(bottom:9),
+                padding:const EdgeInsets.all(13),
+                decoration:BoxDecoration(color:const Color(0xFFFFFCF6),border:Border.all(color:const Color(0xFFE4DCCF)),borderRadius:BorderRadius.circular(6)),
+                child:Row(children:[
+                  Container(width:46,height:46,color:e['_type']=='Lights'?const Color(0xFFC9A44D):const Color(0xFF9E1B32),child:Icon(e['_type']=='Lights'?Icons.lightbulb_outline:Icons.storefront_outlined,color:Colors.white)),
+                  const SizedBox(width:12),
+                  Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+                    Text((e['name']??'Christmas listing').toString(),style:const TextStyle(fontWeight:FontWeight.w800)),
+                    const SizedBox(height:3),
+                    Text((e['city']??'').toString() + ((e['region']??'').toString().isNotEmpty ? ', ' + (e['region']??'').toString() : ''),style:const TextStyle(fontSize:12,color:Color(0xFF6B6F6C))),
+                  ])),
+                  Text((e['_type']??'').toString().toUpperCase(),style:const TextStyle(fontSize:9.5,fontWeight:FontWeight.w800,letterSpacing:.8,color:Color(0xFF8B6F2E))),
+                ]),
+              )).toList());
             },
           ),
         ],
@@ -808,7 +861,6 @@ class NearMePage extends StatelessWidget {
     );
   }
 }
-
 
 class SavedPage extends StatefulWidget {
   const SavedPage({super.key});
@@ -838,50 +890,64 @@ class _SavedPageState extends State<SavedPage> {
     }
     final name = boardName.text.trim();
     if (name.isEmpty) return;
-    await Supabase.instance.client.from('boards').insert({
-      'user_id': user.id,
-      'name': name,
-      'emoji': '🎄',
-    });
+    await Supabase.instance.client.from('boards').insert({'user_id':user.id,'name':name,'emoji':'✦'});
     boardName.clear();
     if (mounted) setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
-    final user = Supabase.instance.client.auth.currentUser;
+    final user=Supabase.instance.client.auth.currentUser;
     return SafeArea(
-      child: ListView(
-        padding: const EdgeInsets.all(18),
-        children: [
-          Text('Saved', style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w900)),
-          const SizedBox(height: 8),
-          if (user == null) ...[
-            const Card(child: Padding(
-              padding: EdgeInsets.all(18),
-              child: Text('Sign in from Me to create real Christmas boards and keep them across devices.'),
-            )),
-          ] else ...[
-            Row(children: [
-              Expanded(child: TextField(controller: boardName, decoration: const InputDecoration(hintText: 'New board name'))),
-              const SizedBox(width: 8),
-              FilledButton(onPressed: createBoard, child: const Text('Add')),
+      child:ListView(
+        padding:const EdgeInsets.fromLTRB(20,20,20,28),
+        children:[
+          Text('Saved',style:Theme.of(context).textTheme.headlineLarge),
+          const SizedBox(height:6),
+          const Text('Your own little Christmas library.'),
+          const SizedBox(height:22),
+          if(user==null)
+            Container(
+              padding:const EdgeInsets.all(18),
+              decoration:BoxDecoration(color:const Color(0xFFFFFCF6),border:Border.all(color:const Color(0xFFE4DCCF)),borderRadius:BorderRadius.circular(6)),
+              child:const Text('Sign in from Me to create boards and keep your favourite gifts and ideas across devices.'),
+            )
+          else ...[
+            Row(children:[
+              Expanded(child:TextField(controller:boardName,decoration:const InputDecoration(hintText:'New board name'))),
+              const SizedBox(width:8),
+              FilledButton(onPressed:createBoard,child:const Text('Create')),
             ]),
-            const SizedBox(height: 14),
+            const SizedBox(height:18),
             FutureBuilder<List<Map<String,dynamic>>>(
-              future: loadBoards(),
-              builder: (context, snap) {
-                if (snap.connectionState == ConnectionState.waiting) return const Center(child: CircularProgressIndicator());
-                final boards = snap.data ?? [];
-                if (boards.isEmpty) return const Card(child: Padding(
-                  padding: EdgeInsets.all(18),
-                  child: Text('No boards yet. Try Christmas Dinner, Gift Ideas or Elf Ideas.'),
-                ));
-                return Column(children: boards.map((b) => Card(child: ListTile(
-                  leading: Text((b['emoji'] ?? '🎄').toString(), style: const TextStyle(fontSize: 24)),
-                  title: Text((b['name'] ?? 'Board').toString(), style: const TextStyle(fontWeight: FontWeight.w800)),
-                  subtitle: const Text('Saved Christmas ideas will appear here'),
-                ))).toList());
+              future:loadBoards(),
+              builder:(context,snap){
+                if(snap.connectionState==ConnectionState.waiting) return const Center(child:CircularProgressIndicator());
+                final boards=snap.data??[];
+                if(boards.isEmpty) return const Text('No boards yet. Try “Gift Ideas”, “Christmas Dinner” or “Elf Ideas”.');
+                return GridView.count(
+                  crossAxisCount:2,
+                  crossAxisSpacing:10,
+                  mainAxisSpacing:10,
+                  shrinkWrap:true,
+                  physics:const NeverScrollableScrollPhysics(),
+                  childAspectRatio:1.15,
+                  children:boards.map((b)=>Container(
+                    padding:const EdgeInsets.all(15),
+                    decoration:BoxDecoration(
+                      color:const Color(0xFFFFFCF6),
+                      border:Border.all(color:const Color(0xFFE4DCCF)),
+                      borderRadius:BorderRadius.circular(6),
+                    ),
+                    child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+                      const Icon(Icons.bookmark_outline,color:Color(0xFF0F4C45)),
+                      const Spacer(),
+                      Text((b['name']??'Board').toString(),style:GoogleFonts.playfairDisplay(fontWeight:FontWeight.w700,fontSize:18)),
+                      const SizedBox(height:3),
+                      const Text('Saved collection',style:TextStyle(fontSize:11,color:Color(0xFF77736D))),
+                    ]),
+                  )).toList(),
+                );
               },
             ),
           ],
