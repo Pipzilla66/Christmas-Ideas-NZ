@@ -143,56 +143,89 @@ class _OnboardingState extends State<Onboarding> {
 
   @override
   Widget build(BuildContext context) {
+    final green = Theme.of(context).colorScheme.primary;
     return Scaffold(
       body: SafeArea(
         child: ListView(
-          padding: const EdgeInsets.all(20),
+          padding: EdgeInsets.zero,
           children: [
             Container(
-              height: 215,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(28),
-                gradient: LinearGradient(
-                  colors: [Theme.of(context).colorScheme.primary, Theme.of(context).colorScheme.primary.withValues(alpha: .72)],
-                ),
-              ),
-              child: const Column(
-                mainAxisAlignment: MainAxisAlignment.center,
+              height: 280,
+              padding: const EdgeInsets.fromLTRB(26, 34, 26, 28),
+              color: green,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('🎄', style: TextStyle(fontSize: 70)),
-                  SizedBox(height: 8),
-                  Text('CHRISTMAS IDEAS NZ', style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.w900)),
-                  SizedBox(height: 4),
-                  Text('NEW ZEALAND', style: TextStyle(color: Color(0xFFD4AF37), fontWeight: FontWeight.w800, letterSpacing: 2)),
+                  Text('CHRISTMAS IDEAS NZ',
+                    style: GoogleFonts.inter(color: Colors.white70, fontWeight: FontWeight.w800, letterSpacing: 2.1, fontSize: 12)),
+                  const Spacer(),
+                  Text('Make Christmas\nfeel a little easier.',
+                    style: GoogleFonts.playfairDisplay(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 38, height: 1.04)),
+                  const SizedBox(height: 12),
+                  Text('Ideas, gifts, lights and events — all in one very Kiwi place.',
+                    style: GoogleFonts.inter(color: Colors.white.withValues(alpha: .86), fontSize: 15, height: 1.45)),
                 ],
               ),
             ),
-            const SizedBox(height: 24),
-            Text('Kia ora! 🎄', style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w900)),
-            const SizedBox(height: 6),
-            const Text('Welcome to your NZ Christmas hub.'),
-            const SizedBox(height: 20),
-            TextField(controller: controller, decoration: const InputDecoration(labelText: "What's your name?")),
-            const SizedBox(height: 20),
-            const Text('Choose your Christmas style', style: TextStyle(fontWeight: FontWeight.w800)),
-            const SizedBox(height: 10),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                ChoiceChip(label: const Text('Kiwi Christmas'), selected: widget.theme == XmasTheme.kiwi, onSelected: (_) => widget.onThemeChanged(XmasTheme.kiwi)),
-                ChoiceChip(label: const Text('Classic ✨'), selected: widget.theme == XmasTheme.classic, onSelected: (_) => widget.onThemeChanged(XmasTheme.classic)),
-                ChoiceChip(label: const Text('Grinchy 💚'), selected: widget.theme == XmasTheme.grinchy, onSelected: (_) => widget.onThemeChanged(XmasTheme.grinchy)),
-                ChoiceChip(label: const Text('Winter ❄️'), selected: widget.theme == XmasTheme.winter, onSelected: (_) => widget.onThemeChanged(XmasTheme.winter)),
-              ],
-            ),
-            const SizedBox(height: 24),
-            FilledButton(
-              onPressed: () => widget.onContinue(controller.text),
-              child: const Padding(padding: EdgeInsets.symmetric(vertical: 14), child: Text('Enter Christmas Ideas NZ')),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(22, 26, 22, 30),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Welcome', style: Theme.of(context).textTheme.headlineMedium),
+                  const SizedBox(height: 7),
+                  const Text('A name helps us make the app feel more personal. You can browse without creating an account.'),
+                  const SizedBox(height: 22),
+                  TextField(controller: controller, decoration: const InputDecoration(labelText: 'Your name')),
+                  const SizedBox(height: 24),
+                  const Text('CHOOSE A LOOK', style: TextStyle(fontWeight: FontWeight.w800, letterSpacing: 1.4, fontSize: 12)),
+                  const SizedBox(height: 12),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      _ThemeOption(label:'Kiwi', selected:widget.theme==XmasTheme.kiwi, onTap:()=>widget.onThemeChanged(XmasTheme.kiwi)),
+                      _ThemeOption(label:'Classic', selected:widget.theme==XmasTheme.classic, onTap:()=>widget.onThemeChanged(XmasTheme.classic)),
+                      _ThemeOption(label:'Grinchy', selected:widget.theme==XmasTheme.grinchy, onTap:()=>widget.onThemeChanged(XmasTheme.grinchy)),
+                      _ThemeOption(label:'Winter', selected:widget.theme==XmasTheme.winter, onTap:()=>widget.onThemeChanged(XmasTheme.winter)),
+                    ],
+                  ),
+                  const SizedBox(height: 28),
+                  SizedBox(
+                    width: double.infinity,
+                    child: FilledButton(
+                      onPressed: () => widget.onContinue(controller.text),
+                      child: const Text('Start exploring'),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _ThemeOption extends StatelessWidget {
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+  const _ThemeOption({required this.label, required this.selected, required this.onTap});
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(5),
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 11),
+        decoration: BoxDecoration(
+          color: selected ? Theme.of(context).colorScheme.primary : const Color(0xFFFFFCF6),
+          borderRadius: BorderRadius.circular(5),
+          border: Border.all(color: selected ? Theme.of(context).colorScheme.primary : const Color(0xFFCFC5B5)),
+        ),
+        child: Text(label, style: TextStyle(color:selected ? Colors.white : const Color(0xFF343936), fontWeight:FontWeight.w700)),
       ),
     );
   }
@@ -249,87 +282,205 @@ class HomePage extends StatelessWidget {
   final ValueChanged<int> goTo;
   const HomePage({super.key, required this.name, required this.goTo});
 
-  String countdown() {
+  int daysUntilChristmas() {
     final now = DateTime.now();
     var target = DateTime(now.year, 12, 25);
     if (now.isAfter(target)) target = DateTime(now.year + 1, 12, 25);
-    final d = target.difference(now);
-    if (now.month < 12) return '${d.inDays} days until Christmas';
-    if (now.day < 15) return '${d.inDays} days • ${d.inHours % 24} hours';
-    return '${d.inDays}d ${d.inHours % 24}h ${d.inMinutes % 60}m';
+    return target.difference(DateTime(now.year, now.month, now.day)).inDays;
+  }
+
+  Future<List<Map<String,dynamic>>> featuredGifts() async {
+    final rows = await Supabase.instance.client
+      .from('gift_ideas')
+      .select('id,title,description,recipient_group,price_min,price_max,nz_made,product_url,affiliate_url,featured,sponsored')
+      .eq('status','published')
+      .order('featured', ascending:false)
+      .limit(6);
+    return List<Map<String,dynamic>>.from(rows);
+  }
+
+  Future<List<Map<String,dynamic>>> latestIdeas() async {
+    final rows = await Supabase.instance.client
+      .from('content_items')
+      .select('id,title,summary,body,image_url,external_url,content_type,featured,sponsored,sponsor_label')
+      .eq('status','published')
+      .order('featured', ascending:false)
+      .limit(4);
+    return List<Map<String,dynamic>>.from(rows);
   }
 
   @override
   Widget build(BuildContext context) {
     return SafeArea(
       child: ListView(
-        padding: const EdgeInsets.all(18),
+        padding: EdgeInsets.zero,
         children: [
-          Text('Kia ora, $name 🎄', style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w900)),
-          const SizedBox(height: 14),
-          Container(
-            padding: const EdgeInsets.all(22),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(24),
-              gradient: LinearGradient(colors: [Theme.of(context).colorScheme.primary, Theme.of(context).colorScheme.primary.withValues(alpha: .72)]),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 14),
+            child: Row(
+              children: [
+                Expanded(child: Column(crossAxisAlignment:CrossAxisAlignment.start, children:[
+                  Text('CHRISTMAS IDEAS NZ', style:GoogleFonts.inter(fontSize:11,fontWeight:FontWeight.w800,letterSpacing:1.7,color:const Color(0xFF8B6F2E))),
+                  const SizedBox(height:5),
+                  Text('Kia ora, ' + name, style:Theme.of(context).textTheme.headlineMedium),
+                ])),
+                IconButton(onPressed:()=>goTo(4), icon:const Icon(Icons.person_outline)),
+              ],
             ),
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              const Text('THE COUNTDOWN IS ON', style: TextStyle(color: Colors.white70, fontWeight: FontWeight.w800)),
-              const SizedBox(height: 8),
-              Text(countdown(), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 24)),
-            ]),
           ),
-          const SizedBox(height: 20),
-          const Text("✨ Today's Christmas Idea", style: TextStyle(fontWeight: FontWeight.w900, fontSize: 18)),
-          const SizedBox(height: 8),
-          FutureBuilder<List<Map<String, dynamic>>>(
-            future: Supabase.instance.client.from('content_items').select('title,summary').eq('status','published').order('published_at', ascending: false).limit(1),
-            builder: (context, snap) {
-              if (snap.connectionState == ConnectionState.waiting) return const Card(child: Padding(padding: EdgeInsets.all(20), child: Center(child: CircularProgressIndicator())));
-              if (snap.hasError || (snap.data ?? []).isEmpty) {
-                return const Card(child: Padding(padding: EdgeInsets.all(18), child: Text('Christmas inspiration is being loaded.')));
-              }
-              final item = snap.data!.first;
-              return Card(child: Padding(
-                padding: const EdgeInsets.all(18),
-                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Text(item['title'] ?? 'Christmas idea', style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 17)),
-                  const SizedBox(height: 8),
-                  Text(item['summary'] ?? ''),
-                ]),
-              ));
+          Container(
+            margin: const EdgeInsets.symmetric(horizontal:20),
+            padding: const EdgeInsets.fromLTRB(22, 24, 22, 22),
+            decoration: BoxDecoration(
+              color: const Color(0xFF0F4C45),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              crossAxisAlignment:CrossAxisAlignment.end,
+              children:[
+                Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+                  Text('THE COUNTDOWN',style:GoogleFonts.inter(color:Colors.white70,fontSize:11,fontWeight:FontWeight.w800,letterSpacing:1.4)),
+                  const SizedBox(height:7),
+                  Text(daysUntilChristmas().toString() + ' days',style:GoogleFonts.playfairDisplay(color:Colors.white,fontSize:34,fontWeight:FontWeight.w700)),
+                  const SizedBox(height:2),
+                  Text('until Christmas Day',style:GoogleFonts.inter(color:Colors.white70,fontSize:14)),
+                ])),
+                const Icon(Icons.auto_awesome,color:Color(0xFFC9A44D),size:30),
+              ],
+            ),
+          ),
+          const SizedBox(height:28),
+          _SectionHeading(title:'Gift inspiration', action:'Find a gift', onTap:()=>goTo(1)),
+          const SizedBox(height:12),
+          SizedBox(
+            height: 190,
+            child: FutureBuilder<List<Map<String,dynamic>>>(
+              future: featuredGifts(),
+              builder:(context,snap){
+                if(snap.connectionState==ConnectionState.waiting) return const Center(child:CircularProgressIndicator());
+                final items=snap.data??[];
+                return ListView.separated(
+                  padding:const EdgeInsets.symmetric(horizontal:20),
+                  scrollDirection:Axis.horizontal,
+                  itemCount:items.length,
+                  separatorBuilder:(_,__)=>const SizedBox(width:12),
+                  itemBuilder:(context,i){
+                    final g=items[i];
+                    return InkWell(
+                      onTap:()=>Navigator.push(context,MaterialPageRoute(builder:(_)=>GiftDetailPage(gift:g))),
+                      child:Container(
+                        width:155,
+                        decoration:BoxDecoration(
+                          color:const Color(0xFFFFFCF6),
+                          border:Border.all(color:const Color(0xFFE4DCCF)),
+                          borderRadius:BorderRadius.circular(7),
+                        ),
+                        child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+                          Container(
+                            height:86,
+                            width:double.infinity,
+                            decoration:const BoxDecoration(
+                              color:Color(0xFFE9E2D4),
+                              borderRadius:BorderRadius.vertical(top:Radius.circular(6)),
+                            ),
+                            child:const Icon(Icons.card_giftcard,size:34,color:Color(0xFF0F4C45)),
+                          ),
+                          Padding(
+                            padding:const EdgeInsets.all(10),
+                            child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+                              Text((g['title']??'Gift idea').toString(),maxLines:2,overflow:TextOverflow.ellipsis,style:const TextStyle(fontWeight:FontWeight.w800,fontSize:13)),
+                              const SizedBox(height:5),
+                              Text('NZ\\$' + (g['price_min']??'').toString(),style:const TextStyle(fontSize:12,color:Color(0xFF8B6F2E),fontWeight:FontWeight.w700)),
+                            ]),
+                          ),
+                        ]),
+                      ),
+                    );
+                  },
+                );
+              },
+            ),
+          ),
+          const SizedBox(height:28),
+          _SectionHeading(title:'Christmas ideas', action:'Explore all', onTap:()=>goTo(1)),
+          const SizedBox(height:10),
+          FutureBuilder<List<Map<String,dynamic>>>(
+            future: latestIdeas(),
+            builder:(context,snap){
+              if(snap.connectionState==ConnectionState.waiting) return const Padding(padding:EdgeInsets.all(28),child:Center(child:CircularProgressIndicator()));
+              final items=snap.data??[];
+              if(items.isEmpty) return const Padding(padding:EdgeInsets.symmetric(horizontal:20),child:Text('More Christmas inspiration is being added.'));
+              return Padding(
+                padding:const EdgeInsets.symmetric(horizontal:20),
+                child:Column(
+                  children:items.map((item)=>Padding(
+                    padding:const EdgeInsets.only(bottom:10),
+                    child:InkWell(
+                      onTap:()=>Navigator.push(context,MaterialPageRoute(builder:(_)=>ContentDetailPage(item:item))),
+                      child:Container(
+                        padding:const EdgeInsets.all(14),
+                        decoration:BoxDecoration(
+                          color:const Color(0xFFFFFCF6),
+                          border:Border.all(color:const Color(0xFFE4DCCF)),
+                          borderRadius:BorderRadius.circular(7),
+                        ),
+                        child:Row(children:[
+                          Container(width:72,height:72,color:const Color(0xFF9E1B32),child:const Icon(Icons.star_outline,color:Colors.white,size:30)),
+                          const SizedBox(width:14),
+                          Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+                            Text((item['title']??'Christmas idea').toString(),style:const TextStyle(fontWeight:FontWeight.w800,fontSize:15)),
+                            if((item['summary']??'').toString().isNotEmpty)...[
+                              const SizedBox(height:5),
+                              Text((item['summary']??'').toString(),maxLines:2,overflow:TextOverflow.ellipsis,style:const TextStyle(fontSize:12.5)),
+                            ],
+                          ])),
+                          const Icon(Icons.chevron_right,size:20),
+                        ]),
+                      ),
+                    ),
+                  )).toList(),
+                ),
+              );
             },
           ),
-          const SizedBox(height: 14),
-          _HomeButton(icon: Icons.card_giftcard, title: 'Gift Finder', subtitle: 'Find gifts by person, budget and NZ-made', onTap: () => goTo(1)),
-          _HomeButton(icon: Icons.location_on, title: 'Christmas Near You', subtitle: 'Lights, markets, Santa and events', onTap: () => goTo(2)),
-          _HomeButton(icon: Icons.favorite, title: 'Saved Boards', subtitle: 'Keep your Christmas ideas together', onTap: () => goTo(3)),
+          const SizedBox(height:20),
+          Container(
+            margin:const EdgeInsets.fromLTRB(20,0,20,24),
+            padding:const EdgeInsets.all(18),
+            color:const Color(0xFFEEE6D8),
+            child:Row(children:[
+              const Icon(Icons.place_outlined,color:Color(0xFF0F4C45),size:28),
+              const SizedBox(width:14),
+              const Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+                Text('Christmas near you',style:TextStyle(fontWeight:FontWeight.w800,fontSize:16)),
+                SizedBox(height:3),
+                Text('Lights, markets, Santa visits and more.'),
+              ])),
+              TextButton(onPressed:()=>goTo(2),child:const Text('OPEN')),
+            ]),
+          ),
         ],
       ),
     );
   }
 }
 
-class _HomeButton extends StatelessWidget {
-  final IconData icon;
+class _SectionHeading extends StatelessWidget {
   final String title;
-  final String subtitle;
+  final String action;
   final VoidCallback onTap;
-  const _HomeButton({required this.icon, required this.title, required this.subtitle, required this.onTap});
+  const _SectionHeading({required this.title,required this.action,required this.onTap});
   @override
-  Widget build(BuildContext context) {
-    return Card(
-      child: ListTile(
-        leading: CircleAvatar(child: Icon(icon)),
-        title: Text(title, style: const TextStyle(fontWeight: FontWeight.w800)),
-        subtitle: Text(subtitle),
-        trailing: const Icon(Icons.chevron_right),
-        onTap: onTap,
-      ),
+  Widget build(BuildContext context){
+    return Padding(
+      padding:const EdgeInsets.symmetric(horizontal:20),
+      child:Row(children:[
+        Expanded(child:Text(title,style:Theme.of(context).textTheme.headlineSmall?.copyWith(fontSize:24))),
+        TextButton(onPressed:onTap,child:Text(action.toUpperCase(),style:const TextStyle(fontSize:11,fontWeight:FontWeight.w800,letterSpacing:.8))),
+      ]),
     );
   }
 }
-
 
 class DiscoverPage extends StatefulWidget {
   const DiscoverPage({super.key});
