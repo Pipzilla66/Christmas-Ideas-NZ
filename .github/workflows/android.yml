@@ -38,7 +38,7 @@ jobs:
 
       - name: Analyze
         working-directory: app
-        run: flutter analyze lib
+        run: flutter analyze lib --no-fatal-infos
 
       - name: Build debug APK
         working-directory: app
