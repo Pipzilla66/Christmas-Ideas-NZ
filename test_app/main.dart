@@ -66,15 +66,51 @@ class _ChristmasIdeasNZState extends State<ChristmasIdeasNZ> {
       theme: ThemeData(
         useMaterial3: true,
         colorScheme: s,
-        scaffoldBackgroundColor: s.surface,
-        textTheme: GoogleFonts.montserratTextTheme().apply(
-          bodyColor: s.onSurface,
-          displayColor: s.onSurface,
+        scaffoldBackgroundColor: const Color(0xFFF7F2E8),
+        textTheme: GoogleFonts.interTextTheme().copyWith(
+          displayLarge: GoogleFonts.playfairDisplay(fontWeight: FontWeight.w700, color: const Color(0xFF173B36)),
+          displayMedium: GoogleFonts.playfairDisplay(fontWeight: FontWeight.w700, color: const Color(0xFF173B36)),
+          headlineLarge: GoogleFonts.playfairDisplay(fontWeight: FontWeight.w700, color: const Color(0xFF173B36)),
+          headlineMedium: GoogleFonts.playfairDisplay(fontWeight: FontWeight.w700, color: const Color(0xFF173B36)),
+          headlineSmall: GoogleFonts.playfairDisplay(fontWeight: FontWeight.w700, color: const Color(0xFF173B36)),
+          titleLarge: GoogleFonts.inter(fontWeight: FontWeight.w800, color: const Color(0xFF1E2522)),
+          titleMedium: GoogleFonts.inter(fontWeight: FontWeight.w700, color: const Color(0xFF1E2522)),
+          bodyLarge: GoogleFonts.inter(color: const Color(0xFF343936), height: 1.45),
+          bodyMedium: GoogleFonts.inter(color: const Color(0xFF343936), height: 1.45),
         ),
-        cardTheme: CardThemeData(
+        dividerColor: const Color(0xFFD9D1C4),
+        cardTheme: const CardThemeData(
           elevation: 0,
-          color: Colors.white.withValues(alpha: .95),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          color: Color(0xFFFFFCF6),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.all(Radius.circular(7)),
+            side: BorderSide(color: Color(0xFFE4DCCF)),
+          ),
+        ),
+        inputDecorationTheme: const InputDecorationTheme(
+          filled: true,
+          fillColor: Color(0xFFFFFCF6),
+          border: OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(5))),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.all(Radius.circular(5)),
+            borderSide: BorderSide(color: Color(0xFFCFC5B5)),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.all(Radius.circular(5)),
+            borderSide: BorderSide(color: Color(0xFF0F4C45), width: 1.5),
+          ),
+        ),
+        filledButtonTheme: FilledButtonThemeData(
+          style: FilledButton.styleFrom(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+          ),
+        ),
+        outlinedButtonTheme: OutlinedButtonThemeData(
+          style: OutlinedButton.styleFrom(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+          ),
         ),
       ),
       home: name == null
@@ -186,15 +222,22 @@ class _ShellState extends State<Shell> {
     ];
     return Scaffold(
       body: IndexedStack(index: index, children: pages),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: index,
-        onDestinationSelected: (i) => setState(() => index = i),
-        destinations: const [
-          NavigationDestination(icon: Icon(Icons.home_outlined), selectedIcon: Icon(Icons.home), label: 'Home'),
-          NavigationDestination(icon: Icon(Icons.search), label: 'Discover'),
-          NavigationDestination(icon: Icon(Icons.location_on_outlined), selectedIcon: Icon(Icons.location_on), label: 'Near Me'),
-          NavigationDestination(icon: Icon(Icons.favorite_border), selectedIcon: Icon(Icons.favorite), label: 'Saved'),
-          NavigationDestination(icon: Icon(Icons.person_outline), selectedIcon: Icon(Icons.person), label: 'Me'),
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: index,
+        onTap: (i) => setState(() => index = i),
+        type: BottomNavigationBarType.fixed,
+        backgroundColor: const Color(0xFFFFFCF6),
+        selectedItemColor: const Color(0xFF0F4C45),
+        unselectedItemColor: const Color(0xFF77736D),
+        elevation: 8,
+        selectedLabelStyle: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 11),
+        unselectedLabelStyle: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 11),
+        items: const [
+          BottomNavigationBarItem(icon: Icon(Icons.home_outlined), activeIcon: Icon(Icons.home), label: 'Home'),
+          BottomNavigationBarItem(icon: Icon(Icons.explore_outlined), activeIcon: Icon(Icons.explore), label: 'Discover'),
+          BottomNavigationBarItem(icon: Icon(Icons.place_outlined), activeIcon: Icon(Icons.place), label: 'Near Me'),
+          BottomNavigationBarItem(icon: Icon(Icons.bookmark_border), activeIcon: Icon(Icons.bookmark), label: 'Saved'),
+          BottomNavigationBarItem(icon: Icon(Icons.person_outline), activeIcon: Icon(Icons.person), label: 'Me'),
         ],
       ),
     );
