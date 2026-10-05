@@ -553,7 +553,18 @@ class HomePage extends StatelessWidget {
                           borderRadius:BorderRadius.circular(7),
                         ),
                         child:Row(children:[
-                          Container(width:72,height:72,color:const Color(0xFF9E1B32),child:const Icon(Icons.star_outline,color:Colors.white,size:30)),
+                          ClipRRect(
+                            borderRadius:BorderRadius.circular(4),
+                            child:(item['image_url']??'').toString().isNotEmpty
+                              ? Image.network(
+                                  (item['image_url']??'').toString(),
+                                  width:72,
+                                  height:72,
+                                  fit:BoxFit.cover,
+                                  errorBuilder:(_,__,___)=>Container(width:72,height:72,color:const Color(0xFF9E1B32),child:const Icon(Icons.star_outline,color:Colors.white,size:30)),
+                                )
+                              : Container(width:72,height:72,color:const Color(0xFF9E1B32),child:const Icon(Icons.star_outline,color:Colors.white,size:30)),
+                          ),
                           const SizedBox(width:14),
                           Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
                             Text((item['title']??'Christmas idea').toString(),style:const TextStyle(fontWeight:FontWeight.w800,fontSize:15)),
@@ -759,7 +770,19 @@ class _DiscoverPageState extends State<DiscoverPage> {
                 return q.isEmpty||hay.contains(q);
               }).toList();
               return Column(children:items.map((item)=>ListTile(
-                contentPadding:const EdgeInsets.symmetric(vertical:4),
+                contentPadding:const EdgeInsets.symmetric(vertical:6),
+                leading:ClipRRect(
+                  borderRadius:BorderRadius.circular(4),
+                  child:(item['image_url']??'').toString().isNotEmpty
+                    ? Image.network(
+                        (item['image_url']??'').toString(),
+                        width:58,
+                        height:58,
+                        fit:BoxFit.cover,
+                        errorBuilder:(_,__,___)=>Container(width:58,height:58,color:const Color(0xFF9E1B32),child:const Icon(Icons.star_outline,color:Colors.white)),
+                      )
+                    : Container(width:58,height:58,color:const Color(0xFF9E1B32),child:const Icon(Icons.star_outline,color:Colors.white)),
+                ),
                 title:Text((item['title']??'Christmas idea').toString(),style:const TextStyle(fontWeight:FontWeight.w800)),
                 subtitle:Text((item['summary']??'').toString(),maxLines:2,overflow:TextOverflow.ellipsis),
                 trailing:const Icon(Icons.arrow_forward,size:18),
