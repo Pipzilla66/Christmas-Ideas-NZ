@@ -1,5 +1,8 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -598,7 +601,13 @@ class _DiscoverPageState extends State<DiscoverPage> {
                       borderRadius:BorderRadius.circular(6),
                     ),
                     child:Row(children:[
-                      Container(width:58,height:58,color:const Color(0xFFECE4D7),child:const Icon(Icons.card_giftcard,color:Color(0xFF0F4C45))),
+                      ClipRRect(
+                        borderRadius:BorderRadius.circular(4),
+                        child:(g['image_url']??'').toString().isNotEmpty
+                          ? Image.network((g['image_url']??'').toString(),width:58,height:58,fit:BoxFit.cover,
+                              errorBuilder:(_,__,___)=>Container(width:58,height:58,color:const Color(0xFFECE4D7),child:const Icon(Icons.card_giftcard,color:Color(0xFF0F4C45))))
+                          : Container(width:58,height:58,color:const Color(0xFFECE4D7),child:const Icon(Icons.card_giftcard,color:Color(0xFF0F4C45))),
+                      ),
                       const SizedBox(width:12),
                       Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
                         Text((g['title']??'Gift idea').toString(),style:const TextStyle(fontWeight:FontWeight.w800,fontSize:14)),
@@ -1091,10 +1100,12 @@ class _BoardDetailPageState extends State<BoardDetailPage> {
                     borderRadius:BorderRadius.circular(6),
                   ),
                   child:Row(children:[
-                    Container(
-                      width:54,height:54,
-                      color:isGift?const Color(0xFFECE4D7):const Color(0xFF9E1B32),
-                      child:Icon(isGift?Icons.card_giftcard:Icons.star_outline,color:isGift?const Color(0xFF0F4C45):Colors.white),
+                    ClipRRect(
+                      borderRadius:BorderRadius.circular(4),
+                      child:(item['image_url']??'').toString().isNotEmpty
+                        ? Image.network((item['image_url']??'').toString(),width:54,height:54,fit:BoxFit.cover,
+                            errorBuilder:(_,__,___)=>Container(width:54,height:54,color:isGift?const Color(0xFFECE4D7):const Color(0xFF9E1B32),child:Icon(isGift?Icons.card_giftcard:Icons.star_outline,color:isGift?const Color(0xFF0F4C45):Colors.white)))
+                        : Container(width:54,height:54,color:isGift?const Color(0xFFECE4D7):const Color(0xFF9E1B32),child:Icon(isGift?Icons.card_giftcard:Icons.star_outline,color:isGift?const Color(0xFF0F4C45):Colors.white)),
                     ),
                     const SizedBox(width:12),
                     Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
@@ -1210,6 +1221,177 @@ class _SubmissionPageState extends State<SubmissionPage> {
   }
 }
 
+class AdminMediaManagerPage extends StatefulWidget {
+  const AdminMediaManagerPage({super.key});
+  @override
+  State<AdminMediaManagerPage> createState() => _AdminMediaManagerPageState();
+}
+
+class _AdminMediaManagerPageState extends State<AdminMediaManagerPage> {
+  bool showGifts = true;
+  bool busy = false;
+  final picker = ImagePicker();
+
+  Future<List<Map<String,dynamic>>> loadItems() async {
+    if (showGifts) {
+      final rows = await Supabase.instance.client
+          .from('gift_ideas')
+          .select('id,title,image_url,image_source_url,image_credit,recipient_group')
+          .eq('status','published')
+          .order('title');
+      return List<Map<String,dynamic>>.from(rows);
+    }
+    final rows = await Supabase.instance.client
+        .from('content_items')
+        .select('id,title,image_url,image_source_url,image_credit,content_type')
+        .eq('status','published')
+        .order('title');
+    return List<Map<String,dynamic>>.from(rows);
+  }
+
+  Future<String?> uploadImage(dynamic id) async {
+    final user = Supabase.instance.client.auth.currentUser;
+    if (user == null) return null;
+    final picked = await picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 88,
+      maxWidth: 1800,
+    );
+    if (picked == null) return null;
+    final ext = picked.name.contains('.') ? picked.name.split('.').last.toLowerCase() : 'jpg';
+    final folder = showGifts ? 'gifts' : 'ideas';
+    final path = 'admin/' + folder + '/' + id.toString() + '_' + DateTime.now().millisecondsSinceEpoch.toString() + '.' + ext;
+    await Supabase.instance.client.storage.from('content-images').upload(
+      path,
+      File(picked.path),
+      fileOptions: const FileOptions(upsert: true),
+    );
+    return Supabase.instance.client.storage.from('content-images').getPublicUrl(path);
+  }
+
+  Future<void> editItem(Map<String,dynamic> item) async {
+    final imageUrl = TextEditingController(text:(item['image_url']??'').toString());
+    final sourceUrl = TextEditingController(text:(item['image_source_url']??'').toString());
+    final credit = TextEditingController(text:(item['image_credit']??'').toString());
+    final saved = await showDialog<bool>(
+      context:context,
+      builder:(ctx)=>StatefulBuilder(
+        builder:(ctx,setLocal)=>AlertDialog(
+          title:Text('Image for ' + (item['title']??'item').toString()),
+          content:SizedBox(
+            width:420,
+            child:SingleChildScrollView(
+              child:Column(
+                mainAxisSize:MainAxisSize.min,
+                children:[
+                  TextField(controller:imageUrl,decoration:const InputDecoration(labelText:'Image URL')),
+                  const SizedBox(height:10),
+                  OutlinedButton.icon(
+                    onPressed:busy?null:() async {
+                      setLocal(()=>busy=true);
+                      try {
+                        final uploaded=await uploadImage(item['id']);
+                        if(uploaded!=null) imageUrl.text=uploaded;
+                      } finally {
+                        setLocal(()=>busy=false);
+                      }
+                    },
+                    icon:const Icon(Icons.photo_library_outlined),
+                    label:Text(busy?'Uploading…':'Choose photo from gallery'),
+                  ),
+                  const SizedBox(height:10),
+                  TextField(controller:sourceUrl,decoration:const InputDecoration(labelText:'Source/product page URL')),
+                  const SizedBox(height:10),
+                  TextField(controller:credit,decoration:const InputDecoration(labelText:'Image credit / permission note')),
+                  const SizedBox(height:8),
+                  const Text(
+                    'For retailer products, use approved retailer or affiliate imagery. For Elf and Secret Santa ideas, use your own, licensed or generated images.',
+                    style:TextStyle(fontSize:11.5,color:Color(0xFF6B6F6C)),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          actions:[
+            TextButton(onPressed:()=>Navigator.pop(ctx,false),child:const Text('Cancel')),
+            FilledButton(onPressed:()=>Navigator.pop(ctx,true),child:const Text('Save image')),
+          ],
+        ),
+      ),
+    );
+    if(saved!=true) return;
+    setState(()=>busy=true);
+    try {
+      await Supabase.instance.client.from(showGifts?'gift_ideas':'content_items').update({
+        'image_url': imageUrl.text.trim().isEmpty ? null : imageUrl.text.trim(),
+        'image_source_url': sourceUrl.text.trim().isEmpty ? null : sourceUrl.text.trim(),
+        'image_credit': credit.text.trim().isEmpty ? null : credit.text.trim(),
+      }).eq('id',item['id']);
+      if(mounted) setState((){});
+    } finally {
+      if(mounted) setState(()=>busy=false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context){
+    return Scaffold(
+      appBar:AppBar(backgroundColor:const Color(0xFFF7F2E8),title:const Text('Image Library')),
+      body:Column(children:[
+        Padding(
+          padding:const EdgeInsets.fromLTRB(20,16,20,8),
+          child:Row(children:[
+            Expanded(child:SegmentedButton<bool>(
+              segments:const [
+                ButtonSegment(value:true,label:Text('Gifts'),icon:Icon(Icons.card_giftcard)),
+                ButtonSegment(value:false,label:Text('Ideas'),icon:Icon(Icons.auto_awesome)),
+              ],
+              selected:{showGifts},
+              onSelectionChanged:(s)=>setState(()=>showGifts=s.first),
+            )),
+          ]),
+        ),
+        Expanded(
+          child:FutureBuilder<List<Map<String,dynamic>>>(
+            future:loadItems(),
+            builder:(context,snap){
+              if(snap.connectionState==ConnectionState.waiting) return const Center(child:CircularProgressIndicator());
+              final items=snap.data??[];
+              return ListView.separated(
+                padding:const EdgeInsets.fromLTRB(20,8,20,24),
+                itemCount:items.length,
+                separatorBuilder:(_,__)=>const Divider(height:1),
+                itemBuilder:(context,i){
+                  final item=items[i];
+                  final image=(item['image_url']??'').toString();
+                  return ListTile(
+                    contentPadding:const EdgeInsets.symmetric(vertical:7),
+                    leading:ClipRRect(
+                      borderRadius:BorderRadius.circular(4),
+                      child:image.isNotEmpty
+                        ? Image.network(image,width:58,height:58,fit:BoxFit.cover,errorBuilder:(_,__,___)=>_mediaPlaceholder())
+                        : _mediaPlaceholder(),
+                    ),
+                    title:Text((item['title']??'Untitled').toString(),style:const TextStyle(fontWeight:FontWeight.w800)),
+                    subtitle:Text(image.isEmpty?'No image yet':'Image connected'),
+                    trailing:const Icon(Icons.edit_outlined),
+                    onTap:()=>editItem(item),
+                  );
+                },
+              );
+            },
+          ),
+        ),
+      ]),
+    );
+  }
+
+  Widget _mediaPlaceholder()=>Container(
+    width:58,height:58,color:const Color(0xFFECE4D7),
+    child:const Icon(Icons.image_outlined,color:Color(0xFF0F4C45)),
+  );
+}
+
 class AdminDashboardPage extends StatefulWidget {
   const AdminDashboardPage({super.key});
   @override
@@ -1317,6 +1499,14 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
               );
             },
           ),
+          const SizedBox(height: 18),
+          Card(child: ListTile(
+            leading: const Icon(Icons.photo_library_outlined, color: Color(0xFF0F4C45)),
+            title: const Text('Image Library', style: TextStyle(fontWeight: FontWeight.w900)),
+            subtitle: const Text('Add and manage photos for gifts, Elf ideas and Secret Santa content'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminMediaManagerPage())).then((_)=>setState((){})),
+          )),
           const SizedBox(height: 18),
           Text('Pending submissions', style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontSize:25)),
           const SizedBox(height: 8),
