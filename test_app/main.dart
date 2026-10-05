@@ -13,10 +13,70 @@ const _coverPhotoBase64 = '/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDABELDA8MChEPDg8TEhEUG
 
 const _phillieBase64 = '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';
 
+
+Widget safeEmbeddedImage(String data, {BoxFit fit = BoxFit.cover, double? width, double? height}) {
+  try {
+    return Image.memory(
+      base64Decode(data),
+      fit: fit,
+      width: width,
+      height: height,
+      gaplessPlayback: true,
+      errorBuilder: (_, __, ___) => Container(
+        width: width,
+        height: height,
+        color: const Color(0xFFE9E2D4),
+        child: const Center(child: Icon(Icons.image_outlined, color: Color(0xFF0F4C45))),
+      ),
+    );
+  } catch (_) {
+    return Container(
+      width: width,
+      height: height,
+      color: const Color(0xFFE9E2D4),
+      child: const Center(child: Icon(Icons.image_outlined, color: Color(0xFF0F4C45))),
+    );
+  }
+}
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Supabase.initialize(url: supabaseUrl, publishableKey: supabaseKey);
-  runApp(const ChristmasIdeasNZ());
+  ErrorWidget.builder = (details) => Material(
+    color: const Color(0xFFF7F2E8),
+    child: SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.error_outline, size: 48, color: Color(0xFFA80F24)),
+            const SizedBox(height: 16),
+            const Text('Christmas Ideas NZ hit a loading problem.', textAlign: TextAlign.center, style: TextStyle(fontWeight: FontWeight.w800, fontSize: 18)),
+            const SizedBox(height: 8),
+            Text(details.exceptionAsString(), textAlign: TextAlign.center, style: const TextStyle(fontSize: 12)),
+          ],
+        ),
+      ),
+    ),
+  );
+  try {
+    await Supabase.initialize(url: supabaseUrl, publishableKey: supabaseKey);
+    runApp(const ChristmasIdeasNZ());
+  } catch (e) {
+    runApp(MaterialApp(
+      home: Scaffold(
+        backgroundColor: const Color(0xFFF7F2E8),
+        body: SafeArea(
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Text('Could not connect to Christmas Ideas NZ.\n\n$e', textAlign: TextAlign.center),
+            ),
+          ),
+        ),
+      ),
+    ));
+  }
 }
 
 enum XmasTheme { kiwi, classic, grinchy, winter }
@@ -161,7 +221,7 @@ class _OnboardingState extends State<Onboarding> {
               child: Stack(
                 fit: StackFit.expand,
                 children: [
-                  Image.memory(base64Decode(_coverPhotoBase64), fit: BoxFit.cover),
+                  safeEmbeddedImage(_coverPhotoBase64, fit: BoxFit.cover),
                   Container(
                     decoration: const BoxDecoration(
                       gradient: LinearGradient(
@@ -283,7 +343,7 @@ class PhillieButton extends StatelessWidget {
                   border:Border.all(color:const Color(0xFFC69A3A),width:2),
                   boxShadow:const [BoxShadow(color:Color(0x33000000),blurRadius:12,offset:Offset(0,4))],
                 ),
-                child:ClipOval(child:Image.memory(base64Decode(_phillieBase64),fit:BoxFit.cover)),
+                child:ClipOval(child:safeEmbeddedImage(_phillieBase64,fit:BoxFit.cover)),
               ),
               Positioned(
                 right:-2,bottom:-2,
@@ -387,7 +447,7 @@ class _PhillieSupportSheetState extends State<PhillieSupportSheet>{
             Container(
               width:70,height:70,padding:const EdgeInsets.all(3),
               decoration:BoxDecoration(shape:BoxShape.circle,border:Border.all(color:const Color(0xFFC69A3A),width:2)),
-              child:ClipOval(child:Image.memory(base64Decode(_phillieBase64),fit:BoxFit.cover)),
+              child:ClipOval(child:safeEmbeddedImage(_phillieBase64,fit:BoxFit.cover)),
             ),
             const SizedBox(width:14),
             Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
@@ -595,7 +655,7 @@ class HomePage extends StatelessWidget {
             child:Stack(
               fit:StackFit.expand,
               children:[
-                Image.memory(base64Decode(_coverPhotoBase64),fit:BoxFit.cover),
+                safeEmbeddedImage(_coverPhotoBase64,fit:BoxFit.cover),
                 Container(decoration:const BoxDecoration(
                   gradient:LinearGradient(
                     begin:Alignment.topCenter,
