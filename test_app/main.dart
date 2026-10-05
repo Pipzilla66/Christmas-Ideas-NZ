@@ -1160,7 +1160,7 @@ class _SubmissionPageState extends State<SubmissionPage> {
       description.clear();
       city.clear();
       region.clear();
-      message = 'Submitted for approval ✅';
+      message = 'Thanks — it is now waiting for approval.';
     } catch (e) {
       message = 'Could not submit. Please try again.';
     } finally {
@@ -1171,15 +1171,17 @@ class _SubmissionPageState extends State<SubmissionPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Submit a Christmas Find')),
+      appBar: AppBar(backgroundColor: const Color(0xFFF7F2E8), elevation: 0, title: const Text('Submit a Christmas find')),
       body: ListView(
-        padding: const EdgeInsets.all(18),
+        padding: const EdgeInsets.fromLTRB(20,18,20,30),
         children: [
-          const Text('Help build the NZ Christmas map and idea library.', style: TextStyle(fontWeight: FontWeight.w700)),
-          const SizedBox(height: 16),
+          Text('Add something festive', style: Theme.of(context).textTheme.headlineMedium),
+          const SizedBox(height: 8),
+          const Text('Help make Christmas Ideas NZ more useful for families around Aotearoa.'),
+          const SizedBox(height: 24),
           DropdownButtonFormField<String>(
             initialValue: type,
-            decoration: const InputDecoration(labelText: 'What are you submitting?'),
+            decoration: const InputDecoration(labelText: 'What are you adding?'),
             items: const [
               DropdownMenuItem(value:'event', child: Text('Event / Market')),
               DropdownMenuItem(value:'light', child: Text('Christmas Lights')),
@@ -1294,9 +1296,9 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Christmas Ideas NZ Admin')),
+      appBar: AppBar(backgroundColor: const Color(0xFFF7F2E8), elevation: 0, title: const Text('Admin')),
       body: ListView(
-        padding: const EdgeInsets.all(18),
+        padding: const EdgeInsets.fromLTRB(20,18,20,30),
         children: [
           FutureBuilder<Map<String,int>>(
             future: counts(),
@@ -1316,7 +1318,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
             },
           ),
           const SizedBox(height: 18),
-          const Text('Pending submissions', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900)),
+          Text('Pending submissions', style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontSize:25)),
           const SizedBox(height: 8),
           FutureBuilder<List<Map<String,dynamic>>>(
             future: pending(),
@@ -1410,9 +1412,11 @@ class _MePageState extends State<MePage> {
       child: ListView(
         padding: const EdgeInsets.all(18),
         children: [
-          Text('Me', style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w900)),
-          const SizedBox(height: 14),
-          const Text('Christmas theme', style: TextStyle(fontWeight: FontWeight.w800)),
+          Text('Me', style: Theme.of(context).textTheme.headlineLarge),
+          const SizedBox(height: 5),
+          const Text('Your Christmas preferences, account and contributions.'),
+          const SizedBox(height: 22),
+          const Text('CHRISTMAS STYLE', style: TextStyle(fontSize:10,fontWeight:FontWeight.w800,letterSpacing:1.2,color:Color(0xFF8B6F2E))),
           const SizedBox(height: 8),
           Wrap(
             spacing: 8,
@@ -1436,8 +1440,10 @@ class _MePageState extends State<MePage> {
             const SizedBox(height: 12),
             FilledButton(onPressed: busy ? null : signIn, child: Text(busy ? 'Signing in…' : 'Sign in')),
           ] else ...[
-            Card(child: ListTile(
-              leading: const CircleAvatar(child: Icon(Icons.person)),
+            Container(
+              decoration: BoxDecoration(color: const Color(0xFFFFFCF6), border: Border.all(color: const Color(0xFFE4DCCF)), borderRadius: BorderRadius.circular(5)),
+              child: ListTile(
+              leading: const Icon(Icons.person_outline, color: Color(0xFF0F4C45)),
               title: Text((profile?['display_name'] ?? user.email ?? 'Signed in').toString()),
               subtitle: Text(isAdmin ? 'Owner / Admin' : 'Member'),
             )),
@@ -1460,8 +1466,10 @@ class _MePageState extends State<MePage> {
           ],
           if (message != null) Padding(padding: const EdgeInsets.only(top: 12), child: Text(message!)),
           const SizedBox(height: 20),
-          const Card(child: ListTile(
-            leading: Text('f', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 22)),
+          Container(
+            decoration: BoxDecoration(color: const Color(0xFFEEE6D8), borderRadius: BorderRadius.circular(5)),
+            child: const ListTile(
+            leading: Icon(Icons.facebook, color: Color(0xFF0F4C45)),
             title: Text('Christmas Ideas NZ on Facebook'),
             subtitle: Text('Facebook link will be connected before launch'),
           )),
