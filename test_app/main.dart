@@ -343,7 +343,7 @@ class PhillieButton extends StatelessWidget {
                   border:Border.all(color:const Color(0xFFC69A3A),width:2),
                   boxShadow:const [BoxShadow(color:Color(0x33000000),blurRadius:12,offset:Offset(0,4))],
                 ),
-                child:ClipOval(child:safeEmbeddedImage(_phillieBase64,fit:BoxFit.cover)),
+                child:ClipOval(child:Container(color:const Color(0xFFF3E5C3),padding:const EdgeInsets.all(4),child:safeEmbeddedImage(_phillieBase64,fit:BoxFit.contain))),
               ),
               Positioned(
                 right:-2,bottom:-2,
@@ -447,7 +447,7 @@ class _PhillieSupportSheetState extends State<PhillieSupportSheet>{
             Container(
               width:70,height:70,padding:const EdgeInsets.all(3),
               decoration:BoxDecoration(shape:BoxShape.circle,border:Border.all(color:const Color(0xFFC69A3A),width:2)),
-              child:ClipOval(child:safeEmbeddedImage(_phillieBase64,fit:BoxFit.cover)),
+              child:ClipOval(child:Container(color:const Color(0xFFF3E5C3),padding:const EdgeInsets.all(4),child:safeEmbeddedImage(_phillieBase64,fit:BoxFit.contain))),
             ),
             const SizedBox(width:14),
             Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
