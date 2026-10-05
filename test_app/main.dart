@@ -522,6 +522,82 @@ class _HelpChip extends StatelessWidget{
   );
 }
 
+
+class PhillieGuideCard extends StatelessWidget {
+  final String title;
+  final String message;
+  final String? actionLabel;
+  final VoidCallback? onAction;
+  const PhillieGuideCard({
+    super.key,
+    required this.title,
+    required this.message,
+    this.actionLabel,
+    this.onAction,
+  });
+
+  @override
+  Widget build(BuildContext context){
+    return Container(
+      padding:const EdgeInsets.all(14),
+      decoration:BoxDecoration(
+        color:const Color(0xFFFFFCF6),
+        border:Border.all(color:const Color(0xFFE0D2B7)),
+        borderRadius:BorderRadius.circular(10),
+      ),
+      child:Row(crossAxisAlignment:CrossAxisAlignment.start,children:[
+        Container(
+          width:62,
+          height:62,
+          padding:const EdgeInsets.all(2),
+          decoration:BoxDecoration(
+            shape:BoxShape.circle,
+            color:const Color(0xFFF3E5C3),
+            border:Border.all(color:const Color(0xFFC69A3A),width:2),
+          ),
+          child:ClipOval(
+            child:Container(
+              color:const Color(0xFFF3E5C3),
+              padding:const EdgeInsets.fromLTRB(8,2,8,8),
+              child:safeEmbeddedImage(_phillieBase64,fit:BoxFit.contain),
+            ),
+          ),
+        ),
+        const SizedBox(width:12),
+        Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+          Text(title,style:GoogleFonts.playfairDisplay(
+            fontSize:20,
+            fontWeight:FontWeight.w700,
+            color:const Color(0xFF173B36),
+          )),
+          const SizedBox(height:4),
+          Text(message,style:const TextStyle(fontSize:12.5,height:1.35)),
+          if(actionLabel!=null&&onAction!=null)...[
+            const SizedBox(height:8),
+            TextButton(
+              onPressed:onAction,
+              style:TextButton.styleFrom(
+                padding:EdgeInsets.zero,
+                minimumSize:Size.zero,
+                tapTargetSize:MaterialTapTargetSize.shrinkWrap,
+              ),
+              child:Text(
+                actionLabel!,
+                style:const TextStyle(
+                  fontSize:10.5,
+                  fontWeight:FontWeight.w900,
+                  letterSpacing:.8,
+                  color:Color(0xFFA80F24),
+                ),
+              ),
+            ),
+          ],
+        ])),
+      ]),
+    );
+  }
+}
+
 class Shell extends StatefulWidget {
   final String name;
   final XmasTheme theme;
@@ -545,12 +621,7 @@ class _ShellState extends State<Shell> {
       MePage(theme: widget.theme, onThemeChanged: widget.onThemeChanged),
     ];
     return Scaffold(
-      body: Stack(
-        children:[
-          IndexedStack(index:index,children:pages),
-          const Positioned(right:14,bottom:14,child:PhillieButton()),
-        ],
-      ),
+      body: IndexedStack(index:index,children:pages),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: index,
         onTap: (i) => setState(() => index = i),
@@ -738,7 +809,7 @@ class HomePage extends StatelessWidget {
                       Padding(
                         padding:const EdgeInsets.all(16),
                         child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
-                          const Text('IDEA OF THE DAY',style:TextStyle(fontSize:10,fontWeight:FontWeight.w800,letterSpacing:1.2,color:Color(0xFF8B6F2E))),
+                          const Text('PHILLIE’S PICK · IDEA OF THE DAY',style:TextStyle(fontSize:10,fontWeight:FontWeight.w800,letterSpacing:1.2,color:Color(0xFF8B6F2E))),
                           const SizedBox(height:6),
                           Text((item['title']??'Christmas idea').toString(),style:Theme.of(context).textTheme.headlineSmall?.copyWith(fontSize:22)),
                           if((item['summary']??'').toString().isNotEmpty)...[
@@ -1449,6 +1520,11 @@ class _SavedPageState extends State<SavedPage> {
           Text('Saved Collections',style:Theme.of(context).textTheme.headlineLarge),
           const SizedBox(height:6),
           const Text('Keep the gifts, recipes and ideas you want to come back to.'),
+          const SizedBox(height:16),
+          const PhillieGuideCard(
+            title:'Phillie’s tip',
+            message:'Use boards to keep Christmas organised. Try Gift Ideas, Christmas Dinner, Elf Ideas or Kids Activities — then tap Save on anything you want to keep.',
+          ),
           const SizedBox(height:22),
           if(user==null)
             Container(
@@ -1556,10 +1632,13 @@ class _BoardDetailPageState extends State<BoardDetailPage> {
         builder:(context,snap){
           if(snap.connectionState==ConnectionState.waiting) return const Center(child:CircularProgressIndicator());
           final items=snap.data??[];
-          if(items.isEmpty) return const Center(child:Padding(
-            padding:EdgeInsets.all(28),
-            child:Text('Nothing saved here yet. Open a gift or Christmas idea and tap Save.'),
-          ));
+          if(items.isEmpty) return const Padding(
+            padding:EdgeInsets.all(20),
+            child:PhillieGuideCard(
+              title:'This board is ready',
+              message:'Nothing saved here yet. Open a gift or Christmas idea and tap Save — I’ll keep it here for you.',
+            ),
+          );
           return ListView.separated(
             padding:const EdgeInsets.all(20),
             itemCount:items.length,
@@ -2069,14 +2148,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
             trailing: const Icon(Icons.chevron_right),
             onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminMediaManagerPage())).then((_)=>setState((){})),
           )),
-          const SizedBox(height: 10),
-          Card(child: ListTile(
-            leading: const Icon(Icons.chat_bubble_outline, color: Color(0xFFA80F24)),
-            title: const Text('Phillie Messages', style: TextStyle(fontWeight: FontWeight.w900)),
-            subtitle: const Text('Open and reply to support messages'),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminSupportPage())).then((_)=>setState((){})),
-          )),
+
           const SizedBox(height: 18),
           Text('Pending submissions', style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontSize:25)),
           const SizedBox(height: 8),
