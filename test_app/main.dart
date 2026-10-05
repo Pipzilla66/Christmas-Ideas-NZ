@@ -424,6 +424,59 @@ class _DiscoverPageState extends State<DiscoverPage> {
   }
 }
 
+
+Future<void> saveItemToBoard(BuildContext context, String itemType, dynamic itemId) async {
+  final user = Supabase.instance.client.auth.currentUser;
+  if (user == null) {
+    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Sign in from Me to save this.')));
+    return;
+  }
+  final rows = await Supabase.instance.client
+      .from('boards')
+      .select('id,name')
+      .eq('user_id', user.id)
+      .order('created_at');
+  final boards = List<Map<String,dynamic>>.from(rows);
+  if (boards.isEmpty) {
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Create a Saved board first.')));
+    }
+    return;
+  }
+  if (!context.mounted) return;
+  final boardId = await showModalBottomSheet<String>(
+    context: context,
+    builder: (ctx) => SafeArea(
+      child: ListView(
+        shrinkWrap: true,
+        children: [
+          const ListTile(title: Text('Save to board', style: TextStyle(fontWeight: FontWeight.w900))),
+          ...boards.map((b) => ListTile(
+            leading: const Text('🎄'),
+            title: Text((b['name'] ?? 'Board').toString()),
+            onTap: () => Navigator.pop(ctx, b['id'].toString()),
+          )),
+        ],
+      ),
+    ),
+  );
+  if (boardId == null) return;
+  try {
+    await Supabase.instance.client.from('board_items').insert({
+      'board_id': boardId,
+      'item_type': itemType,
+      'item_id': itemId,
+    });
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Saved to board ❤️')));
+    }
+  } catch (_) {
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Already saved, or unable to save right now.')));
+    }
+  }
+}
+
 class GiftDetailPage extends StatelessWidget {
   final Map<String,dynamic> gift;
   const GiftDetailPage({super.key, required this.gift});
@@ -455,7 +508,19 @@ class GiftDetailPage extends StatelessWidget {
           const SizedBox(height: 14),
           Text((gift['description'] ?? '').toString()),
           const SizedBox(height: 22),
-          FilledButton.icon(onPressed: () => openLink(context), icon: const Icon(Icons.shopping_bag_outlined), label: const Text('View retailer')),
+          Row(children: [
+            Expanded(child: OutlinedButton.icon(
+              onPressed: () => saveItemToBoard(context, 'gift', gift['id']),
+              icon: const Icon(Icons.favorite_border),
+              label: const Text('Save'),
+            )),
+            const SizedBox(width: 10),
+            Expanded(child: FilledButton.icon(
+              onPressed: () => openLink(context),
+              icon: const Icon(Icons.shopping_bag_outlined),
+              label: const Text('View retailer'),
+            )),
+          ]),
         ],
       ),
     );
@@ -491,10 +556,18 @@ class ContentDetailPage extends StatelessWidget {
           ],
           const SizedBox(height: 16),
           Text((item['body'] ?? item['summary'] ?? '').toString()),
-          if ((item['external_url'] ?? '').toString().isNotEmpty) ...[
-            const SizedBox(height: 22),
-            FilledButton.icon(onPressed: openExternal, icon: const Icon(Icons.open_in_new), label: const Text('Open link')),
-          ],
+          const SizedBox(height: 22),
+          Row(children: [
+            Expanded(child: OutlinedButton.icon(
+              onPressed: () => saveItemToBoard(context, 'content', item['id']),
+              icon: const Icon(Icons.favorite_border),
+              label: const Text('Save'),
+            )),
+            if ((item['external_url'] ?? '').toString().isNotEmpty) ...[
+              const SizedBox(width: 10),
+              Expanded(child: FilledButton.icon(onPressed: openExternal, icon: const Icon(Icons.open_in_new), label: const Text('Open link'))),
+            ],
+          ]),
         ],
       ),
     );
