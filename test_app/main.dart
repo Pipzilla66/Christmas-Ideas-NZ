@@ -1777,6 +1777,369 @@ class _SubmissionPageState extends State<SubmissionPage> {
   }
 }
 
+
+class AdminContentEditorPage extends StatefulWidget {
+  const AdminContentEditorPage({super.key});
+  @override
+  State<AdminContentEditorPage> createState()=>_AdminContentEditorPageState();
+}
+
+class _AdminContentEditorPageState extends State<AdminContentEditorPage>{
+  bool showGifts=true;
+
+  Future<List<Map<String,dynamic>>> loadItems() async {
+    if(showGifts){
+      final rows=await Supabase.instance.client.from('gift_ideas')
+        .select('id,title,description,image_url,recipient_group,price_min,price_max,nz_made,product_url,affiliate_url,featured,sponsored,status')
+        .order('title');
+      return List<Map<String,dynamic>>.from(rows);
+    }
+    final rows=await Supabase.instance.client.from('content_items')
+      .select('id,title,summary,body,image_url,external_url,content_type,featured,sponsored,status,idea_of_day_date')
+      .order('title');
+    return List<Map<String,dynamic>>.from(rows);
+  }
+
+  @override
+  Widget build(BuildContext context){
+    return Scaffold(
+      appBar:AppBar(backgroundColor:const Color(0xFFF7F2E8),title:const Text('Content Editor')),
+      body:Column(children:[
+        Padding(
+          padding:const EdgeInsets.fromLTRB(18,14,18,8),
+          child:SegmentedButton<bool>(
+            segments:const[
+              ButtonSegment(value:true,label:Text('Gifts'),icon:Icon(Icons.card_giftcard_outlined)),
+              ButtonSegment(value:false,label:Text('Ideas'),icon:Icon(Icons.auto_awesome_outlined)),
+            ],
+            selected:{showGifts},
+            onSelectionChanged:(s)=>setState(()=>showGifts=s.first),
+          ),
+        ),
+        Expanded(
+          child:FutureBuilder<List<Map<String,dynamic>>>(
+            future:loadItems(),
+            builder:(context,snap){
+              if(snap.connectionState==ConnectionState.waiting) return const Center(child:CircularProgressIndicator());
+              final items=snap.data??[];
+              return ListView.separated(
+                padding:const EdgeInsets.fromLTRB(18,8,18,24),
+                itemCount:items.length,
+                separatorBuilder:(_,__)=>const SizedBox(height:8),
+                itemBuilder:(context,i){
+                  final item=items[i];
+                  final image=(item['image_url']??'').toString();
+                  return InkWell(
+                    onTap:() async {
+                      await Navigator.push(context,MaterialPageRoute(
+                        builder:(_)=>showGifts
+                          ? AdminGiftEditPage(item:item)
+                          : AdminIdeaEditPage(item:item),
+                      ));
+                      if(mounted) setState((){});
+                    },
+                    child:Container(
+                      padding:const EdgeInsets.all(11),
+                      decoration:BoxDecoration(
+                        color:const Color(0xFFFFFCF6),
+                        border:Border.all(color:const Color(0xFFE4DCCF)),
+                        borderRadius:BorderRadius.circular(8),
+                      ),
+                      child:Row(children:[
+                        ClipRRect(
+                          borderRadius:BorderRadius.circular(5),
+                          child:image.isNotEmpty
+                            ? Image.network(image,width:58,height:58,fit:BoxFit.cover,errorBuilder:(_,__,___)=>_editorPlaceholder(showGifts))
+                            : _editorPlaceholder(showGifts),
+                        ),
+                        const SizedBox(width:12),
+                        Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+                          Text((item['title']??'Untitled').toString(),style:const TextStyle(fontWeight:FontWeight.w900)),
+                          const SizedBox(height:3),
+                          Text(
+                            showGifts
+                              ? ((item['recipient_group']??'Gift').toString()+' · '+(item['status']??'').toString())
+                              : ((item['content_type']??'Idea').toString()+' · '+(item['status']??'').toString()),
+                            style:const TextStyle(fontSize:11.5,color:Color(0xFF77736D)),
+                          ),
+                        ])),
+                        const Icon(Icons.edit_outlined,color:Color(0xFF173B36)),
+                      ]),
+                    ),
+                  );
+                },
+              );
+            },
+          ),
+        ),
+      ]),
+    );
+  }
+
+  Widget _editorPlaceholder(bool gift)=>Container(
+    width:58,height:58,
+    color:gift?const Color(0xFFECE4D7):const Color(0xFFA80F24),
+    child:Icon(gift?Icons.card_giftcard:Icons.auto_awesome,color:gift?const Color(0xFF0F4C45):Colors.white),
+  );
+}
+
+mixin _AdminImageUpload<T extends StatefulWidget> on State<T>{
+  final ImagePicker adminPicker=ImagePicker();
+
+  Future<String?> chooseAndUploadImage(String folder,dynamic id) async {
+    final picked=await adminPicker.pickImage(source:ImageSource.gallery,imageQuality:88,maxWidth:1800);
+    if(picked==null) return null;
+    final ext=picked.name.contains('.')?picked.name.split('.').last.toLowerCase():'jpg';
+    final path='admin/'+folder+'/'+id.toString()+'_'+DateTime.now().millisecondsSinceEpoch.toString()+'.'+ext;
+    await Supabase.instance.client.storage.from('content-images').upload(
+      path,
+      File(picked.path),
+      fileOptions:const FileOptions(upsert:true),
+    );
+    return Supabase.instance.client.storage.from('content-images').getPublicUrl(path);
+  }
+}
+
+class AdminGiftEditPage extends StatefulWidget{
+  final Map<String,dynamic> item;
+  const AdminGiftEditPage({super.key,required this.item});
+  @override
+  State<AdminGiftEditPage> createState()=>_AdminGiftEditPageState();
+}
+
+class _AdminGiftEditPageState extends State<AdminGiftEditPage> with _AdminImageUpload<AdminGiftEditPage>{
+  late final TextEditingController title;
+  late final TextEditingController description;
+  late final TextEditingController imageUrl;
+  late final TextEditingController recipient;
+  late final TextEditingController priceMin;
+  late final TextEditingController priceMax;
+  late final TextEditingController productUrl;
+  late final TextEditingController affiliateUrl;
+  late bool nzMade;
+  late bool featured;
+  late bool sponsored;
+  late bool published;
+  bool busy=false;
+
+  @override
+  void initState(){
+    super.initState();
+    final x=widget.item;
+    title=TextEditingController(text:(x['title']??'').toString());
+    description=TextEditingController(text:(x['description']??'').toString());
+    imageUrl=TextEditingController(text:(x['image_url']??'').toString());
+    recipient=TextEditingController(text:(x['recipient_group']??'').toString());
+    priceMin=TextEditingController(text:(x['price_min']??'').toString());
+    priceMax=TextEditingController(text:(x['price_max']??'').toString());
+    productUrl=TextEditingController(text:(x['product_url']??'').toString());
+    affiliateUrl=TextEditingController(text:(x['affiliate_url']??'').toString());
+    nzMade=x['nz_made']==true;
+    featured=x['featured']==true;
+    sponsored=x['sponsored']==true;
+    published=(x['status']??'published')=='published';
+  }
+
+  num? numberOrNull(String s)=>s.trim().isEmpty?null:num.tryParse(s.trim());
+
+  Future<void> save() async {
+    if(title.text.trim().isEmpty) return;
+    setState(()=>busy=true);
+    try{
+      await Supabase.instance.client.from('gift_ideas').update({
+        'title':title.text.trim(),
+        'description':description.text.trim().isEmpty?null:description.text.trim(),
+        'image_url':imageUrl.text.trim().isEmpty?null:imageUrl.text.trim(),
+        'recipient_group':recipient.text.trim().isEmpty?null:recipient.text.trim(),
+        'price_min':numberOrNull(priceMin.text),
+        'price_max':numberOrNull(priceMax.text),
+        'product_url':productUrl.text.trim().isEmpty?null:productUrl.text.trim(),
+        'affiliate_url':affiliateUrl.text.trim().isEmpty?null:affiliateUrl.text.trim(),
+        'nz_made':nzMade,
+        'featured':featured,
+        'sponsored':sponsored,
+        'status':published?'published':'draft',
+        'updated_at':DateTime.now().toIso8601String(),
+      }).eq('id',widget.item['id']);
+      if(mounted){
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('Gift updated ✓')));
+        Navigator.pop(context);
+      }
+    }finally{
+      if(mounted) setState(()=>busy=false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context){
+    return Scaffold(
+      appBar:AppBar(backgroundColor:const Color(0xFFF7F2E8),title:const Text('Edit gift')),
+      body:ListView(
+        padding:const EdgeInsets.fromLTRB(18,14,18,28),
+        children:[
+          TextField(controller:title,decoration:const InputDecoration(labelText:'Gift title')),
+          const SizedBox(height:10),
+          TextField(controller:description,maxLines:4,decoration:const InputDecoration(labelText:'Description')),
+          const SizedBox(height:10),
+          TextField(controller:recipient,decoration:const InputDecoration(labelText:'Recipient category')),
+          const SizedBox(height:10),
+          Row(children:[
+            Expanded(child:TextField(controller:priceMin,keyboardType:TextInputType.number,decoration:const InputDecoration(labelText:'Price from'))),
+            const SizedBox(width:8),
+            Expanded(child:TextField(controller:priceMax,keyboardType:TextInputType.number,decoration:const InputDecoration(labelText:'Price to'))),
+          ]),
+          const SizedBox(height:10),
+          TextField(controller:productUrl,decoration:const InputDecoration(labelText:'Product / retailer link')),
+          const SizedBox(height:10),
+          TextField(controller:affiliateUrl,decoration:const InputDecoration(labelText:'Affiliate link')),
+          const SizedBox(height:10),
+          TextField(controller:imageUrl,decoration:const InputDecoration(labelText:'Photo URL')),
+          const SizedBox(height:8),
+          OutlinedButton.icon(
+            onPressed:busy?null:() async {
+              setState(()=>busy=true);
+              try{
+                final url=await chooseAndUploadImage('gifts',widget.item['id']);
+                if(url!=null) setState(()=>imageUrl.text=url);
+              }finally{
+                if(mounted) setState(()=>busy=false);
+              }
+            },
+            icon:const Icon(Icons.photo_library_outlined),
+            label:const Text('Choose a different photo'),
+          ),
+          const SizedBox(height:8),
+          SwitchListTile(contentPadding:EdgeInsets.zero,title:const Text('NZ made'),value:nzMade,onChanged:(v)=>setState(()=>nzMade=v)),
+          SwitchListTile(contentPadding:EdgeInsets.zero,title:const Text('Featured'),value:featured,onChanged:(v)=>setState(()=>featured=v)),
+          SwitchListTile(contentPadding:EdgeInsets.zero,title:const Text('Sponsored'),value:sponsored,onChanged:(v)=>setState(()=>sponsored=v)),
+          SwitchListTile(contentPadding:EdgeInsets.zero,title:const Text('Published'),value:published,onChanged:(v)=>setState(()=>published=v)),
+          const SizedBox(height:12),
+          FilledButton(
+            style:FilledButton.styleFrom(backgroundColor:const Color(0xFFA80F24)),
+            onPressed:busy?null:save,
+            child:Padding(padding:const EdgeInsets.symmetric(vertical:13),child:Text(busy?'Saving…':'Save changes')),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class AdminIdeaEditPage extends StatefulWidget{
+  final Map<String,dynamic> item;
+  const AdminIdeaEditPage({super.key,required this.item});
+  @override
+  State<AdminIdeaEditPage> createState()=>_AdminIdeaEditPageState();
+}
+
+class _AdminIdeaEditPageState extends State<AdminIdeaEditPage> with _AdminImageUpload<AdminIdeaEditPage>{
+  late final TextEditingController title;
+  late final TextEditingController summary;
+  late final TextEditingController body;
+  late final TextEditingController imageUrl;
+  late final TextEditingController externalUrl;
+  late String contentType;
+  late bool featured;
+  late bool sponsored;
+  late bool published;
+  bool busy=false;
+
+  static const types=['idea','recipe','elf','wallpaper','movie','music','activity','decoration','budget','tradition','work_christmas'];
+
+  @override
+  void initState(){
+    super.initState();
+    final x=widget.item;
+    title=TextEditingController(text:(x['title']??'').toString());
+    summary=TextEditingController(text:(x['summary']??'').toString());
+    body=TextEditingController(text:(x['body']??'').toString());
+    imageUrl=TextEditingController(text:(x['image_url']??'').toString());
+    externalUrl=TextEditingController(text:(x['external_url']??'').toString());
+    contentType=types.contains((x['content_type']??'idea').toString())?(x['content_type']??'idea').toString():'idea';
+    featured=x['featured']==true;
+    sponsored=x['sponsored']==true;
+    published=(x['status']??'published')=='published';
+  }
+
+  Future<void> save() async {
+    if(title.text.trim().isEmpty) return;
+    setState(()=>busy=true);
+    try{
+      await Supabase.instance.client.from('content_items').update({
+        'title':title.text.trim(),
+        'summary':summary.text.trim().isEmpty?null:summary.text.trim(),
+        'body':body.text.trim().isEmpty?null:body.text.trim(),
+        'image_url':imageUrl.text.trim().isEmpty?null:imageUrl.text.trim(),
+        'external_url':externalUrl.text.trim().isEmpty?null:externalUrl.text.trim(),
+        'content_type':contentType,
+        'featured':featured,
+        'sponsored':sponsored,
+        'status':published?'published':'draft',
+        'published_at':published?(widget.item['status']=='published'?widget.item['published_at']:DateTime.now().toIso8601String()):null,
+        'updated_at':DateTime.now().toIso8601String(),
+      }).eq('id',widget.item['id']);
+      if(mounted){
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('Idea updated ✓')));
+        Navigator.pop(context);
+      }
+    }finally{
+      if(mounted) setState(()=>busy=false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context){
+    return Scaffold(
+      appBar:AppBar(backgroundColor:const Color(0xFFF7F2E8),title:const Text('Edit idea')),
+      body:ListView(
+        padding:const EdgeInsets.fromLTRB(18,14,18,28),
+        children:[
+          TextField(controller:title,decoration:const InputDecoration(labelText:'Title')),
+          const SizedBox(height:10),
+          DropdownButtonFormField<String>(
+            initialValue:contentType,
+            decoration:const InputDecoration(labelText:'Type'),
+            items:types.map((t)=>DropdownMenuItem(value:t,child:Text(t.replaceAll('_',' ')))).toList(),
+            onChanged:(v)=>setState(()=>contentType=v??'idea'),
+          ),
+          const SizedBox(height:10),
+          TextField(controller:summary,maxLines:3,decoration:const InputDecoration(labelText:'Short summary')),
+          const SizedBox(height:10),
+          TextField(controller:body,maxLines:8,decoration:const InputDecoration(labelText:'Main text / instructions')),
+          const SizedBox(height:10),
+          TextField(controller:externalUrl,decoration:const InputDecoration(labelText:'External link (optional)')),
+          const SizedBox(height:10),
+          TextField(controller:imageUrl,decoration:const InputDecoration(labelText:'Photo URL')),
+          const SizedBox(height:8),
+          OutlinedButton.icon(
+            onPressed:busy?null:() async {
+              setState(()=>busy=true);
+              try{
+                final url=await chooseAndUploadImage('ideas',widget.item['id']);
+                if(url!=null) setState(()=>imageUrl.text=url);
+              }finally{
+                if(mounted) setState(()=>busy=false);
+              }
+            },
+            icon:const Icon(Icons.photo_library_outlined),
+            label:const Text('Choose a different photo'),
+          ),
+          const SizedBox(height:8),
+          SwitchListTile(contentPadding:EdgeInsets.zero,title:const Text('Featured / Phillie pick eligible'),value:featured,onChanged:(v)=>setState(()=>featured=v)),
+          SwitchListTile(contentPadding:EdgeInsets.zero,title:const Text('Sponsored'),value:sponsored,onChanged:(v)=>setState(()=>sponsored=v)),
+          SwitchListTile(contentPadding:EdgeInsets.zero,title:const Text('Published'),value:published,onChanged:(v)=>setState(()=>published=v)),
+          const SizedBox(height:12),
+          FilledButton(
+            style:FilledButton.styleFrom(backgroundColor:const Color(0xFFA80F24)),
+            onPressed:busy?null:save,
+            child:Padding(padding:const EdgeInsets.symmetric(vertical:13),child:Text(busy?'Saving…':'Save changes')),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class AdminMediaManagerPage extends StatefulWidget {
   const AdminMediaManagerPage({super.key});
   @override
@@ -2141,6 +2504,14 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
             },
           ),
           const SizedBox(height: 18),
+          Card(child: ListTile(
+            leading: const Icon(Icons.edit_note_outlined, color: Color(0xFFA80F24)),
+            title: const Text('Content Editor', style: TextStyle(fontWeight: FontWeight.w900)),
+            subtitle: const Text('Edit gift and idea text, photos, prices and links'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminContentEditorPage())).then((_)=>setState((){})),
+          )),
+          const SizedBox(height: 10),
           Card(child: ListTile(
             leading: const Icon(Icons.photo_library_outlined, color: Color(0xFF0F4C45)),
             title: const Text('Image Library', style: TextStyle(fontWeight: FontWeight.w900)),
