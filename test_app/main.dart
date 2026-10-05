@@ -2587,10 +2587,31 @@ class _MePageState extends State<MePage> {
     setState(() { busy = true; message = null; });
     try {
       await Supabase.instance.client.auth.signInWithPassword(email: email.text.trim(), password: password.text);
-      await loadProfile();
-      message = profile?['role'] == 'admin' ? 'Admin access confirmed ✅' : 'Signed in ✅';
     } catch (e) {
-      message = 'Sign in failed. Check your email and password.';
+      if (mounted) {
+        setState(() {
+          busy = false;
+          message = 'Sign in failed. Check your email and password.';
+        });
+      }
+      return;
+    }
+
+    try {
+      await loadProfile();
+      if (mounted) {
+        setState(() {
+          message = profile?['role'] == 'admin' || profile?['role'] == 'editor'
+              ? 'Admin access confirmed ✅'
+              : 'Signed in ✅';
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          message = 'Signed in, but your account details could not be loaded. Please try again.';
+        });
+      }
     } finally {
       if (mounted) setState(() => busy = false);
     }
@@ -2598,7 +2619,7 @@ class _MePageState extends State<MePage> {
 
   Future<void> signOut() async {
     await Supabase.instance.client.auth.signOut();
-    if (mounted) setState(() { profile = null; message = 'Signed out'; });
+    if (mounted) setState(() { profile = null; message = null; });
   }
 
   @override
