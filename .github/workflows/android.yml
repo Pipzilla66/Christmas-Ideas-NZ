@@ -45,15 +45,15 @@ jobs:
         working-directory: generated_app
         run: flutter analyze lib --no-fatal-infos --no-fatal-warnings
 
-      - name: Build debug APK
+      - name: Build release APK
         working-directory: generated_app
-        run: flutter build apk --debug
+        run: flutter build apk --release --split-per-abi
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: christmas-ideas-nz-test-apk
-          path: generated_app/build/app/outputs/flutter-apk/app-debug.apk
+          path: generated_app/build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
           if-no-files-found: error
 
       - name: Publish direct APK download
@@ -62,7 +62,7 @@ jobs:
           tag: latest-test
           name: Christmas Ideas NZ - Latest Test Build
           body: Latest Android test build for Christmas Ideas NZ.
-          artifacts: generated_app/build/app/outputs/flutter-apk/app-debug.apk
+          artifacts: generated_app/build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
           prerelease: true
           allowUpdates: true
           replacesArtifacts: true
