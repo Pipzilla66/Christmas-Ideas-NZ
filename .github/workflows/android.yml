@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   push:
     paths:
-      - 'app_source_bundle.b64'
+      - 'bundle.part.*'
       - '.github/workflows/android.yml'
 
 jobs:
@@ -18,7 +18,8 @@ jobs:
         run: |
           rm -rf app
           mkdir -p app
-          base64 -d app_source_bundle.b64 > /tmp/christmas_ideas_app.tgz
+          cat bundle.part.00 bundle.part.01 bundle.part.02 bundle.part.03 bundle.part.04 bundle.part.05 > /tmp/app.b64
+          base64 -d /tmp/app.b64 > /tmp/christmas_ideas_app.tgz
           tar -xzf /tmp/christmas_ideas_app.tgz -C app
 
       - name: Set up Flutter
