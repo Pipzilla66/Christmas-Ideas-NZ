@@ -390,7 +390,7 @@ class HomePage extends StatelessWidget {
                             child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
                               Text((g['title']??'Gift idea').toString(),maxLines:2,overflow:TextOverflow.ellipsis,style:const TextStyle(fontWeight:FontWeight.w800,fontSize:13)),
                               const SizedBox(height:5),
-                              Text('NZ\\$' + (g['price_min']??'').toString(),style:const TextStyle(fontSize:12,color:Color(0xFF8B6F2E),fontWeight:FontWeight.w700)),
+                              Text('NZ\$' + (g['price_min']??'').toString(),style:const TextStyle(fontSize:12,color:Color(0xFF8B6F2E),fontWeight:FontWeight.w700)),
                             ]),
                           ),
                         ]),
@@ -563,7 +563,7 @@ class _DiscoverPageState extends State<DiscoverPage> {
           Row(children:[
             const Text('Budget',style:TextStyle(fontWeight:FontWeight.w800)),
             const Spacer(),
-            Text('Up to NZ\\$' + maxBudget.round().toString(),style:const TextStyle(fontWeight:FontWeight.w700,color:Color(0xFF8B6F2E))),
+            Text('Up to NZ\$' + maxBudget.round().toString(),style:const TextStyle(fontWeight:FontWeight.w700,color:Color(0xFF8B6F2E))),
           ]),
           Slider(value:maxBudget,min:20,max:500,divisions:24,onChanged:(v)=>setState(()=>maxBudget=v)),
           Row(children:[
@@ -603,7 +603,7 @@ class _DiscoverPageState extends State<DiscoverPage> {
                       Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
                         Text((g['title']??'Gift idea').toString(),style:const TextStyle(fontWeight:FontWeight.w800,fontSize:14)),
                         const SizedBox(height:4),
-                        Text((g['recipient_group']??'').toString() + '  ·  NZ\\$' + (g['price_min']??'').toString() + (g['nz_made']==true?'  ·  NZ made':''),style:const TextStyle(fontSize:11.5,color:Color(0xFF6B6F6C))),
+                        Text((g['recipient_group']??'').toString() + '  ·  NZ\$' + (g['price_min']??'').toString() + (g['nz_made']==true?'  ·  NZ made':''),style:const TextStyle(fontSize:11.5,color:Color(0xFF6B6F6C))),
                       ])),
                       const Icon(Icons.chevron_right,size:20),
                     ]),
