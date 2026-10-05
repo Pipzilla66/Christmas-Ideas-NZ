@@ -8,7 +8,7 @@ const supabaseKey = 'sb_publishable_ciIHpWT3mWNzgEpUebXGkw_EBzELVZ3';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Supabase.initialize(url: supabaseUrl, anonKey: supabaseKey);
+  await Supabase.initialize(url: supabaseUrl, publishableKey: supabaseKey);
   runApp(const ChristmasIdeasNZ());
 }
 
@@ -346,7 +346,7 @@ class _DiscoverPageState extends State<DiscoverPage> {
               return Column(children: gifts.map((g) => Card(child: ListTile(
                 leading: const CircleAvatar(child: Text('🎁')),
                 title: Text(g['title'] ?? 'Gift idea', style: const TextStyle(fontWeight: FontWeight.w800)),
-                subtitle: Text('${g['recipient_group'] ?? ''} • $${g['price_min'] ?? ''}${g['nz_made'] == true ? ' • NZ Made' : ''}'),
+                subtitle: Text("${g['recipient_group'] ?? ''} • NZ\${g['price_min'] ?? ''}${g['nz_made'] == true ? ' • NZ Made' : ''}"),
               ))).toList());
             },
           ),
