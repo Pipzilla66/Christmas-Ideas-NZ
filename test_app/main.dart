@@ -397,20 +397,314 @@ class NearMePage extends StatelessWidget {
   }
 }
 
-class SavedPage extends StatelessWidget {
+
+class SavedPage extends StatefulWidget {
   const SavedPage({super.key});
   @override
+  State<SavedPage> createState() => _SavedPageState();
+}
+
+class _SavedPageState extends State<SavedPage> {
+  final boardName = TextEditingController();
+
+  Future<List<Map<String,dynamic>>> loadBoards() async {
+    final user = Supabase.instance.client.auth.currentUser;
+    if (user == null) return [];
+    final rows = await Supabase.instance.client
+        .from('boards')
+        .select('id,name,emoji,created_at')
+        .eq('user_id', user.id)
+        .order('created_at', ascending: false);
+    return List<Map<String,dynamic>>.from(rows);
+  }
+
+  Future<void> createBoard() async {
+    final user = Supabase.instance.client.auth.currentUser;
+    if (user == null) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Sign in from Me first.')));
+      return;
+    }
+    final name = boardName.text.trim();
+    if (name.isEmpty) return;
+    await Supabase.instance.client.from('boards').insert({
+      'user_id': user.id,
+      'name': name,
+      'emoji': '🎄',
+    });
+    boardName.clear();
+    if (mounted) setState(() {});
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final user = Supabase.instance.client.auth.currentUser;
     return SafeArea(
       child: ListView(
         padding: const EdgeInsets.all(18),
         children: [
           Text('Saved', style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w900)),
           const SizedBox(height: 8),
-          const Text('Sign in from Me to use your real saved boards.'),
-          const SizedBox(height: 14),
-          for (final name in const ['Christmas Dinner','Gift Ideas','Kids Activities','Decorating the House','Elf Ideas','Christmas Day'])
-            Card(child: ListTile(leading: const Text('❤️'), title: Text(name, style: const TextStyle(fontWeight: FontWeight.w800)), subtitle: const Text('Ready for saved items'))),
+          if (user == null) ...[
+            const Card(child: Padding(
+              padding: EdgeInsets.all(18),
+              child: Text('Sign in from Me to create real Christmas boards and keep them across devices.'),
+            )),
+          ] else ...[
+            Row(children: [
+              Expanded(child: TextField(controller: boardName, decoration: const InputDecoration(hintText: 'New board name'))),
+              const SizedBox(width: 8),
+              FilledButton(onPressed: createBoard, child: const Text('Add')),
+            ]),
+            const SizedBox(height: 14),
+            FutureBuilder<List<Map<String,dynamic>>>(
+              future: loadBoards(),
+              builder: (context, snap) {
+                if (snap.connectionState == ConnectionState.waiting) return const Center(child: CircularProgressIndicator());
+                final boards = snap.data ?? [];
+                if (boards.isEmpty) return const Card(child: Padding(
+                  padding: EdgeInsets.all(18),
+                  child: Text('No boards yet. Try Christmas Dinner, Gift Ideas or Elf Ideas.'),
+                ));
+                return Column(children: boards.map((b) => Card(child: ListTile(
+                  leading: Text((b['emoji'] ?? '🎄').toString(), style: const TextStyle(fontSize: 24)),
+                  title: Text((b['name'] ?? 'Board').toString(), style: const TextStyle(fontWeight: FontWeight.w800)),
+                  subtitle: const Text('Saved Christmas ideas will appear here'),
+                ))).toList());
+              },
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class SubmissionPage extends StatefulWidget {
+  const SubmissionPage({super.key});
+  @override
+  State<SubmissionPage> createState() => _SubmissionPageState();
+}
+
+class _SubmissionPageState extends State<SubmissionPage> {
+  String type = 'event';
+  final title = TextEditingController();
+  final description = TextEditingController();
+  final city = TextEditingController();
+  final region = TextEditingController();
+  String? message;
+  bool busy = false;
+
+  Future<void> submit() async {
+    final user = Supabase.instance.client.auth.currentUser;
+    if (user == null) {
+      setState(() => message = 'Please sign in first.');
+      return;
+    }
+    if (title.text.trim().isEmpty) {
+      setState(() => message = 'Please add a title.');
+      return;
+    }
+    setState(() { busy = true; message = null; });
+    try {
+      await Supabase.instance.client.from('submissions').insert({
+        'user_id': user.id,
+        'submission_type': type,
+        'title': title.text.trim(),
+        'description': description.text.trim(),
+        'payload': {
+          'city': city.text.trim(),
+          'region': region.text.trim(),
+        },
+        'status': 'pending',
+      });
+      title.clear();
+      description.clear();
+      city.clear();
+      region.clear();
+      message = 'Submitted for approval ✅';
+    } catch (e) {
+      message = 'Could not submit. Please try again.';
+    } finally {
+      if (mounted) setState(() => busy = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Submit a Christmas Find')),
+      body: ListView(
+        padding: const EdgeInsets.all(18),
+        children: [
+          const Text('Help build the NZ Christmas map and idea library.', style: TextStyle(fontWeight: FontWeight.w700)),
+          const SizedBox(height: 16),
+          DropdownButtonFormField<String>(
+            initialValue: type,
+            decoration: const InputDecoration(labelText: 'What are you submitting?'),
+            items: const [
+              DropdownMenuItem(value:'event', child: Text('Event / Market')),
+              DropdownMenuItem(value:'light', child: Text('Christmas Lights')),
+              DropdownMenuItem(value:'business', child: Text('NZ Christmas Business')),
+              DropdownMenuItem(value:'idea', child: Text('Christmas Idea')),
+            ],
+            onChanged: (v) => setState(() => type = v ?? 'event'),
+          ),
+          const SizedBox(height: 12),
+          TextField(controller: title, decoration: const InputDecoration(labelText: 'Title / Name')),
+          const SizedBox(height: 12),
+          TextField(controller: description, maxLines: 4, decoration: const InputDecoration(labelText: 'Description')),
+          const SizedBox(height: 12),
+          TextField(controller: city, decoration: const InputDecoration(labelText: 'City or town')),
+          const SizedBox(height: 12),
+          TextField(controller: region, decoration: const InputDecoration(labelText: 'Region')),
+          if (message != null) Padding(padding: const EdgeInsets.only(top: 12), child: Text(message!)),
+          const SizedBox(height: 18),
+          FilledButton(onPressed: busy ? null : submit, child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 13),
+            child: Text(busy ? 'Submitting…' : 'Send for approval'),
+          )),
+        ],
+      ),
+    );
+  }
+}
+
+class AdminDashboardPage extends StatefulWidget {
+  const AdminDashboardPage({super.key});
+  @override
+  State<AdminDashboardPage> createState() => _AdminDashboardPageState();
+}
+
+class _AdminDashboardPageState extends State<AdminDashboardPage> {
+  Future<List<Map<String,dynamic>>> pending() async {
+    final rows = await Supabase.instance.client
+        .from('submissions')
+        .select('id,submission_type,title,description,payload,status,created_at')
+        .eq('status','pending')
+        .order('created_at', ascending: true);
+    return List<Map<String,dynamic>>.from(rows);
+  }
+
+  Future<void> review(Map<String,dynamic> item, bool approve) async {
+    final user = Supabase.instance.client.auth.currentUser;
+    if (user == null) return;
+    if (approve) {
+      final payload = Map<String,dynamic>.from(item['payload'] ?? {});
+      final type = item['submission_type'];
+      if (type == 'event') {
+        await Supabase.instance.client.from('events').insert({
+          'name': item['title'],
+          'description': item['description'],
+          'city': payload['city'],
+          'region': payload['region'],
+          'event_type': 'community',
+          'status': 'published',
+          'created_by': user.id,
+        });
+      } else if (type == 'light') {
+        await Supabase.instance.client.from('light_displays').insert({
+          'name': item['title'],
+          'description': item['description'],
+          'city': payload['city'],
+          'region': payload['region'],
+          'status': 'published',
+          'created_by': user.id,
+        });
+      } else if (type == 'business') {
+        await Supabase.instance.client.from('businesses').insert({
+          'name': item['title'],
+          'description': item['description'],
+          'city': payload['city'],
+          'region': payload['region'],
+          'status': 'published',
+        });
+      } else if (type == 'idea') {
+        await Supabase.instance.client.from('content_items').insert({
+          'title': item['title'],
+          'summary': item['description'],
+          'content_type': 'idea',
+          'status': 'published',
+          'published_at': DateTime.now().toIso8601String(),
+          'created_by': user.id,
+        });
+      }
+    }
+    await Supabase.instance.client.from('submissions').update({
+      'status': approve ? 'approved' : 'rejected',
+      'reviewed_by': user.id,
+      'reviewed_at': DateTime.now().toIso8601String(),
+    }).eq('id', item['id']);
+    if (mounted) setState(() {});
+  }
+
+  Future<Map<String,int>> counts() async {
+    final ideas = await Supabase.instance.client.from('content_items').select('id');
+    final gifts = await Supabase.instance.client.from('gift_ideas').select('id');
+    final events = await Supabase.instance.client.from('events').select('id');
+    final lights = await Supabase.instance.client.from('light_displays').select('id');
+    final pendingRows = await Supabase.instance.client.from('submissions').select('id').eq('status','pending');
+    return {
+      'Ideas': (ideas as List).length,
+      'Gifts': (gifts as List).length,
+      'Events': (events as List).length,
+      'Lights': (lights as List).length,
+      'Pending': (pendingRows as List).length,
+    };
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Christmas Ideas NZ Admin')),
+      body: ListView(
+        padding: const EdgeInsets.all(18),
+        children: [
+          FutureBuilder<Map<String,int>>(
+            future: counts(),
+            builder: (context, snap) {
+              final data = snap.data ?? {};
+              return Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  Chip(label: Text('Ideas: ' + (data['Ideas']?.toString() ?? '…'))),
+                  Chip(label: Text('Gifts: ' + (data['Gifts']?.toString() ?? '…'))),
+                  Chip(label: Text('Events: ' + (data['Events']?.toString() ?? '…'))),
+                  Chip(label: Text('Lights: ' + (data['Lights']?.toString() ?? '…'))),
+                  Chip(label: Text('Pending: ' + (data['Pending']?.toString() ?? '…'))),
+                ],
+              );
+            },
+          ),
+          const SizedBox(height: 18),
+          const Text('Pending submissions', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900)),
+          const SizedBox(height: 8),
+          FutureBuilder<List<Map<String,dynamic>>>(
+            future: pending(),
+            builder: (context, snap) {
+              if (snap.connectionState == ConnectionState.waiting) return const Center(child: CircularProgressIndicator());
+              final items = snap.data ?? [];
+              if (items.isEmpty) return const Card(child: Padding(padding: EdgeInsets.all(18), child: Text('Nothing waiting for approval 🎄')));
+              return Column(children: items.map((item) => Card(child: Padding(
+                padding: const EdgeInsets.all(14),
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Text((item['submission_type'] ?? '').toString().toUpperCase(), style: Theme.of(context).textTheme.labelSmall),
+                  const SizedBox(height: 4),
+                  Text((item['title'] ?? '').toString(), style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16)),
+                  if ((item['description'] ?? '').toString().isNotEmpty) ...[
+                    const SizedBox(height: 6),
+                    Text((item['description'] ?? '').toString()),
+                  ],
+                  const SizedBox(height: 10),
+                  Row(children: [
+                    Expanded(child: OutlinedButton(onPressed: () => review(item, false), child: const Text('Reject'))),
+                    const SizedBox(width: 8),
+                    Expanded(child: FilledButton(onPressed: () => review(item, true), child: const Text('Approve & Publish'))),
+                  ]),
+                ]),
+              ))).toList());
+            },
+          ),
         ],
       ),
     );
@@ -433,13 +727,23 @@ class _MePageState extends State<MePage> {
   Map<String,dynamic>? profile;
   bool busy = false;
 
+  Future<void> loadProfile() async {
+    final user = Supabase.instance.client.auth.currentUser;
+    if (user == null) {
+      if (mounted) setState(() => profile = null);
+      return;
+    }
+    final rows = await Supabase.instance.client.from('profiles').select('display_name,role,premium_status').eq('id', user.id).limit(1);
+    if (mounted) setState(() {
+      profile = List<Map<String,dynamic>>.from(rows).isEmpty ? null : List<Map<String,dynamic>>.from(rows).first;
+    });
+  }
+
   Future<void> signIn() async {
     setState(() { busy = true; message = null; });
     try {
       await Supabase.instance.client.auth.signInWithPassword(email: email.text.trim(), password: password.text);
-      final uid = Supabase.instance.client.auth.currentUser!.id;
-      final rows = await Supabase.instance.client.from('profiles').select('display_name,role,premium_status').eq('id', uid).limit(1);
-      profile = List<Map<String,dynamic>>.from(rows).isEmpty ? null : List<Map<String,dynamic>>.from(rows).first;
+      await loadProfile();
       message = profile?['role'] == 'admin' ? 'Admin access confirmed ✅' : 'Signed in ✅';
     } catch (e) {
       message = 'Sign in failed. Check your email and password.';
@@ -450,12 +754,19 @@ class _MePageState extends State<MePage> {
 
   Future<void> signOut() async {
     await Supabase.instance.client.auth.signOut();
-    setState(() { profile = null; message = 'Signed out'; });
+    if (mounted) setState(() { profile = null; message = 'Signed out'; });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    loadProfile();
   }
 
   @override
   Widget build(BuildContext context) {
     final user = Supabase.instance.client.auth.currentUser;
+    final isAdmin = profile?['role'] == 'admin' || profile?['role'] == 'editor';
     return SafeArea(
       child: ListView(
         padding: const EdgeInsets.all(18),
@@ -476,7 +787,9 @@ class _MePageState extends State<MePage> {
           ),
           const SizedBox(height: 22),
           if (user == null) ...[
-            const Text('Owner/Admin sign in', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 18)),
+            const Text('Sign in', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 18)),
+            const SizedBox(height: 6),
+            const Text('Sign in to save boards, submit Christmas finds and access admin tools.'),
             const SizedBox(height: 10),
             TextField(controller: email, keyboardType: TextInputType.emailAddress, decoration: const InputDecoration(labelText: 'Email')),
             const SizedBox(height: 10),
@@ -486,27 +799,32 @@ class _MePageState extends State<MePage> {
           ] else ...[
             Card(child: ListTile(
               leading: const CircleAvatar(child: Icon(Icons.person)),
-              title: Text(profile?['display_name'] ?? user.email ?? 'Signed in'),
-              subtitle: Text(profile?['role'] == 'admin' ? 'Owner / Admin' : 'Member'),
+              title: Text((profile?['display_name'] ?? user.email ?? 'Signed in').toString()),
+              subtitle: Text(isAdmin ? 'Owner / Admin' : 'Member'),
             )),
-            if (profile?['role'] == 'admin')
-              const Card(child: Padding(
-                padding: EdgeInsets.all(18),
-                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Text('Admin access is working 🎄', style: TextStyle(fontWeight: FontWeight.w900)),
-                  SizedBox(height: 6),
-                  Text('The full admin forms from the main build will be added after phone testing.'),
-                ]),
+            Card(child: ListTile(
+              leading: const CircleAvatar(child: Text('⬆')),
+              title: const Text('Submit a Christmas Find', style: TextStyle(fontWeight: FontWeight.w800)),
+              subtitle: const Text('Events, lights, businesses or ideas'),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SubmissionPage())),
+            )),
+            if (isAdmin)
+              Card(child: ListTile(
+                leading: const CircleAvatar(child: Icon(Icons.admin_panel_settings)),
+                title: const Text('Admin Dashboard', style: TextStyle(fontWeight: FontWeight.w900)),
+                subtitle: const Text('Approve submissions and view live content totals'),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminDashboardPage())),
               )),
             FilledButton.tonal(onPressed: signOut, child: const Text('Sign out')),
           ],
           if (message != null) Padding(padding: const EdgeInsets.only(top: 12), child: Text(message!)),
           const SizedBox(height: 20),
-          Card(child: ListTile(
-            leading: const Text('f', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 22)),
-            title: const Text('Christmas Ideas NZ on Facebook'),
-            trailing: const Icon(Icons.open_in_new),
-            onTap: () => launchUrl(Uri.parse('https://www.facebook.com/')),
+          const Card(child: ListTile(
+            leading: Text('f', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 22)),
+            title: Text('Christmas Ideas NZ on Facebook'),
+            subtitle: Text('Facebook link will be connected before launch'),
           )),
         ],
       ),
