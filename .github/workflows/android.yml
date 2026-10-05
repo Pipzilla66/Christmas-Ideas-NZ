@@ -37,6 +37,18 @@ jobs:
           cp test_app/pubspec.yaml generated_app/pubspec.yaml
           cp test_app/main.dart generated_app/lib/main.dart
 
+      - name: Ensure release internet permission
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path("generated_app/android/app/src/main/AndroidManifest.xml")
+          s = p.read_text()
+          perm = '<uses-permission android:name="android.permission.INTERNET"/>'
+          if perm not in s:
+              s = s.replace('<manifest xmlns:android="http://schemas.android.com/apk/res/android">', '<manifest xmlns:android="http://schemas.android.com/apk/res/android">\n    ' + perm)
+              p.write_text(s)
+          PY
+
       - name: Get packages
         working-directory: generated_app
         run: flutter pub get
