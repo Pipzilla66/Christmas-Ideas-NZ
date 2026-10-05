@@ -699,46 +699,89 @@ class GiftDetailPage extends StatelessWidget {
     final raw = (gift['affiliate_url'] ?? gift['product_url'] ?? '').toString();
     final uri = Uri.tryParse(raw);
     if (uri == null || raw.isEmpty || !await launchUrl(uri, mode: LaunchMode.externalApplication)) {
-      if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Retailer link is not available yet.')));
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Retailer link is not available yet.')));
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final price = 'NZ\$' + (gift['price_min'] ?? '').toString()
-        + (gift['price_max'] != null ? '–' + gift['price_max'].toString() : '');
+        + (gift['price_max'] != null && gift['price_max'].toString() != gift['price_min'].toString()
+            ? '–' + gift['price_max'].toString()
+            : '');
+    final image = (gift['image_url'] ?? '').toString();
     return Scaffold(
-      appBar: AppBar(title: const Text('Gift Idea')),
+      appBar: AppBar(backgroundColor: const Color(0xFFF7F2E8), elevation: 0, title: const Text('Gift idea')),
       body: ListView(
-        padding: const EdgeInsets.all(18),
+        padding: EdgeInsets.zero,
         children: [
-          const Center(child: Text('🎁', style: TextStyle(fontSize: 72))),
-          const SizedBox(height: 12),
-          if (gift['sponsored'] == true) const Chip(label: Text('Sponsored')),
-          Text(gift['title'] ?? 'Gift idea', style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w900)),
-          const SizedBox(height: 8),
-          Text((gift['recipient_group'] ?? '').toString() + ' • ' + price + (gift['nz_made'] == true ? ' • NZ Made 🇳🇿' : ''),
-            style: const TextStyle(fontWeight: FontWeight.w700)),
-          const SizedBox(height: 14),
-          Text((gift['description'] ?? '').toString()),
-          const SizedBox(height: 22),
-          Row(children: [
-            Expanded(child: OutlinedButton.icon(
-              onPressed: () => saveItemToBoard(context, 'gift', gift['id']),
-              icon: const Icon(Icons.favorite_border),
-              label: const Text('Save'),
-            )),
-            const SizedBox(width: 10),
-            Expanded(child: FilledButton.icon(
-              onPressed: () => openLink(context),
-              icon: const Icon(Icons.shopping_bag_outlined),
-              label: const Text('View retailer'),
-            )),
-          ]),
+          if (image.isNotEmpty)
+            AspectRatio(
+              aspectRatio: 16/10,
+              child: Image.network(image, fit: BoxFit.cover, errorBuilder: (_,__,___) => _giftHero()),
+            )
+          else
+            _giftHero(),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20,22,20,30),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (gift['sponsored'] == true)
+                  const Text('SPONSORED', style: TextStyle(fontSize:10,fontWeight:FontWeight.w800,letterSpacing:1.3,color:Color(0xFF8B6F2E))),
+                Text((gift['title'] ?? 'Gift idea').toString(), style: Theme.of(context).textTheme.headlineMedium),
+                const SizedBox(height:10),
+                Wrap(spacing:8,runSpacing:8,children:[
+                  _MetaTag((gift['recipient_group'] ?? 'Gift').toString()),
+                  _MetaTag(price),
+                  if (gift['nz_made'] == true) const _MetaTag('NZ made'),
+                ]),
+                const SizedBox(height:20),
+                Text((gift['description'] ?? '').toString(), style: Theme.of(context).textTheme.bodyLarge),
+                const SizedBox(height:26),
+                Row(children: [
+                  Expanded(child: OutlinedButton.icon(
+                    onPressed: () => saveItemToBoard(context, 'gift', gift['id']),
+                    icon: const Icon(Icons.bookmark_border),
+                    label: const Text('Save'),
+                  )),
+                  const SizedBox(width:10),
+                  Expanded(child: FilledButton.icon(
+                    onPressed: () => openLink(context),
+                    icon: const Icon(Icons.shopping_bag_outlined),
+                    label: const Text('View retailer'),
+                  )),
+                ]),
+              ],
+            ),
+          ),
         ],
       ),
     );
   }
+
+  Widget _giftHero() => Container(
+    height:230,
+    color:const Color(0xFFE8E0D2),
+    child:const Center(child:Icon(Icons.card_giftcard,size:74,color:Color(0xFF0F4C45))),
+  );
+}
+
+class _MetaTag extends StatelessWidget {
+  final String text;
+  const _MetaTag(this.text);
+  @override
+  Widget build(BuildContext context) => Container(
+    padding:const EdgeInsets.symmetric(horizontal:10,vertical:7),
+    decoration:BoxDecoration(
+      color:const Color(0xFFFFFCF6),
+      border:Border.all(color:const Color(0xFFD9D1C4)),
+      borderRadius:BorderRadius.circular(4),
+    ),
+    child:Text(text,style:const TextStyle(fontSize:11.5,fontWeight:FontWeight.w700)),
+  );
 }
 
 class ContentDetailPage extends StatelessWidget {
@@ -755,37 +798,56 @@ class ContentDetailPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final image = (item['image_url'] ?? '').toString();
     return Scaffold(
-      appBar: AppBar(title: const Text('Christmas Idea')),
+      appBar: AppBar(backgroundColor: const Color(0xFFF7F2E8), elevation:0, title: const Text('Christmas idea')),
       body: ListView(
-        padding: const EdgeInsets.all(18),
+        padding: EdgeInsets.zero,
         children: [
-          const Center(child: Text('🎄', style: TextStyle(fontSize: 72))),
-          const SizedBox(height: 12),
-          if (item['sponsored'] == true) Chip(label: Text((item['sponsor_label'] ?? 'Sponsored').toString())),
-          Text(item['title'] ?? 'Christmas idea', style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w900)),
-          if ((item['summary'] ?? '').toString().isNotEmpty) ...[
-            const SizedBox(height: 8),
-            Text((item['summary'] ?? '').toString(), style: const TextStyle(fontWeight: FontWeight.w700)),
-          ],
-          const SizedBox(height: 16),
-          Text((item['body'] ?? item['summary'] ?? '').toString()),
-          const SizedBox(height: 22),
-          Row(children: [
-            Expanded(child: OutlinedButton.icon(
-              onPressed: () => saveItemToBoard(context, 'content', item['id']),
-              icon: const Icon(Icons.favorite_border),
-              label: const Text('Save'),
-            )),
-            if ((item['external_url'] ?? '').toString().isNotEmpty) ...[
-              const SizedBox(width: 10),
-              Expanded(child: FilledButton.icon(onPressed: openExternal, icon: const Icon(Icons.open_in_new), label: const Text('Open link'))),
-            ],
-          ]),
+          if (image.isNotEmpty)
+            AspectRatio(
+              aspectRatio:16/10,
+              child:Image.network(image,fit:BoxFit.cover,errorBuilder:(_,__,___)=>_ideaHero()),
+            )
+          else
+            _ideaHero(),
+          Padding(
+            padding:const EdgeInsets.fromLTRB(20,22,20,30),
+            child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+              Text((item['content_type'] ?? 'IDEA').toString().toUpperCase(),
+                style:const TextStyle(fontSize:10,fontWeight:FontWeight.w800,letterSpacing:1.3,color:Color(0xFF8B6F2E))),
+              const SizedBox(height:7),
+              Text((item['title'] ?? 'Christmas idea').toString(),style:Theme.of(context).textTheme.headlineMedium),
+              if((item['summary']??'').toString().isNotEmpty)...[
+                const SizedBox(height:10),
+                Text((item['summary']??'').toString(),style:const TextStyle(fontSize:16,fontWeight:FontWeight.w700,height:1.4)),
+              ],
+              const SizedBox(height:20),
+              Text((item['body'] ?? item['summary'] ?? '').toString(),style:Theme.of(context).textTheme.bodyLarge),
+              const SizedBox(height:26),
+              Row(children:[
+                Expanded(child:OutlinedButton.icon(
+                  onPressed:()=>saveItemToBoard(context,'content',item['id']),
+                  icon:const Icon(Icons.bookmark_border),
+                  label:const Text('Save'),
+                )),
+                if((item['external_url']??'').toString().isNotEmpty)...[
+                  const SizedBox(width:10),
+                  Expanded(child:FilledButton.icon(onPressed:openExternal,icon:const Icon(Icons.open_in_new),label:const Text('Open link'))),
+                ],
+              ]),
+            ]),
+          ),
         ],
       ),
     );
   }
+
+  Widget _ideaHero() => Container(
+    height:230,
+    color:const Color(0xFF9E1B32),
+    child:const Center(child:Icon(Icons.star_outline,size:72,color:Colors.white)),
+  );
 }
 
 class NearMePage extends StatelessWidget {
@@ -932,26 +994,125 @@ class _SavedPageState extends State<SavedPage> {
                   shrinkWrap:true,
                   physics:const NeverScrollableScrollPhysics(),
                   childAspectRatio:1.15,
-                  children:boards.map((b)=>Container(
-                    padding:const EdgeInsets.all(15),
-                    decoration:BoxDecoration(
-                      color:const Color(0xFFFFFCF6),
-                      border:Border.all(color:const Color(0xFFE4DCCF)),
-                      borderRadius:BorderRadius.circular(6),
+                  children:boards.map((b)=>InkWell(
+                    onTap:()=>Navigator.push(context,MaterialPageRoute(builder:(_)=>BoardDetailPage(board:b))).then((_)=>setState((){})),
+                    child:Container(
+                      padding:const EdgeInsets.all(15),
+                      decoration:BoxDecoration(
+                        color:const Color(0xFFFFFCF6),
+                        border:Border.all(color:const Color(0xFFE4DCCF)),
+                        borderRadius:BorderRadius.circular(6),
+                      ),
+                      child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+                        const Icon(Icons.bookmark_outline,color:Color(0xFF0F4C45)),
+                        const Spacer(),
+                        Text((b['name']??'Board').toString(),style:GoogleFonts.playfairDisplay(fontWeight:FontWeight.w700,fontSize:18)),
+                        const SizedBox(height:3),
+                        const Text('Open collection',style:TextStyle(fontSize:11,color:Color(0xFF77736D))),
+                      ]),
                     ),
-                    child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
-                      const Icon(Icons.bookmark_outline,color:Color(0xFF0F4C45)),
-                      const Spacer(),
-                      Text((b['name']??'Board').toString(),style:GoogleFonts.playfairDisplay(fontWeight:FontWeight.w700,fontSize:18)),
-                      const SizedBox(height:3),
-                      const Text('Saved collection',style:TextStyle(fontSize:11,color:Color(0xFF77736D))),
-                    ]),
                   )).toList(),
                 );
               },
             ),
           ],
         ],
+      ),
+    );
+  }
+}
+
+class BoardDetailPage extends StatefulWidget {
+  final Map<String,dynamic> board;
+  const BoardDetailPage({super.key, required this.board});
+  @override
+  State<BoardDetailPage> createState()=>_BoardDetailPageState();
+}
+
+class _BoardDetailPageState extends State<BoardDetailPage> {
+  Future<List<Map<String,dynamic>>> loadItems() async {
+    final rows = await Supabase.instance.client
+      .from('board_items')
+      .select('id,item_type,item_id,created_at')
+      .eq('board_id', widget.board['id'])
+      .order('created_at', ascending:false);
+    final items=List<Map<String,dynamic>>.from(rows);
+    final out=<Map<String,dynamic>>[];
+    for(final row in items){
+      final type=(row['item_type']??'').toString();
+      final itemId=row['item_id'];
+      if(type=='gift'){
+        final data=await Supabase.instance.client.from('gift_ideas')
+          .select('id,title,description,image_url,recipient_group,price_min,price_max,nz_made,product_url,affiliate_url,featured,sponsored')
+          .eq('id',itemId).maybeSingle();
+        if(data!=null) out.add({...Map<String,dynamic>.from(data), '_board_item_id':row['id'], '_type':'gift'});
+      } else if(type=='content'){
+        final data=await Supabase.instance.client.from('content_items')
+          .select('id,title,summary,body,image_url,external_url,content_type,featured,sponsored,sponsor_label')
+          .eq('id',itemId).maybeSingle();
+        if(data!=null) out.add({...Map<String,dynamic>.from(data), '_board_item_id':row['id'], '_type':'content'});
+      }
+    }
+    return out;
+  }
+
+  Future<void> removeItem(dynamic id) async {
+    await Supabase.instance.client.from('board_items').delete().eq('id',id);
+    if(mounted) setState((){});
+  }
+
+  @override
+  Widget build(BuildContext context){
+    return Scaffold(
+      appBar:AppBar(backgroundColor:const Color(0xFFF7F2E8),title:Text((widget.board['name']??'Saved board').toString())),
+      body:FutureBuilder<List<Map<String,dynamic>>>(
+        future:loadItems(),
+        builder:(context,snap){
+          if(snap.connectionState==ConnectionState.waiting) return const Center(child:CircularProgressIndicator());
+          final items=snap.data??[];
+          if(items.isEmpty) return const Center(child:Padding(
+            padding:EdgeInsets.all(28),
+            child:Text('Nothing saved here yet. Open a gift or Christmas idea and tap Save.'),
+          ));
+          return ListView.separated(
+            padding:const EdgeInsets.all(20),
+            itemCount:items.length,
+            separatorBuilder:(_,__)=>const SizedBox(height:10),
+            itemBuilder:(context,i){
+              final item=items[i];
+              final isGift=item['_type']=='gift';
+              return InkWell(
+                onTap:()=>Navigator.push(context,MaterialPageRoute(builder:(_)=>isGift?GiftDetailPage(gift:item):ContentDetailPage(item:item))),
+                child:Container(
+                  padding:const EdgeInsets.all(12),
+                  decoration:BoxDecoration(
+                    color:const Color(0xFFFFFCF6),
+                    border:Border.all(color:const Color(0xFFE4DCCF)),
+                    borderRadius:BorderRadius.circular(6),
+                  ),
+                  child:Row(children:[
+                    Container(
+                      width:54,height:54,
+                      color:isGift?const Color(0xFFECE4D7):const Color(0xFF9E1B32),
+                      child:Icon(isGift?Icons.card_giftcard:Icons.star_outline,color:isGift?const Color(0xFF0F4C45):Colors.white),
+                    ),
+                    const SizedBox(width:12),
+                    Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+                      Text((item['title']??'Saved item').toString(),style:const TextStyle(fontWeight:FontWeight.w800)),
+                      const SizedBox(height:3),
+                      Text(isGift?'Gift idea':'Christmas idea',style:const TextStyle(fontSize:11,color:Color(0xFF77736D))),
+                    ])),
+                    IconButton(
+                      tooltip:'Remove',
+                      onPressed:()=>removeItem(item['_board_item_id']),
+                      icon:const Icon(Icons.close,size:19),
+                    ),
+                  ]),
+                ),
+              );
+            },
+          );
+        },
       ),
     );
   }
