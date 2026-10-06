@@ -216,7 +216,7 @@ class _OnboardingState extends State<Onboarding> {
               child: Stack(
                 fit: StackFit.expand,
                 children: [
-                  Image.asset('assets/cover_photo.jpg',fit:BoxFit.cover,errorBuilder:(_,__,___)=>Container(color:const Color(0xFF173B36),child:const Center(child:Icon(Icons.photo_outlined,color:Colors.white,size:46)))),
+                  Container(color:const Color(0xFF173B36),child:const Center(child:Icon(Icons.photo_outlined,color:Colors.white,size:46))),
                   Container(
                     decoration: const BoxDecoration(
                       gradient: LinearGradient(
@@ -338,7 +338,7 @@ class PhillieButton extends StatelessWidget {
                   border:Border.all(color:const Color(0xFFC69A3A),width:2),
                   boxShadow:const [BoxShadow(color:Color(0x33000000),blurRadius:12,offset:Offset(0,4))],
                 ),
-                child:ClipOval(child:Container(color:const Color(0xFFF3E5C3),padding:const EdgeInsets.all(4),child:Image.asset('assets/phillie_avatar.jpg',fit:BoxFit.cover,alignment:Alignment.topCenter,errorBuilder:(_,__,___)=>const Icon(Icons.emoji_emotions_outlined,color:Color(0xFF0F4C45))))),
+                child:ClipOval(child:Container(color:const Color(0xFFF3E5C3),padding:const EdgeInsets.all(4),child:const Icon(Icons.emoji_emotions_outlined,color:Color(0xFF0F4C45)))),
               ),
               Positioned(
                 right:-2,bottom:-2,
@@ -442,7 +442,7 @@ class _PhillieSupportSheetState extends State<PhillieSupportSheet>{
             Container(
               width:70,height:70,padding:const EdgeInsets.all(3),
               decoration:BoxDecoration(shape:BoxShape.circle,border:Border.all(color:const Color(0xFFC69A3A),width:2)),
-              child:ClipOval(child:Container(color:const Color(0xFFF3E5C3),padding:const EdgeInsets.all(4),child:Image.asset('assets/phillie_avatar.jpg',fit:BoxFit.cover,alignment:Alignment.topCenter,errorBuilder:(_,__,___)=>const Icon(Icons.emoji_emotions_outlined,color:Color(0xFF0F4C45))))),
+              child:ClipOval(child:Container(color:const Color(0xFFF3E5C3),padding:const EdgeInsets.all(4),child:const Icon(Icons.emoji_emotions_outlined,color:Color(0xFF0F4C45)))),
             ),
             const SizedBox(width:14),
             Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
@@ -554,7 +554,7 @@ class PhillieGuideCard extends StatelessWidget {
             child:Container(
               color:const Color(0xFFF3E5C3),
               padding:const EdgeInsets.fromLTRB(8,2,8,8),
-              child:Image.asset('assets/phillie_avatar.jpg',fit:BoxFit.cover,alignment:Alignment.topCenter,errorBuilder:(_,__,___)=>const Icon(Icons.emoji_emotions_outlined,color:Color(0xFF0F4C45))),
+              child:const Icon(Icons.emoji_emotions_outlined,color:Color(0xFF0F4C45)),
             ),
           ),
         ),
@@ -722,7 +722,7 @@ class HomePage extends StatelessWidget {
             child:Stack(
               fit:StackFit.expand,
               children:[
-                Image.asset('assets/cover_photo.jpg',fit:BoxFit.cover,errorBuilder:(_,__,___)=>Container(color:const Color(0xFF173B36),child:const Center(child:Icon(Icons.photo_outlined,color:Colors.white,size:46)))),
+                Container(color:const Color(0xFF173B36),child:const Center(child:Icon(Icons.photo_outlined,color:Colors.white,size:46))),
                 Container(decoration:const BoxDecoration(
                   gradient:LinearGradient(
                     begin:Alignment.topCenter,
