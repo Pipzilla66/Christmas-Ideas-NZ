@@ -2610,56 +2610,27 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     return List<Map<String,dynamic>>.from(rows);
   }
 
+  final Set<String> reviewing = {};
+
   Future<void> review(Map<String,dynamic> item, bool approve) async {
-    final user = Supabase.instance.client.auth.currentUser;
-    if (user == null) return;
-    if (approve) {
-      final payload = Map<String,dynamic>.from(item['payload'] ?? {});
-      final type = item['submission_type'];
-      if (type == 'event') {
-        await Supabase.instance.client.from('events').insert({
-          'name': item['title'],
-          'description': item['description'],
-          'city': payload['city'],
-          'region': payload['region'],
-          'event_type': 'community',
-          'status': 'published',
-          'created_by': user.id,
-        });
-      } else if (type == 'light') {
-        await Supabase.instance.client.from('light_displays').insert({
-          'name': item['title'],
-          'description': item['description'],
-          'city': payload['city'],
-          'region': payload['region'],
-          'status': 'published',
-          'created_by': user.id,
-        });
-      } else if (type == 'business') {
-        await Supabase.instance.client.from('businesses').insert({
-          'name': item['title'],
-          'description': item['description'],
-          'city': payload['city'],
-          'region': payload['region'],
-          'status': 'published',
-        });
-      } else if (type == 'idea') {
-        await Supabase.instance.client.from('content_items').insert({
-          'title': item['title'],
-          'summary': item['description'],
-          'content_type': 'idea',
-          'status': 'published',
-          'published_at': DateTime.now().toIso8601String(),
-          'created_by': user.id,
-        });
-      }
+    final id = item['id'].toString();
+    if (reviewing.contains(id)) return;
+    setState(() => reviewing.add(id));
+    try {
+      await Supabase.instance.client.rpc('review_christmas_submission', params: {
+        'submission_id': id,
+        'approve': approve,
+      });
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(approve ? 'Approved and published.' : 'Submission rejected.'),
+      ));
+    } catch (_) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('Could not complete the review. Your submission is still saved. Please try again.'),
+      ));
+    } finally {
+      if (mounted) setState(() => reviewing.remove(id));
     }
-    await Supabase.instance.client.from('submissions').update({
-      'status': approve ? 'approved' : 'rejected',
-      'reviewed_by': user.id,
-      'reviewed_at': DateTime.now().toIso8601String(),
-    }).eq('id', item['id']);
-    if (mounted) setState(() {});
   }
 
   Future<Map<String,int>> counts() async {
@@ -2733,6 +2704,9 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
             future: pending(),
             builder: (context, snap) {
               if (snap.connectionState == ConnectionState.waiting) return const Center(child: CircularProgressIndicator());
+              if (snap.hasError) return const Card(child: Padding(
+                padding: EdgeInsets.all(18), child: Text('Could not load submissions. Reopen Admin to try again.'),
+              ));
               final items = snap.data ?? [];
               if (items.isEmpty) return const Card(child: Padding(padding: EdgeInsets.all(18), child: Text('Nothing waiting for approval 🎄')));
               return Column(children: items.map((item) => Card(child: Padding(
@@ -2746,10 +2720,20 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                     Text((item['description'] ?? '').toString()),
                   ],
                   const SizedBox(height: 10),
+                  OutlinedButton.icon(
+                    onPressed: () async {
+                      final saved = await Navigator.push<bool>(context, MaterialPageRoute(
+                        builder: (_) => SubmissionEditorPage(item: item),
+                      ));
+                      if (saved == true && mounted) setState(() {});
+                    },
+                    icon: const Icon(Icons.edit_outlined),
+                    label: const Text('Edit before approval'),
+                  ),
                   Row(children: [
-                    Expanded(child: OutlinedButton(onPressed: () => review(item, false), child: const Text('Reject'))),
+                    Expanded(child: OutlinedButton(onPressed: reviewing.contains(item['id'].toString()) ? null : () => review(item, false), child: const Text('Reject'))),
                     const SizedBox(width: 8),
-                    Expanded(child: FilledButton(onPressed: () => review(item, true), child: const Text('Approve & Publish'))),
+                    Expanded(child: FilledButton(onPressed: reviewing.contains(item['id'].toString()) ? null : () => review(item, true), child: const Text('Approve & Publish'))),
                   ]),
                 ]),
               ))).toList());
@@ -2757,6 +2741,153 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
           ),
         ],
       ),
+    );
+  }
+}
+
+class SubmissionEditorPage extends StatefulWidget {
+  final Map<String, dynamic> item;
+  const SubmissionEditorPage({super.key, required this.item});
+  @override
+  State<SubmissionEditorPage> createState() => _SubmissionEditorPageState();
+}
+
+class _SubmissionEditorPageState extends State<SubmissionEditorPage> {
+  final form = GlobalKey<FormState>();
+  late final TextEditingController title;
+  late final TextEditingController description;
+  late final TextEditingController city;
+  late final TextEditingController address;
+  late final TextEditingController website;
+  late final TextEditingController cost;
+  late Map<String, dynamic> payload;
+  String? region;
+  DateTime? start;
+  DateTime? end;
+  bool busy = false;
+  String? error;
+  bool get isEvent => widget.item['submission_type'] == 'event';
+  bool get isLights => widget.item['submission_type'] == 'light';
+  bool get isPlace => widget.item['submission_type'] != 'idea';
+
+  @override
+  void initState() {
+    super.initState();
+    payload = Map<String, dynamic>.from(widget.item['payload'] ?? {});
+    title = TextEditingController(text: widget.item['title']?.toString() ?? '');
+    description = TextEditingController(text: widget.item['description']?.toString() ?? '');
+    city = TextEditingController(text: payload['city']?.toString() ?? '');
+    address = TextEditingController(text: payload['address']?.toString() ?? '');
+    website = TextEditingController(text: payload['website_url']?.toString() ?? '');
+    cost = TextEditingController(text: payload['cost_text']?.toString() ?? '');
+    region = payload['region']?.toString();
+    if (region?.isEmpty ?? true) region = null;
+    start = DateTime.tryParse((payload[isEvent ? 'start_at' : 'start_date'] ?? '').toString())?.toLocal();
+    end = DateTime.tryParse((payload[isEvent ? 'end_at' : 'end_date'] ?? '').toString())?.toLocal();
+  }
+
+  @override
+  void dispose() {
+    for (final c in [title, description, city, address, website, cost]) { c.dispose(); }
+    super.dispose();
+  }
+
+  String dateLabel(DateTime? value) {
+    if (value == null) return 'Not added';
+    final date = '${value.day}/${value.month}/${value.year}';
+    return isEvent ? '$date ${value.hour.toString().padLeft(2, '0')}:${value.minute.toString().padLeft(2, '0')}' : date;
+  }
+
+  Future<void> chooseDate(bool first) async {
+    final current = (first ? start : end) ?? DateTime.now();
+    final date = await showDatePicker(context: context, initialDate: current,
+      firstDate: DateTime(2020), lastDate: DateTime(2100));
+    if (date == null || !mounted) return;
+    var value = date;
+    if (isEvent) {
+      final time = await showTimePicker(context: context, initialTime: TimeOfDay.fromDateTime(current));
+      if (time == null || !mounted) return;
+      value = DateTime(date.year, date.month, date.day, time.hour, time.minute);
+    }
+    setState(() { if (first) { start = value; } else { end = value; } });
+  }
+
+  Future<void> save() async {
+    if (busy || !form.currentState!.validate()) return;
+    if (start != null && end != null && end!.isBefore(start!)) {
+      setState(() => error = 'The end must be after the start.');
+      return;
+    }
+    setState(() { busy = true; error = null; });
+    final next = {...payload};
+    if (isPlace) next.addAll({'city': city.text.trim(), 'region': region,
+      'address': address.text.trim(), 'website_url': website.text.trim()});
+    if (isEvent || isLights) {
+      next[isEvent ? 'start_at' : 'start_date'] = start == null ? null :
+        (isEvent ? start!.toUtc().toIso8601String() : start!.toIso8601String().substring(0, 10));
+      next[isEvent ? 'end_at' : 'end_date'] = end == null ? null :
+        (isEvent ? end!.toUtc().toIso8601String() : end!.toIso8601String().substring(0, 10));
+    }
+    if (isEvent) next['cost_text'] = cost.text.trim();
+    try {
+      await Supabase.instance.client.from('submissions').update({
+        'title': title.text.trim(), 'description': description.text.trim(), 'payload': next,
+      }).eq('id', widget.item['id']).eq('status', 'pending').select('id').single();
+      if (mounted) Navigator.pop(context, true);
+    } catch (_) {
+      if (mounted) setState(() => error = 'Could not save. Check your connection and that this submission is still pending.');
+    } finally {
+      if (mounted) setState(() => busy = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final regions = <String>{..._SubmissionPageState.regions, if (region != null) region!}.toList();
+    return Scaffold(
+      appBar: AppBar(title: const Text('Edit submission')),
+      body: Form(key: form, child: ListView(padding: const EdgeInsets.all(20), children: [
+        const Text('Fact-check and add details. Saving keeps this submission pending for approval.'),
+        const SizedBox(height: 18),
+        TextFormField(controller: title, enabled: !busy, decoration: const InputDecoration(labelText: 'Title / Name'),
+          validator: (v) => (v?.trim().isEmpty ?? true) ? 'Add a title.' : null),
+        const SizedBox(height: 12),
+        TextFormField(controller: description, enabled: !busy, maxLines: 6,
+          decoration: const InputDecoration(labelText: 'Description and extra information')),
+        if (isPlace) ...[
+          const SizedBox(height: 12),
+          TextFormField(controller: address, enabled: !busy, decoration: const InputDecoration(labelText: 'Street address / Venue')),
+          const SizedBox(height: 12),
+          TextFormField(controller: city, enabled: !busy, decoration: const InputDecoration(labelText: 'City or town')),
+          const SizedBox(height: 12),
+          DropdownButtonFormField<String>(initialValue: region, isExpanded: true,
+            decoration: const InputDecoration(labelText: 'Region'),
+            items: regions.map((r) => DropdownMenuItem(value: r, child: Text(r))).toList(),
+            onChanged: busy ? null : (v) => setState(() => region = v)),
+          const SizedBox(height: 12),
+          TextFormField(controller: website, enabled: !busy, keyboardType: TextInputType.url,
+            decoration: const InputDecoration(labelText: 'Website / Source link'),
+            validator: (v) {
+              if (v == null || v.trim().isEmpty) return null;
+              final uri = Uri.tryParse(v.trim());
+              return uri != null && ['https', 'http'].contains(uri.scheme) && uri.host.isNotEmpty
+                ? null : 'Use a full link starting with https://';
+            }),
+        ],
+        if (isEvent || isLights) ...[
+          const SizedBox(height: 12),
+          ListTile(contentPadding: EdgeInsets.zero, title: const Text('Start'), subtitle: Text(dateLabel(start)),
+            onTap: busy ? null : () => chooseDate(true),
+            trailing: IconButton(onPressed: busy ? null : () => setState(() => start = null), icon: const Icon(Icons.clear))),
+          ListTile(contentPadding: EdgeInsets.zero, title: const Text('End'), subtitle: Text(dateLabel(end)),
+            onTap: busy ? null : () => chooseDate(false),
+            trailing: IconButton(onPressed: busy ? null : () => setState(() => end = null), icon: const Icon(Icons.clear))),
+        ],
+        if (isEvent) TextFormField(controller: cost, enabled: !busy, decoration: const InputDecoration(labelText: 'Cost / Entry details')),
+        if (error != null) Padding(padding: const EdgeInsets.only(top: 12), child: Text(error!, style: const TextStyle(color: Colors.red))),
+        const SizedBox(height: 20),
+        FilledButton(onPressed: busy ? null : save, child: Text(busy ? 'Saving…' : 'Save changes — keep pending')),
+      ])),
     );
   }
 }
