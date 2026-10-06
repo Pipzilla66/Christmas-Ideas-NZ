@@ -338,7 +338,7 @@ class PhillieButton extends StatelessWidget {
                   border:Border.all(color:const Color(0xFFC69A3A),width:2),
                   boxShadow:const [BoxShadow(color:Color(0x33000000),blurRadius:12,offset:Offset(0,4))],
                 ),
-                child:ClipOval(child:Container(color:const Color(0xFFF3E5C3),padding:const EdgeInsets.all(4),child:const Icon(Icons.emoji_emotions_outlined,color:Color(0xFF0F4C45)))),
+                child:ClipOval(child:Image.asset('assets/phillie_avatar.jpg',fit:BoxFit.cover,errorBuilder:(_, __, ___)=>const Icon(Icons.emoji_emotions_outlined,color:Color(0xFF0F4C45)))),
               ),
               Positioned(
                 right:-2,bottom:-2,
@@ -442,7 +442,7 @@ class _PhillieSupportSheetState extends State<PhillieSupportSheet>{
             Container(
               width:70,height:70,padding:const EdgeInsets.all(3),
               decoration:BoxDecoration(shape:BoxShape.circle,border:Border.all(color:const Color(0xFFC69A3A),width:2)),
-              child:ClipOval(child:Container(color:const Color(0xFFF3E5C3),padding:const EdgeInsets.all(4),child:const Icon(Icons.emoji_emotions_outlined,color:Color(0xFF0F4C45)))),
+              child:ClipOval(child:Image.asset('assets/phillie_avatar.jpg',fit:BoxFit.cover,errorBuilder:(_, __, ___)=>const Icon(Icons.emoji_emotions_outlined,color:Color(0xFF0F4C45)))),
             ),
             const SizedBox(width:14),
             Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
@@ -1816,7 +1816,13 @@ class _SubmissionPageState extends State<SubmissionPage> {
   final title = TextEditingController();
   final description = TextEditingController();
   final city = TextEditingController();
-  final region = TextEditingController();
+  String? region;
+  static const regions = [
+    'Northland', 'Auckland', 'Waikato', 'Bay of Plenty', 'Gisborne',
+    'Hawke’s Bay', 'Taranaki', 'Manawatū-Whanganui', 'Wellington',
+    'Tasman', 'Nelson', 'Marlborough', 'West Coast', 'Canterbury',
+    'Otago', 'Southland', 'Chatham Islands', 'Nationwide / Online',
+  ];
   String? message;
   bool busy = false;
 
@@ -1839,14 +1845,13 @@ class _SubmissionPageState extends State<SubmissionPage> {
         'description': description.text.trim(),
         'payload': {
           'city': city.text.trim(),
-          'region': region.text.trim(),
+          'region': region,
         },
         'status': 'pending',
       });
       title.clear();
       description.clear();
       city.clear();
-      region.clear();
       message = 'Thanks — it is now waiting for approval.';
     } catch (e) {
       message = 'Could not submit. Please try again.';
@@ -1884,7 +1889,14 @@ class _SubmissionPageState extends State<SubmissionPage> {
           const SizedBox(height: 12),
           TextField(controller: city, decoration: const InputDecoration(labelText: 'City or town')),
           const SizedBox(height: 12),
-          TextField(controller: region, decoration: const InputDecoration(labelText: 'Region')),
+          DropdownButtonFormField<String>(
+            initialValue: region,
+            isExpanded: true,
+            decoration: const InputDecoration(labelText: 'Region'),
+            hint: const Text('Select a region'),
+            items: regions.map((r) => DropdownMenuItem(value: r, child: Text(r))).toList(),
+            onChanged: busy ? null : (v) => setState(() => region = v),
+          ),
           if (message != null) Padding(padding: const EdgeInsets.only(top: 12), child: Text(message!)),
           const SizedBox(height: 18),
           FilledButton(onPressed: busy ? null : submit, child: Padding(
