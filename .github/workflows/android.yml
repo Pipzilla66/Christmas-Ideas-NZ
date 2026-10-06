@@ -103,7 +103,7 @@ jobs:
             --out "$RUNNER_TEMP/signed-app.apk" "$apk_path"
           "$apk_signer" verify --verbose --print-certs "$RUNNER_TEMP/signed-app.apk"
           mv "$RUNNER_TEMP/signed-app.apk" "$apk_path"
-          "$(dirname "$apk_signer")/aapt" dump badging "$apk_path" | head -n 1
+          "$(dirname "$apk_signer")/aapt" dump badging "$apk_path" | sed -n '1p'
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
