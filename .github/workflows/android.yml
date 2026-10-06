@@ -59,6 +59,25 @@ jobs:
           cp -R test_app/test generated_app/test
           cp -R test_app/assets generated_app/assets
 
+      - name: Apply Christmas Ideas NZ phone name and icon
+        run: |
+          cp -R test_app/android_branding/res/. generated_app/android/app/src/main/res/
+          python3 - <<'PYBRAND'
+          from pathlib import Path
+          import xml.etree.ElementTree as ET
+          android = "http://schemas.android.com/apk/res/android"
+          ET.register_namespace("android", android)
+          path = Path("generated_app/android/app/src/main/AndroidManifest.xml")
+          tree = ET.parse(path)
+          application = tree.getroot().find("application")
+          if application is None:
+              raise SystemExit("Generated Android host has no application element")
+          application.set("{" + android + "}label", "@string/app_name")
+          application.set("{" + android + "}icon", "@mipmap/ic_launcher")
+          application.set("{" + android + "}roundIcon", "@mipmap/ic_launcher")
+          tree.write(path, encoding="utf-8", xml_declaration=True)
+          PYBRAND
+
       - name: Ensure release internet permission
         run: |
           python3 - <<'PY'
@@ -103,7 +122,21 @@ jobs:
             --out "$RUNNER_TEMP/signed-app.apk" "$apk_path"
           "$apk_signer" verify --verbose --print-certs "$RUNNER_TEMP/signed-app.apk"
           mv "$RUNNER_TEMP/signed-app.apk" "$apk_path"
-          "$(dirname "$apk_signer")/aapt" dump badging "$apk_path" | sed -n '1p'
+          "$(dirname "$apk_signer")/aapt" dump badging "$apk_path" > "$RUNNER_TEMP/apk-badging.txt"
+          python3 - <<'PYBRANDCHECK'
+          import os
+          from pathlib import Path
+          text = (Path(os.environ["RUNNER_TEMP"]) / "apk-badging.txt").read_text()
+          if "package: name='nz.co.christmasideas.christmas_ideas_nz_test'" not in text:
+              raise SystemExit("Android app identity changed unexpectedly")
+          if "application-label:'Christmas Ideas NZ'" not in text:
+              raise SystemExit("Phone launcher label is incorrect")
+          if "mipmap-anydpi-v26/ic_launcher.xml" not in text:
+              raise SystemExit("Custom adaptive launcher icon is missing")
+          for line in text.splitlines():
+              if line.startswith(("package:", "application-label:", "application:")):
+                  print(line)
+          PYBRANDCHECK
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
