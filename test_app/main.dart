@@ -1347,9 +1347,16 @@ class GiftDetailPage extends StatelessWidget {
                   Expanded(child: FilledButton.icon(
                     onPressed: () => openLink(context),
                     icon: const Icon(Icons.shopping_bag_outlined),
-                    label: const Text('View retailer'),
+                    label: Text((gift['affiliate_url'] ?? '').toString().isNotEmpty ? 'Shop gift' : 'View retailer'),
                   )),
                 ]),
+                if ((gift['affiliate_url'] ?? '').toString().isNotEmpty) ...[
+                  const SizedBox(height:10),
+                  const Text(
+                    'Some links may earn Christmas Ideas NZ a commission at no extra cost to you.',
+                    style:TextStyle(fontSize:10.5,color:Color(0xFF77736D),height:1.35),
+                  ),
+                ],
               ],
             ),
           ),
