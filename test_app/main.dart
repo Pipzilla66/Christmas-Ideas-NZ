@@ -9,11 +9,6 @@ import 'package:url_launcher/url_launcher.dart';
 
 const supabaseUrl = 'https://ocrwnkeqemcsklsnbufq.supabase.co';
 const supabaseKey = 'sb_publishable_ciIHpWT3mWNzgEpUebXGkw_EBzELVZ3';
-const _coverPhotoBase64 = '/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDABELDA8MChEPDg8TEhEUGSobGRcXGTMkJh4qPDU/Pjs1OjlDS2BRQ0daSDk6U3FUWmNma2xrQFB2fnRofWBpa2f/2wBDARITExkWGTEbGzFnRTpFZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2f/wAARCAEmAggDASIAAhEBAxEB/8QAGwAAAgMBAQEAAAAAAAAAAAAAAwQAAgUBBgf/xABIEAACAQMCAwUFBgIHBgYCAwABAgMABBESIQUxQRMiUWFxBhQygZFCUqGxwdEj8BUkM2JysuEWNENTgvFjZHN0kqKTwiU1Rf/EABkBAAMBAQEAAAAAAAAAAAAAAAECAwAEBf/EACURAAICAwEBAAICAwEBAAAAAAABAhEDITESQQRREyIjMmFxof/aAAwDAQACEQMRAD8AxFiSEjs1LNp2Zjy6bDxoiMWDI+4yOfTYUOM6Gy+MBTjfrmipKscZVQHkZskkbAYx8653svHRbR2qlTpJxvnrS0kGhttz08xRo85HPI5fz40x2cc8WWcKc9M/IihdD0mZrKJRo+8cqegb/X9q5MnbxLJ9sd0+vT9qLMmMgANjngEb/t+tVgIabDnCTd1j4N4/kadP6IwvCroQ2spVQXTvnPUYwP1o19YRTs0lsuibcMg+GTbJx4HBodrwi7nuGMcJJ3Vzy0nkR/PjVJmlRhEX0usmx5YIG2/ypdetB6thLniaS8OsoApVIywf/Ftj8KjCQ2ZCsfjGQG8qBdAOyXQjAJfEsfLDjn9edFhjR7bSp1r2gK4OCOex+tZpLgU7L2kKdmTcMyx9QvxN5D6c6bjumZmigiitwOQABY+ZJ3pW7UlQqkDu4LeGTvRpuHtBASQ3vQbSIxvhcdfM0nRuFPejdzLHISyjJJJ6UnLEhALRqwyRkbHbrketHj4VOhbX9obhdiKI9pIFVEdmVckKwH50yaXBab6Z0kL4AWSVkJ5c6KyRxjUTqYbLqOo/Jf3owzHgMCCMZzSglW2vp2IIyWAxz506diSSRx00TDXsQpfIO43G+fGnzb3BjYOySIBk5ODVLKIXaSXMg2ZxEB4DBJ/SuQ8REAEFyDrhOlXAzkdM1pW+GjS6LGzdCSk0UMZ56pAR+Ga6t1FBLHFCS0K51uwxrY8zjwpW7MTXTtAO4TkbY9aHVVG1sk3T0abx6TrUnTnIK8wenz/Mfh2N2QnGkNv3lj0n8tvlSUF08AxgMn3TRxfxAbW+/wDiH7UvlhUg0Q3MjbKo5npSASS7u9MS6nkbCirXF084xsqfdFBRmRgyEhhyI6UVGtgck9DF0J7dntZ1Cuhw229UtZkgL64Vl1IVGr7J8RVGdpJC0jFmJ3Y7mpIFDnQSy+JGKatUC3dg8b0ypVFUh8kjceFArorNWBOjRhuiFwDirS3ZYYzSETKA2vJ22x41zUan/GrKfyOi8rljzoWmrVZVp1oRuyojq4iJ6UzbqoYa11KeYzWonCThGjy8chwrgfgR0NJKdDxjZl8RtezvGXH2V/yilDF5V6zjXC3e/wApGxBVQMDrpFYt7ClueyTDMPifp6D96EZ2Fx+iUB0HFeh4fxQxIve3GOdecOxoiykUJw9BhPyekv8AiwkVlZskcsdawTPD7yTOpdCDsh8tqE7vI2FBYnoBmq+7s0bOe7oGWz4k4ApY41EMpt8DWVg95JkjCjlWq/DFjtJEZAr9COYNd4BdLGyjAyOW2d69BJHDLavM7AMOhqcptMdJUeKXhJdJ3llVGjXVhzu3pQ+FuUMkKq5eTbCcyPKtPiELTPiIdclmOAoqttAscZRR/DI7xbbX69ceVUUrWxXGnaANaK3eb+MY9t2wieTP1PkKKupo9BkZkO2hf4cf05mmOxaVVLHCD4Tj/KvIDz/OrGMR/DhR18fmaDYUKrCE+HujwRQv486ssCknuAnxbvGjq2Wwis58AK40ch3Z4k8skn8KWxipt1C51YbyAFS8RuzhKMVIU8jz3qraRubj6L/rRLlo2t4NUrAYbpz3rfQijx613AJ/vKDQOx0tns028CRTJkgC47V8+eKEWj5q7fQUybA0g9zdz8Stnhmdm0ISgPTHhWSIgQO8i+p/atKNdA1liQyEAkVlRDKsue8QMAnnTREkdZUX7Yb0FXtXT3lNmI38ulRLWeQAiFsHqRgfWj20MdvcKC3aSAH4fhXb8TTNgSBW0Ks/eGkYzjOTjxJo12SM5XSSNh4DoKLAmiHUw78mGbPMDoP1+lDkYTXALZ0opLHy50t7GoFDbyTOsaDLse6M4A8yegA/OtWM29raskY1R85H5Gc/ogxy60KGMRI/aDA0hpvzCfqaRimkuWkduTMiqPAE1nsGkMT9pc3kiQKXkcLGgHMsR+1X/o6axjMUyFOzkVifMBifypIXpt72SaM99J8gDqMYrVbiD8ZtZ9cogjUqZJH3JyDmg00G02YkcMkyqIkLM2pgAM9aZisYbZv65M5fOfd4N2+Z5CmBMChg4cjQwfalP9pJ6n7Iq0NuFXSpRRz36/v86ZyoVRAs5U5ghS2U7A51ufmf0qUdlaMkEgkczqB/GpSWUQukYmQ6ThhyBooUwQs7qQxwAPPH704s8U0byxpGWZdMqqO646OPAjqKQkm7KIo/fUMM554I2NEULaoZLjGcBBqc+AHOrEjtC4wFJJ09B5fz50PtBBYuIzqEzjLdcDkKvaxEwF5DgStoTxyD8XyNKFaKzRKQCjKNttjuPA0t2erKLnvKSmT9ob4+mRWhkGLSykEZBwOW+4+tKkFHLBlXGGXUCMMOX7c+tNFmkjXg9oHTheVAIkTDHqCuxP0wfkaxLwJOjPHIr572zb8t9qkXceaLHcB7RR5dfwJrjGFY+waZLfs8q38PvMOuCOefOiopOxb0Xth2hMTb9tCD/wBQzj8sU/wWJexkkYADJ0gcuQH60jb/AO8pMqlIxpWMHnjPOtVT2VkyrgYJApJseKF5Ilkc690zllH2gDnA86euLqLhsah8NdPvI2MiPqAPPcClImAmRjggENSbu9zfBycEhdJ8Cckn150Iq+mk6DXHE5y2DKsR+677/Qcq7HxDUoEp7RWOM6sj9waN2aRBY40ULgE+edvX5ms69CQS9rGuF1BZFHIg/rTJJ6A2zRaNXXT8Wdu8MmsnilsVd5PBiDWrbf7rzyVOx9Dih3S9u8ykbH9dv2+laL8szVoy7K+FtavGwz3tajxOMVWGxvOJO80MLMue85ICj5nalFALKGOASAT4Vve2amC+gsou7aRQqYkHI55n1ropJ6+nM22qMy64VeWnZ9rDgSHSjKwZWPgCNqBc2s9pIqXELxM3IOME1Tt5Rb9hrPZatejpnlmvRe1NraTcV1zcRSB+wjBRonb7PiKNtOmKYj8OvI5Y4ntpFkl+BSN29KtNwniEEbPJZzKqbsSvw+vhWr7QKqcZ4WEbWoggAbGMjPOtd4DYe0fEuMNMskEORLDFlnOQAAw6Drml96DR4+1sbq8VmtoHlCfEUGcVLayuLssLeFpNHxEcl9TyrU9myHHGHVdIazkIA6b8qnB2seJcGPB7mc2s5l7SKU/C5IxhqZsFCCcJv3lljW0lLw47RdO655Zoh4HxNFZmsZgFGo5XkPGucXXiFncy2d85LgqWwdnAGFOeu1P+1MskPFbd43ZG90jGQfEEGtbtG0ZE1rPBDFNLEyxTDMb9G9K7b2k90kjwRNIsQy5HJR516S0SPiHsrHwzT/HWB7mA+JV2BH0qtmq2ns9xKw0jtVtRNOeoZjsvyGPrQ9aNR5mKNppVjjUu7nCqOZNTkSDsRsRWv7N28yNLxCFFklgIWJWYDLHnz8Fz9RV/aO3XhvtGLhIwYpStwq9Dvkj65pr3QPliTcKvUtzM1u4QLqPLIHiRzAqlvEkmNU6IfAg/oK272yj4s9xxTg10TI6kz277OARuB4isGIUvUHjNez4fE7D+u2/z1ftXsOB2KW9vkSrIGO+k5FeJs0YuoUEknYV63h13HaxLCGDyE94jfB8K5sjrp0La0a97ErwOuoISMaj4V4jiHDI1kP8AXLceWT+1ep4jfojtDKCVZRnHMZryHEoykpGrUDuGHUUIu5aDVR2Zs8cecXEb/4Q37Us5OrnkDYHGKPIvOgkYNdSOds17GPs7AFMBm3Y56fSp2QkDCUbZ5eOM4/OhWV8vuywMQrA7dAakt4sS5VwzDoDUGpWzoTVC9vO0LnRz5Z8K04+I9sCM4J2AFYYLuwwpyTzHWtfh1ukM7PqEiq2hXHLOMn6DNGcVVsEZO9D6wjTpcA47xGdvU+VcMSk6mUt1Cnr5t+gq2cxq2MB+/pPXoufLrXSQqksxLZySdyakh3spI+nJPePLP5UGZFj71ycHmEzy9f2otxItmpd8Cc8/wDwx4etYMs815NojjMhJ2Ub08Y+gOVDVzxXT3IgAvkNvp1+dUt7a5vlchnYoNTYHdUVVeC3bKNSAM3PLcqJGeI8Kgmj7NtEnPG49TT0q/qJbb2JEaAZGUsgbSAD1o9xq7K21xkdxshjsvePOp73GtmIEHJtWthzJ5mqXzmS2gJYlCGwCdzudzW69hbrgozKWIXJHjyp/hly3ZyQqqBXIYs/lvgUOLhssgZyFhRujc8URuH3AjDxSI4AwFU7gUZeWqBH1dlp7uWa3jRUAjhBAKj4ifGkPeHSIdm2nPPArUtbvseETWpAUFtTEjvE9AKQshKkvaRBdsAkjOKEaQXbGUgnggEtyxEj/AjHdR94+HlUsoh70CcFVydutAXtLiTVI5LasEk86ft1EegEDLkjP8+dLIaIKV20FnO+cnwqWqgFXcZVVMzjxAOFH1odxmSaJRnEnOmLQgqGPwySf/RBn86y4Zgr+QrD2OcvkmU+LEZP02HyoNiNigClxpdVZwmdueT50Je0YtcMMhpCxH55piCKK7kjt4mR9RwqSodS+hHSnqkLeyQ8PSfiUvYyAWyDVJIdwp6jPWnh2VzaOkcJSzWRQnRpCM5Y1ZoUmb+j7ciOzt+9cSj7R/nYedMM4ERKrpUFQq9FG+KlKQySsWkjCovc0IOSqNv9TQ9QxlRjPXrRZZg41SboOQBxrP7UjPI8qs64wo3A2wP2oJNjvQYMItJHU4HlUpYyKIbbLDcEk58zUpvILF4lurCYOUZMeI2NNJB75ORAO7IAdPhvRIreWNQIpySTujHZvlV4JBbMzqGQSAhlXmGHMelFy/QsYjHGILOzEaRFyZO9IG5KfEVWSRVfUCOzhQRRDPM9T9cmgXuq5s9bFiNJZcjBGKTgnUxxiTZIQWbfdvAUsU2gyaTNNPjVzvndvlz/AA/Kq3MWhiV28xVocdgGk2dsPp8B1/CrkJ2Khn3IxgrsTW+h+GYjD3uFz8LHQ3py/I1Gwlx/EEnIZKgNuNuvLlRLqI6CdsAggj6H9KJJCZpgwcqDliRzxgNt57mnsSgc86CMBDmQ8stk58WP5AU5byGThiM3xgkN6ik5bE6juT3Q2WGDg+NOcPUG2aP/AIhfIHjtvSyqho3YPWwxtkDb+frSsMnZTNDK2nOGjk6Ag5Hy504YWVu7uPCqvFHMuHAwTy5EHy8KCaC0wyySEFijavvAjH5Gs2+kVl7BSCxILYOcf60VuFAna60r4MP2puxgtrJg0eZZRuGK7D0H6mmVIVpsahj7C1WNhhiBqHgSc4peQaZD6/rRw3aEsx255pTiUwjWVupOF/n6mk6xuIwSM5rXXisF5YRWnFIZHMAxFPEQHA8CDsRWWuVORRJZXmCggd3lgV1nIMXE9gLNbW2hlw0geWaTGsgdFxyG9Tjd/FxS9WdI3i7ioykg8tsj5UiQQalFJANS/wCJWt5f2c/ZTIluiIy6gSwXlijP7Qdn7QScStomEc4xNBIQQwxgij2mg+xt3P7vAZopRGshiUsFOOuOe/OhW3D+Hp7NDiU8dw8gl7IosoUE+PKk0HZSz4lw+wu7xoLe47C6iMegsAY888Hr5UpDJw+W0iguo50aJjplhxllJzgg9fOmv6Lt7+wmuuFvLrtxqlt5sFgviCOYosVjwxfZ1OJzR3LN2vZMiygAnx5UdIGzO4vf/wBK8R7d0KRhQiqDkhR5+NE41fR8TmilSJ4nSNY8FwwIA26c6FxA2RlQ2AlVNHfWU5Ktk5GfpTt5wV7XgdtfblnbEq/cB3X8Pzo2lQNgYuJ+6TcPntkcSWg0nU2Q4ySem3M1ez4oIzxJrmNpWv1IYq2NOTnwqcOsYpLC6v7hJJYbfC9nGcFifE9AKBee5ssL2XaLrUmSN21FDnxxW09Gt9OXNxFLw22tYo3RoWZmJYEOWxv5csU6eLRSWNhE9rqmsiNDl8hhndSMcqy8VdRRpAs0re+tLBpZuH28yXEilB2kgKRg88YGT86RhjIx5VEXJwBTlrbtIcctqV0gq2O8KtpJG1KjMF5gDJOa017GyGlhofO2oYIpWwnezj+Fo87Bs8zSt3drJGLiZy76igQjp45riyNydHXjRuG6tWv3a4OU0KBt5CsC/ZTO4QER55GqW8pmftC50fCuR1rRFut1ENICkDBPjRxry7YZ80efcZzQHXFa9zarErDc+eNqzpEAz411xdnI1QqVJ2xmmYrVXK7kAjLZ6V202ukBA7x071oywjGQAfGhOVaHhFPZm3LdidETAIRuAPzratI1hto4CMZAUt695z9ABWdcW8U0yw241SM4CgDflvn51rSL/aZ20o2/hlgn5CpyekOlthAwlJfHoOg8PoK4j6dcxxiI6UHi/wDp+1WIVEPTFKXUggso1PIKXPqd6n9KCLLPf8QSGFh3iRnOSPEmtlRb8KtSluuCdi3Vz61nezY0vdyZJICoCeYyavxSYzXgQd1A2PQZwKZrdCp/Ssl0797swfDPX671a1vGc6CdDHoT3T5f9qsyGYthSsasUHy6k+JpGdcR9opwRg/WgkO2V4vaIjLcIuELYdPA1ewQXLxzzYIiQty/vHFGuSJeGsW3JiV/nqI/SucKYNaPEB3miYgeOGNNf9RKXo5IzzTYUhSBlienXA/U1Q5BJ1aiPEYI/AVaTBkcZxrGx+VEuZDPIpYAHrjOOR6nxz+FAYT4gTOqv9odzFDll95ZxbwkIwUOqnHeGP2ovEAFh5blhjFL28eXOqMkrzUnkaaPAS7oYtUYkKAp6bbgfOiysBEzLnGBp8h0owXREAQAzDG32R/P50C61BVK4wcoR5f6Ul2xnpAMl2Dcte/oSN/1q0jdlw0Y2It8/wDzahSN2SNg740D6ZP6CjzBDAqyNojKxKzeA2pxRS2kkJLxR9oD8SA4IP7VrW2q04e90tv2dxO3YwhgA3mRXLzh1rA0TWE7KWIU6cnOeXzpy6YS8Q0qdUdjGIkPjIeZ/P6UsmmZJoHbxLDCsK4Kocn+83Vj+lCkZGhlaUfwlZdxzY77D6iiyDEelNmOwz0865d2rtwr3kMqwsQsY8hn8TSWPwynnLM3aYAK9OS+GPKlY7ox6tILBgVJ9R0qhDudBGsg8jyHrTCWLuADJgdGzhR8qvSRK2xU21xIFVE2xjORyNSnUgjQ4Nyc55JGTUoOb+DKCfQ0MiTxqwLasaXxuQfGuttIZrgaYwWIDc3Y9cdBQnhgkGoFlbxU0C3jjkudRLMkXedmOR6ChRtjrnRasp+zG2fU1nWwRJgzqHCMCR0Iz/2p68YxWqK2A8veIPTPKkwjo0kZKHTpUFOverQ4aXUatqGkmbV3nfVq+lFVWMBYKGHNl6kYzXbMdioCMXdvikIxt4AfrUhGVGCVIAwRzG1Sl0ouCcsaiN9BOkrkA743FWnQ9gmMg6UII6cxV2BPaZwO6QQOWcjcftTUVuZtKIpZii4H/Uaa9AYvbrhO1nYuCc6c/EfOn+I2XZ29vNrCtKA4CLjTtWpb8ChUgyoSeoB2FcvoO0g1FMhDhQegHSpyl9CnejFikjuQVfCy9Ry1eYPQ+XWhtA6sdi3mOfzFHmgiDKQpAblihX03Z3DCNSU6Bjvy8aKd8NwoUbkVPzjNcChPshm6A7D6Dc0F75cYaI/LH7UCTiWFIjiP/U2B9BTqLB6Q8ZdIJkYc9y3Iev7VlXkwn4gyjJRWIXV1PifWgySyzuDIxOOQ5Aegq064nk8dR/OqxhXSU5euFxHlcgbddqPFJaxPGdBOPjyedBiupUieNftjDbc6CyMOYIo1fQXW0XvSjys8a6VJ2HlS1FZG07g4oeMVSOkSnt2egslJ9heI4/56/wD61Rgf9gVwDj3zP4VnJxO7SzNosxEDDBjwMGpBxO9t4RFFdSpGNgobYfKl8v8A+gtGj7PMeGWN9xCcFY3hMMQP/Ec+HpR7O4a09iUdIYpj72Rpkj1jlzxWFeT3U7I928rkrlDJnceXlTlvc8atFit4Gu41K6o41U7jxAoyjZk6OxWUt/xeOe4i7KK4dpWGMYRd2Pp0rb4dfWPGJ7+yjFwrX6lgJdOlWUbYx6D6ViS3HGFkeaY3YbRoZ5FPw+ByOVJQTSW86zQuY5FOQy7EVnH0a6HrC44hwTVdRoGh7QwTxOMrkdGHTnsaY47BZNBZ31pD7ubpSzw+GDzFJpxS9WaSUXUmuTGs5+LHLI60OeeW6l7SeRpH5ZY0ad2C1QILRFSoopiNcqRpBz160RSsS4OcZP4Vo2tq2zlSw267CmeCwwBy1xyG+kitC8jiOlYcRqOmK58s60WhH6U4rxez9zijWMEod1xg7V5rjPEU4reIYYhEowoArQv7OJv+NseZwc1mlbWGZOyTLKN2Y8z44qEX9OvE1HqHpuCXPD7aJn7wbcAchTnDGFuA8ukDONI3xSV/xG7eOKOV/iQEYOMetL2E97OssNsmtdOXApKm0U1dM3OKzW0xV0XC8iPGsO/MTzs0KaE6CrxXHaDRIuDnYg5qz25bkQcnArrxx8rp5+SWzPZfCii9nVdIYEnriiPEI9mBJwdvCgJEXJwQMDrVmkTTfwZisLtOyuipVS4w5O+c1qNIyCTYauyB3/xmsuS/luGiRwo0kZI21Y8a0pCDkrzaORR6ggioSv6dEWvgWbaFgD0PPqeppHi+yPjkFH0pxSJIw2NmGB6UpejXseq4P5Uq6P8ABbgkmmWeInBmXKnzFM3yF21hTh8/nuPUGsmNSrd0lZIz48iK17e/iuU0OyJIdyG+Fj4jwNPJbtCxfxlI5sg61JLcypxqPmPH6VSRZZpNJQDPJeWB5+FNiFGIOF1eI3/HarSzwWq95lY/cTx86nY4pxALb8OA6yaUUeKr1+v50hreHsZYjjSDjH+I0aV2vJ3muW2AwgHT0qSx9nbw4HedSq+W5yaotKmT69F/eopxlgI26jp8j0qSTQhMAgjwLAj8AKXTI7o+HOx8/GqaDlgUUkHmTit5RvTDXzGTiJC/ZI0+W3OmbWElmkYkqu5J6mitZ6rmRm7qZ5+NXlYaNEfwKR8zSN6pFEvrAzy6UZjzHj4UEOXjUEZ1HUB5dPrVLgtJKydM7+flUlkFtGEG80g2/ujHOsl8C39EZZBJdrGpyqZGfEnmacuV7Th7bZ/hRt+lZ0ChcOeastakQD2qRnqjxH9KpLVE47stwK1C8RidySIgZME5xgU/aREwIW5vmVvMk7fh+dZnC3EdvdlEKN2OnJOc5IFel4XamZ2JX+FHhR5kADFSndseNUKmyZomdiVQqVXxJP8ApVbp2j4cLTYiPvhMbgdd/Hr8q9DPGEtnYKMgj5V566V3uAEcL9oseSgcyfKp/R07MJ41iJcnBbcbbEeNHkA7gG6lSQB1O1dutFy6zRL2cZGmNW5J4Z8iPxzQkZoYxHImCFBKnxJO30qvRQOGD47SNPEA5P8ApUqPHC4VsDOQD0qUwBiIRygkNA6nf4NJ+gIq8ktral9gyruqjYDzwKyY+yKZKyrtnukEfQ0SEwdqqLGXZiBmU7DPXAouIikWml95PbTEg==';
-
-const _phillieBase64 = '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';
-
-
 Widget safeEmbeddedImage(String data, {BoxFit fit = BoxFit.cover, double? width, double? height}) {
   try {
     return Image.memory(
@@ -343,7 +338,7 @@ class PhillieButton extends StatelessWidget {
                   border:Border.all(color:const Color(0xFFC69A3A),width:2),
                   boxShadow:const [BoxShadow(color:Color(0x33000000),blurRadius:12,offset:Offset(0,4))],
                 ),
-                child:ClipOval(child:Container(color:const Color(0xFFF3E5C3),padding:const EdgeInsets.all(4),child:safeEmbeddedImage(_phillieBase64,fit:BoxFit.contain))),
+                child:ClipOval(child:Container(color:const Color(0xFFF3E5C3),padding:const EdgeInsets.all(4),child:Image.asset('assets/phillie_avatar.jpg',fit:BoxFit.cover,alignment:Alignment.topCenter,errorBuilder:(_,__,___)=>const Icon(Icons.emoji_emotions_outlined,color:Color(0xFF0F4C45))))),
               ),
               Positioned(
                 right:-2,bottom:-2,
@@ -447,7 +442,7 @@ class _PhillieSupportSheetState extends State<PhillieSupportSheet>{
             Container(
               width:70,height:70,padding:const EdgeInsets.all(3),
               decoration:BoxDecoration(shape:BoxShape.circle,border:Border.all(color:const Color(0xFFC69A3A),width:2)),
-              child:ClipOval(child:Container(color:const Color(0xFFF3E5C3),padding:const EdgeInsets.all(4),child:safeEmbeddedImage(_phillieBase64,fit:BoxFit.contain))),
+              child:ClipOval(child:Container(color:const Color(0xFFF3E5C3),padding:const EdgeInsets.all(4),child:Image.asset('assets/phillie_avatar.jpg',fit:BoxFit.cover,alignment:Alignment.topCenter,errorBuilder:(_,__,___)=>const Icon(Icons.emoji_emotions_outlined,color:Color(0xFF0F4C45))))),
             ),
             const SizedBox(width:14),
             Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
@@ -559,7 +554,7 @@ class PhillieGuideCard extends StatelessWidget {
             child:Container(
               color:const Color(0xFFF3E5C3),
               padding:const EdgeInsets.fromLTRB(8,2,8,8),
-              child:safeEmbeddedImage(_phillieBase64,fit:BoxFit.contain),
+              child:Image.asset('assets/phillie_avatar.jpg',fit:BoxFit.cover,alignment:Alignment.topCenter,errorBuilder:(_,__,___)=>const Icon(Icons.emoji_emotions_outlined,color:Color(0xFF0F4C45))),
             ),
           ),
         ),
@@ -726,7 +721,7 @@ class HomePage extends StatelessWidget {
             child:Stack(
               fit:StackFit.expand,
               children:[
-                safeEmbeddedImage(_coverPhotoBase64,fit:BoxFit.cover),
+                Image.asset('assets/cover_photo.jpg',fit:BoxFit.cover,errorBuilder:(_,__,___)=>Container(color:const Color(0xFF173B36),child:const Center(child:Icon(Icons.photo_outlined,color:Colors.white,size:46)))),
                 Container(decoration:const BoxDecoration(
                   gradient:LinearGradient(
                     begin:Alignment.topCenter,
@@ -1399,8 +1394,16 @@ class ContentDetailPage extends StatelessWidget {
   );
 }
 
-class NearMePage extends StatelessWidget {
+class NearMePage extends StatefulWidget {
   const NearMePage({super.key});
+  @override
+  State<NearMePage> createState()=>_NearMePageState();
+}
+
+class _NearMePageState extends State<NearMePage> {
+  final search=TextEditingController();
+  String type='All';
+  String region='All';
 
   Future<List<Map<String, dynamic>>> load() async {
     final events = await Supabase.instance.client
@@ -1418,87 +1421,165 @@ class NearMePage extends StatelessWidget {
       .select('name,city,region,address,website_url,business_type')
       .eq('status','published')
       .limit(300);
-    return [
+    final all=[
       ...List<Map<String,dynamic>>.from(events).map((e) => {...e, '_type':'Event'}),
       ...List<Map<String,dynamic>>.from(lights).map((e) => {...e, '_type':'Lights'}),
       ...List<Map<String,dynamic>>.from(stores).map((e) => {...e, '_type':'Store'}),
     ];
+    all.sort((a,b)=>((a['region']??'').toString()+(a['city']??'').toString()+(a['name']??'').toString())
+      .compareTo((b['region']??'').toString()+(b['city']??'').toString()+(b['name']??'').toString()));
+    return all;
+  }
+
+  Future<void> reportIssue(Map<String,dynamic> item) async {
+    final issue=TextEditingController();
+    final email=TextEditingController();
+    final ok=await showDialog<bool>(
+      context:context,
+      builder:(ctx)=>AlertDialog(
+        title:const Text('Report an issue'),
+        content:SingleChildScrollView(child:Column(mainAxisSize:MainAxisSize.min,children:[
+          Text((item['name']??'Christmas listing').toString(),style:const TextStyle(fontWeight:FontWeight.w800)),
+          const SizedBox(height:12),
+          TextField(controller:issue,maxLines:4,decoration:const InputDecoration(
+            labelText:'What needs correcting?',
+            hintText:'Wrong date, location, closed store, duplicate listing…',
+          )),
+          const SizedBox(height:10),
+          TextField(controller:email,keyboardType:TextInputType.emailAddress,decoration:const InputDecoration(
+            labelText:'Email (optional)',
+          )),
+        ])),
+        actions:[
+          TextButton(onPressed:()=>Navigator.pop(ctx,false),child:const Text('Cancel')),
+          FilledButton(onPressed:()=>Navigator.pop(ctx,true),child:const Text('Send')),
+        ],
+      ),
+    );
+    if(ok!=true||issue.text.trim().isEmpty) return;
+    try{
+      await Supabase.instance.client.from('support_tickets').insert({
+        'email':email.text.trim().isEmpty?null:email.text.trim(),
+        'message':'[LISTING ISSUE] '+(item['name']??'Christmas listing').toString()
+          +' | '+(item['city']??'').toString()+', '+(item['region']??'').toString()
+          +' | '+(item['_type']??'').toString()
+          +'\n'+issue.text.trim(),
+      });
+      if(mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('Thanks — your correction has been sent.')));
+    }catch(_){
+      if(mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('Could not send that just now. Please try again.')));
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return SafeArea(
-      child:ListView(
-        padding:const EdgeInsets.fromLTRB(20,20,20,28),
-        children:[
-          const Text('EXPLORE YOUR AREA',style:TextStyle(fontSize:10,fontWeight:FontWeight.w900,letterSpacing:1.4,color:Color(0xFF8B6F2E))),
-          const SizedBox(height:4),
-          Text('Christmas Near You',style:Theme.of(context).textTheme.headlineLarge),
-          const SizedBox(height:6),
-          const Text('Lights, markets, Santa visits and festive finds around Aotearoa.'),
-          const SizedBox(height:18),
-          Container(
-            height:180,
-            decoration:BoxDecoration(
-              color:const Color(0xFFE9E1D2),
-              border:Border.all(color:const Color(0xFFC5D0C7)),
-              borderRadius:BorderRadius.circular(6),
-            ),
-            child:Stack(children:[
-              const Center(child:Icon(Icons.map_outlined,size:58,color:Color(0xFF0F4C45))),
-              Positioned(left:14,bottom:12,child:Container(
-                padding:const EdgeInsets.symmetric(horizontal:10,vertical:7),
-                color:const Color(0xFFFFFCF6),
-                child:const Text('THE CHRISTMAS MAP',style:TextStyle(fontSize:10,fontWeight:FontWeight.w900,letterSpacing:1)),
-              )),
-            ]),
-          ),
-          const SizedBox(height:22),
-          Text('Events, lights & Christmas stores',style:Theme.of(context).textTheme.headlineSmall?.copyWith(fontSize:25)),
-          const SizedBox(height:10),
-          FutureBuilder<List<Map<String,dynamic>>>(
-            future:load(),
-            builder:(context,snap){
-              if(snap.connectionState==ConnectionState.waiting) return const Center(child:CircularProgressIndicator());
-              final items=snap.data??[];
-              if(items.isEmpty) return Container(
-                padding:const EdgeInsets.all(18),
-                decoration:BoxDecoration(color:const Color(0xFFFFFCF6),border:Border.all(color:const Color(0xFFE4DCCF)),borderRadius:BorderRadius.circular(6)),
-                child:const Text('We are building the national Christmas map. Events and light displays will appear here as they are approved.'),
-              );
-              return Column(children:items.map((e)=>Container(
-                margin:const EdgeInsets.only(bottom:9),
-                padding:const EdgeInsets.all(13),
-                decoration:BoxDecoration(color:const Color(0xFFFFFCF6),border:Border.all(color:const Color(0xFFE4DCCF)),borderRadius:BorderRadius.circular(6)),
-                child:Row(children:[
-                  Container(
-                    width:46,height:46,
-                    color:e['_type']=='Lights'
-                      ? const Color(0xFFC9A44D)
-                      : e['_type']=='Store'
-                        ? const Color(0xFF0F4C45)
-                        : const Color(0xFF9E1B32),
-                    child:Icon(
-                      e['_type']=='Lights'
-                        ? Icons.lightbulb_outline
-                        : e['_type']=='Store'
-                          ? Icons.shopping_bag_outlined
-                          : Icons.celebration_outlined,
-                      color:Colors.white,
-                    ),
-                  ),
-                  const SizedBox(width:12),
-                  Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
-                    Text((e['name']??'Christmas listing').toString(),style:const TextStyle(fontWeight:FontWeight.w800)),
-                    const SizedBox(height:3),
-                    Text((e['city']??'').toString() + ((e['region']??'').toString().isNotEmpty ? ', ' + (e['region']??'').toString() : ''),style:const TextStyle(fontSize:12,color:Color(0xFF6B6F6C))),
-                  ])),
-                  Text((e['_type']??'').toString().toUpperCase(),style:const TextStyle(fontSize:9.5,fontWeight:FontWeight.w800,letterSpacing:.8,color:Color(0xFF8B6F2E))),
+      child:FutureBuilder<List<Map<String,dynamic>>>(
+        future:load(),
+        builder:(context,snap){
+          final all=snap.data??[];
+          final regions=<String>{...all.map((e)=>(e['region']??'').toString()).where((r)=>r.isNotEmpty)}.toList()..sort();
+          final q=search.text.trim().toLowerCase();
+          final items=all.where((e){
+            final matchesType=type=='All'||e['_type']==type;
+            final matchesRegion=region=='All'||e['region']==region;
+            final hay=((e['name']??'').toString()+' '+(e['city']??'').toString()+' '+(e['region']??'').toString()).toLowerCase();
+            return matchesType&&matchesRegion&&(q.isEmpty||hay.contains(q));
+          }).toList();
+
+          return ListView(
+            padding:const EdgeInsets.fromLTRB(20,20,20,28),
+            children:[
+              const Text('EXPLORE YOUR AREA',style:TextStyle(fontSize:10,fontWeight:FontWeight.w900,letterSpacing:1.4,color:Color(0xFF8B6F2E))),
+              const SizedBox(height:4),
+              Text('Christmas Near You',style:Theme.of(context).textTheme.headlineLarge),
+              const SizedBox(height:6),
+              const Text('Lights, markets, Santa visits and Christmas shopping around Aotearoa.'),
+              const SizedBox(height:16),
+              TextField(
+                controller:search,
+                onChanged:(_)=>setState((){}),
+                decoration:const InputDecoration(prefixIcon:Icon(Icons.search),hintText:'Search town, region or event'),
+              ),
+              const SizedBox(height:10),
+              Wrap(spacing:7,runSpacing:7,children:['All','Event','Lights','Store'].map((t)=>ChoiceChip(
+                label:Text(t=='All'?'All':t=='Event'?'Events':t=='Lights'?'Lights':'Stores'),
+                selected:type==t,
+                onSelected:(_)=>setState(()=>type=t),
+              )).toList()),
+              const SizedBox(height:10),
+              DropdownButtonFormField<String>(
+                value:regions.contains(region)?region:'All',
+                decoration:const InputDecoration(labelText:'Region'),
+                items:['All',...regions].map((r)=>DropdownMenuItem(value:r,child:Text(r=='All'?'All regions':r))).toList(),
+                onChanged:(v)=>setState(()=>region=v??'All'),
+              ),
+              const SizedBox(height:18),
+              Container(
+                height:160,
+                decoration:BoxDecoration(
+                  color:const Color(0xFFE9E1D2),
+                  border:Border.all(color:const Color(0xFFC5D0C7)),
+                  borderRadius:BorderRadius.circular(6),
+                ),
+                child:Stack(children:[
+                  const Center(child:Icon(Icons.map_outlined,size:58,color:Color(0xFF0F4C45))),
+                  Positioned(left:14,bottom:12,child:Container(
+                    padding:const EdgeInsets.symmetric(horizontal:10,vertical:7),
+                    color:const Color(0xFFFFFCF6),
+                    child:Text(all.length.toString()+' VERIFIED FESTIVE LISTINGS',style:const TextStyle(fontSize:10,fontWeight:FontWeight.w900,letterSpacing:1)),
+                  )),
                 ]),
-              )).toList());
-            },
-          ),
-        ],
+              ),
+              const SizedBox(height:22),
+              Row(children:[
+                Expanded(child:Text('Events, lights & stores',style:Theme.of(context).textTheme.headlineSmall?.copyWith(fontSize:25))),
+                Text(items.length.toString(),style:const TextStyle(fontWeight:FontWeight.w900,color:Color(0xFF8B6F2E))),
+              ]),
+              const SizedBox(height:10),
+              if(snap.connectionState==ConnectionState.waiting)
+                const Center(child:Padding(padding:EdgeInsets.all(30),child:CircularProgressIndicator()))
+              else if(items.isEmpty)
+                Container(
+                  padding:const EdgeInsets.all(18),
+                  decoration:BoxDecoration(color:const Color(0xFFFFFCF6),border:Border.all(color:const Color(0xFFE4DCCF)),borderRadius:BorderRadius.circular(6)),
+                  child:const Text('No listings match those filters yet.'),
+                )
+              else
+                ...items.map((e)=>Container(
+                  margin:const EdgeInsets.only(bottom:9),
+                  padding:const EdgeInsets.all(13),
+                  decoration:BoxDecoration(color:const Color(0xFFFFFCF6),border:Border.all(color:const Color(0xFFE4DCCF)),borderRadius:BorderRadius.circular(6)),
+                  child:Column(children:[
+                    Row(children:[
+                      Container(
+                        width:46,height:46,
+                        color:e['_type']=='Lights'?const Color(0xFFC9A44D):e['_type']=='Store'?const Color(0xFF0F4C45):const Color(0xFF9E1B32),
+                        child:Icon(e['_type']=='Lights'?Icons.lightbulb_outline:e['_type']=='Store'?Icons.shopping_bag_outlined:Icons.celebration_outlined,color:Colors.white),
+                      ),
+                      const SizedBox(width:12),
+                      Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+                        Text((e['name']??'Christmas listing').toString(),style:const TextStyle(fontWeight:FontWeight.w800)),
+                        const SizedBox(height:3),
+                        Text((e['city']??'').toString()+((e['region']??'').toString().isNotEmpty?', '+(e['region']??'').toString():''),style:const TextStyle(fontSize:12,color:Color(0xFF6B6F6C))),
+                      ])),
+                      Text((e['_type']??'').toString().toUpperCase(),style:const TextStyle(fontSize:9.5,fontWeight:FontWeight.w800,letterSpacing:.8,color:Color(0xFF8B6F2E))),
+                    ]),
+                    const SizedBox(height:6),
+                    Align(
+                      alignment:Alignment.centerRight,
+                      child:TextButton.icon(
+                        onPressed:()=>reportIssue(e),
+                        icon:const Icon(Icons.flag_outlined,size:15),
+                        label:const Text('Report issue'),
+                        style:TextButton.styleFrom(foregroundColor:const Color(0xFF77736D),textStyle:const TextStyle(fontSize:11,fontWeight:FontWeight.w700)),
+                      ),
+                    ),
+                  ]),
+                )),
+            ],
+          );
+        },
       ),
     );
   }
@@ -2341,6 +2422,72 @@ class _AdminMediaManagerPageState extends State<AdminMediaManagerPage> {
 }
 
 
+class AdminCorrectionsPage extends StatefulWidget {
+  const AdminCorrectionsPage({super.key});
+  @override
+  State<AdminCorrectionsPage> createState()=>_AdminCorrectionsPageState();
+}
+
+class _AdminCorrectionsPageState extends State<AdminCorrectionsPage>{
+  Future<List<Map<String,dynamic>>> load() async {
+    final rows=await Supabase.instance.client.from('support_tickets')
+      .select('id,email,message,status,created_at')
+      .like('message','[LISTING ISSUE]%')
+      .order('created_at',ascending:false)
+      .limit(200);
+    return List<Map<String,dynamic>>.from(rows);
+  }
+
+  Future<void> close(dynamic id) async {
+    await Supabase.instance.client.from('support_tickets').update({
+      'status':'closed',
+      'updated_at':DateTime.now().toIso8601String(),
+    }).eq('id',id);
+    if(mounted) setState((){});
+  }
+
+  @override
+  Widget build(BuildContext context)=>Scaffold(
+    appBar:AppBar(backgroundColor:const Color(0xFFF7F2E8),title:const Text('Listing Corrections')),
+    body:FutureBuilder<List<Map<String,dynamic>>>(
+      future:load(),
+      builder:(context,snap){
+        if(snap.connectionState==ConnectionState.waiting) return const Center(child:CircularProgressIndicator());
+        final items=snap.data??[];
+        if(items.isEmpty) return const Center(child:Text('No listing corrections waiting.'));
+        return ListView.separated(
+          padding:const EdgeInsets.all(18),
+          itemCount:items.length,
+          separatorBuilder:(_,__)=>const SizedBox(height:10),
+          itemBuilder:(context,i){
+            final t=items[i];
+            return Container(
+              padding:const EdgeInsets.all(14),
+              decoration:BoxDecoration(color:const Color(0xFFFFFCF6),border:Border.all(color:const Color(0xFFE3D8C8)),borderRadius:BorderRadius.circular(8)),
+              child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+                Row(children:[
+                  const Expanded(child:Text('LISTING CORRECTION',style:TextStyle(fontSize:10,fontWeight:FontWeight.w900,letterSpacing:1,color:Color(0xFFA80F24)))),
+                  Text((t['status']??'open').toString().toUpperCase(),style:const TextStyle(fontSize:9,fontWeight:FontWeight.w900)),
+                ]),
+                const SizedBox(height:8),
+                Text((t['message']??'').toString().replaceFirst('[LISTING ISSUE] ','')),
+                if((t['email']??'').toString().isNotEmpty)...[
+                  const SizedBox(height:6),
+                  Text('Contact: '+(t['email']??'').toString(),style:const TextStyle(fontSize:11,color:Color(0xFF77736D))),
+                ],
+                if((t['status']??'')!='closed')...[
+                  const SizedBox(height:10),
+                  Align(alignment:Alignment.centerRight,child:FilledButton.tonal(onPressed:()=>close(t['id']),child:const Text('Mark resolved'))),
+                ],
+              ]),
+            );
+          },
+        );
+      },
+    ),
+  );
+}
+
 class AdminSupportPage extends StatefulWidget {
   const AdminSupportPage({super.key});
   @override
@@ -2547,6 +2694,14 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
             subtitle: const Text('Add and manage photos for gifts, Elf ideas and Secret Santa content'),
             trailing: const Icon(Icons.chevron_right),
             onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminMediaManagerPage())).then((_)=>setState((){})),
+          )),
+          const SizedBox(height: 10),
+          Card(child: ListTile(
+            leading: const Icon(Icons.flag_outlined, color: Color(0xFFA80F24)),
+            title: const Text('Listing Corrections', style: TextStyle(fontWeight: FontWeight.w900)),
+            subtitle: const Text('Review user reports about events, lights and stores'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminCorrectionsPage())).then((_)=>setState((){})),
           )),
 
           const SizedBox(height: 18),

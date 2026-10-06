@@ -21,4 +21,4 @@ dev_dependencies:
   flutter_lints: ^5.0.0
 
 flutter:
-  uses-material-design: true
+  uses-material-design: true\n  assets:\n    - assets/cover_photo.jpg\n    - assets/phillie_avatar.jpg

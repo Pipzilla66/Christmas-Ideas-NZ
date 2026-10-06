@@ -35,7 +35,7 @@ jobs:
           rm -rf generated_app
           flutter create generated_app --platforms=android --project-name christmas_ideas_nz_test --org nz.co.christmasideas
           cp test_app/pubspec.yaml generated_app/pubspec.yaml
-          cp test_app/main.dart generated_app/lib/main.dart
+          cp test_app/main.dart generated_app/lib/main.dart\n          cp -R test_app/assets generated_app/assets
 
       - name: Ensure release internet permission
         run: |
