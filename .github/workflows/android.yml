@@ -47,11 +47,6 @@ jobs:
           perm = '<uses-permission android:name="android.permission.INTERNET"/>'
           if perm not in s:
               s = s.replace('<manifest xmlns:android="http://schemas.android.com/apk/res/android">', '<manifest xmlns:android="http://schemas.android.com/apk/res/android">\n    ' + perm)
-          admob = '        <meta-data android:name="com.google.android.gms.ads.APPLICATION_ID" android:value="ca-app-pub-3940256099942544~3347511713"/>\n'
-          if 'com.google.android.gms.ads.APPLICATION_ID' not in s:
-              activity = s.find('        <activity')
-              if activity != -1:
-                  s = s[:activity] + admob + s[activity:]
           p.write_text(s)
           PY
 
