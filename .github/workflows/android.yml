@@ -123,16 +123,37 @@ jobs:
           "$apk_signer" verify --verbose --print-certs "$RUNNER_TEMP/signed-app.apk"
           mv "$RUNNER_TEMP/signed-app.apk" "$apk_path"
           "$(dirname "$apk_signer")/aapt" dump badging "$apk_path" > "$RUNNER_TEMP/apk-badging.txt"
-          python3 - <<'PYBRANDCHECK'
+          python3 - "$(dirname "$apk_signer")/aapt" "$apk_path" <<'PYBRANDCHECK'
           import os
+          import hashlib
+          import subprocess
+          import sys
+          import zipfile
           from pathlib import Path
           text = (Path(os.environ["RUNNER_TEMP"]) / "apk-badging.txt").read_text()
           if "package: name='nz.co.christmasideas.christmas_ideas_nz_test'" not in text:
               raise SystemExit("Android app identity changed unexpectedly")
           if "application-label:'Christmas Ideas NZ'" not in text:
               raise SystemExit("Phone launcher label is incorrect")
-          if "mipmap-anydpi-v26/ic_launcher.xml" not in text:
-              raise SystemExit("Custom adaptive launcher icon is missing")
+          aapt, apk_path = sys.argv[1:]
+          resources = subprocess.check_output([aapt, "dump", "resources", apk_path], text=True)
+          if "mipmap/ic_launcher" not in resources:
+              raise SystemExit("Launcher icon resource is missing")
+          expected_art = hashlib.sha256(Path("test_app/android_branding/res/drawable-nodpi/app_icon_art.jpg").read_bytes()).digest()
+          with zipfile.ZipFile(apk_path) as apk:
+              if not any(hashlib.sha256(apk.read(name)).digest() == expected_art for name in apk.namelist() if name.endswith(".jpg")):
+                  raise SystemExit("Original icon artwork is missing from APK")
+              adaptive_found = False
+              for name in apk.namelist():
+                  if name.startswith("res/") and name.endswith(".xml"):
+                      xml = subprocess.check_output([aapt, "dump", "xmltree", apk_path, name], text=True)
+                      if "E: adaptive-icon" in xml and "E: background" in xml and "E: foreground" in xml:
+                          adaptive_found = True
+                          print("Verified packaged adaptive icon:", name)
+                          break
+              if not adaptive_found:
+                  raise SystemExit("Custom adaptive launcher icon is missing")
+          print("Verified original cover artwork in APK")
           for line in text.splitlines():
               if line.startswith(("package:", "application-label:", "application:")):
                   print(line)
