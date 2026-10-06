@@ -35,7 +35,9 @@ jobs:
           rm -rf generated_app
           flutter create generated_app --platforms=android --project-name christmas_ideas_nz_test --org nz.co.christmasideas
           cp test_app/pubspec.yaml generated_app/pubspec.yaml
-          cp test_app/main.dart generated_app/lib/main.dart
+          cp test_app/*.dart generated_app/lib/
+          rm -rf generated_app/test
+          cp -R test_app/test generated_app/test
           cp -R test_app/assets generated_app/assets
 
       - name: Ensure release internet permission
@@ -57,6 +59,10 @@ jobs:
       - name: Analyze
         working-directory: generated_app
         run: flutter analyze lib --no-fatal-infos --no-fatal-warnings
+
+      - name: Test listing filters
+        working-directory: generated_app
+        run: flutter test
 
       - name: Build release APK
         working-directory: generated_app

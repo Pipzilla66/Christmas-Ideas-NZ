@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'listing_filters.dart';
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
@@ -1410,34 +1412,76 @@ class NearMePage extends StatefulWidget {
 }
 
 class _NearMePageState extends State<NearMePage> {
-  final search=TextEditingController();
-  String type='All';
-  String region='All';
+  final search = TextEditingController();
+  String category = 'All';
+  String region = 'All';
+  String city = 'All';
+  String when = 'Any time';
+  String cost = 'All';
+  DateTime? chosenDate;
+  late Future<List<Map<String, dynamic>>> listings;
+
+  @override
+  void initState() { super.initState(); listings = load(); }
+  @override
+  void dispose() { search.dispose(); super.dispose(); }
 
   Future<List<Map<String, dynamic>>> load() async {
-    final events = await Supabase.instance.client
-      .from('events')
-      .select('name,city,region,address,start_at,website_url')
-      .eq('status','published')
-      .limit(150);
-    final lights = await Supabase.instance.client
-      .from('light_displays')
-      .select('name,city,region,address,start_date,website_url')
-      .eq('status','published')
-      .limit(150);
-    final stores = await Supabase.instance.client
-      .from('businesses')
-      .select('name,city,region,address,website_url,business_type')
-      .eq('status','published')
-      .limit(300);
-    final all=[
-      ...List<Map<String,dynamic>>.from(events).map((e) => {...e, '_type':'Event'}),
-      ...List<Map<String,dynamic>>.from(lights).map((e) => {...e, '_type':'Lights'}),
-      ...List<Map<String,dynamic>>.from(stores).map((e) => {...e, '_type':'Store'}),
+    final rows = await Future.wait([
+      Supabase.instance.client.from('events').select('id,name,description,city,region,address,start_at,end_at,website_url,event_type,cost_text').eq('status','published').order('name'),
+      Supabase.instance.client.from('light_displays').select('id,name,description,city,region,address,start_date,end_date,website_url,cost_text').eq('status','published').order('name'),
+      Supabase.instance.client.from('businesses').select('id,name,description,city,region,address,website_url,business_type').eq('status','published').order('name'),
+    ]);
+    final all = <Map<String, dynamic>>[
+      ...List<Map<String,dynamic>>.from(rows[0]).map((e) => {...e, '_type':'Event'}),
+      ...List<Map<String,dynamic>>.from(rows[1]).map((e) => {...e, '_type':'Lights'}),
+      ...List<Map<String,dynamic>>.from(rows[2]).map((e) => {...e, '_type':'Store'}),
     ];
-    all.sort((a,b)=>((a['region']??'').toString()+(a['city']??'').toString()+(a['name']??'').toString())
-      .compareTo((b['region']??'').toString()+(b['city']??'').toString()+(b['name']??'').toString()));
+    all.sort((a,b) => (a['name'] ?? '').toString().compareTo((b['name'] ?? '').toString()));
     return all;
+  }
+
+  Future<void> chooseWhen(String value) async {
+    if (value == 'Choose a date') {
+      final date = await showDatePicker(context: context,
+        initialDate: chosenDate ?? DateTime.now(), firstDate: DateTime(2020), lastDate: DateTime(2100));
+      if (date == null || !mounted) return;
+      setState(() { chosenDate = date; when = value; });
+    } else { setState(() => when = value); }
+  }
+
+  String dateText(DateTime value) => '${value.day}/${value.month}/${value.year}';
+  String datesLabel(Map<String, dynamic> item) {
+    if (item['_type'] == 'Store') return 'Check website for opening hours';
+    final start = listingStart(item);
+    if (start == null) return 'Dates to be confirmed';
+    final end = listingEnd(item);
+    return end == null || dateText(start) == dateText(end)
+      ? dateText(start) : '${dateText(start)} – ${dateText(end)}';
+  }
+
+  Future<void> openDirections(Map<String,dynamic> item) async {
+    final address = (item['address'] ?? '').toString().trim();
+    if (address.isEmpty) return;
+    final destination = [address, item['city'], item['region'], 'New Zealand']
+      .where((v) => v != null && v.toString().trim().isNotEmpty).join(', ');
+    try {
+      final ok = await launchUrl(Uri.https('www.google.com', '/maps/dir/', {'api':'1', 'destination':destination}),
+        mode: LaunchMode.externalApplication);
+      if (!ok) throw Exception('Maps unavailable');
+    } catch (_) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Could not open maps. Please try again.')));
+    }
+  }
+
+  Future<void> openWebsite(String url) async {
+    final uri = Uri.tryParse(url);
+    if (uri == null || !['http', 'https'].contains(uri.scheme)) return;
+    try {
+      if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) throw Exception('Website unavailable');
+    } catch (_) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Could not open this website.')));
+    }
   }
 
   Future<void> reportIssue(Map<String,dynamic> item) async {
@@ -1480,120 +1524,106 @@ class _NearMePageState extends State<NearMePage> {
     }
   }
 
+  Widget filterDropdown(String label, String value, List<String> values, ValueChanged<String> changed) {
+    return InputDecorator(decoration: InputDecoration(labelText: label), child: DropdownButtonHideUnderline(
+      child: DropdownButton<String>(value: value, isExpanded: true, isDense: true,
+        items: values.map((v) => DropdownMenuItem(value: v, child: Text(v == 'All' ? (label == 'Region' ? 'All regions' : label == 'City / town' ? 'All cities / towns' : label == 'Category' ? 'All categories' : 'All entry costs') : v))).toList(),
+        onChanged: (v) { if (v != null) changed(v); }),
+    ));
+  }
+
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child:FutureBuilder<List<Map<String,dynamic>>>(
-        future:load(),
-        builder:(context,snap){
-          final all=snap.data??[];
-          final regions=<String>{...all.map((e)=>(e['region']??'').toString()).where((r)=>r.isNotEmpty)}.toList()..sort();
-          final q=search.text.trim().toLowerCase();
-          final items=all.where((e){
-            final matchesType=type=='All'||e['_type']==type;
-            final matchesRegion=region=='All'||e['region']==region;
-            final hay=((e['name']??'').toString()+' '+(e['city']??'').toString()+' '+(e['region']??'').toString()).toLowerCase();
-            return matchesType&&matchesRegion&&(q.isEmpty||hay.contains(q));
-          }).toList();
-
-          return ListView(
-            padding:const EdgeInsets.fromLTRB(20,20,20,28),
-            children:[
-              const Text('EXPLORE YOUR AREA',style:TextStyle(fontSize:10,fontWeight:FontWeight.w900,letterSpacing:1.4,color:Color(0xFF8B6F2E))),
-              const SizedBox(height:4),
-              Text('Christmas Near You',style:Theme.of(context).textTheme.headlineLarge),
-              const SizedBox(height:6),
-              const Text('Lights, markets, Santa visits and Christmas shopping around Aotearoa.'),
-              const SizedBox(height:16),
-              TextField(
-                controller:search,
-                onChanged:(_)=>setState((){}),
-                decoration:const InputDecoration(prefixIcon:Icon(Icons.search),hintText:'Search town, region or event'),
-              ),
-              const SizedBox(height:10),
-              Wrap(spacing:7,runSpacing:7,children:['All','Event','Lights','Store'].map((t)=>ChoiceChip(
-                label:Text(t=='All'?'All':t=='Event'?'Events':t=='Lights'?'Lights':'Stores'),
-                selected:type==t,
-                onSelected:(_)=>setState(()=>type=t),
-              )).toList()),
-              const SizedBox(height:10),
-              DropdownButtonFormField<String>(
-                value:regions.contains(region)?region:'All',
-                decoration:const InputDecoration(labelText:'Region'),
-                items:['All',...regions].map((r)=>DropdownMenuItem(value:r,child:Text(r=='All'?'All regions':r))).toList(),
-                onChanged:(v)=>setState(()=>region=v??'All'),
-              ),
-              const SizedBox(height:18),
-              Container(
-                height:160,
-                decoration:BoxDecoration(
-                  color:const Color(0xFFE9E1D2),
-                  border:Border.all(color:const Color(0xFFC5D0C7)),
-                  borderRadius:BorderRadius.circular(6),
-                ),
-                child:Stack(children:[
-                  const Center(child:Icon(Icons.map_outlined,size:58,color:Color(0xFF0F4C45))),
-                  Positioned(left:14,bottom:12,child:Container(
-                    padding:const EdgeInsets.symmetric(horizontal:10,vertical:7),
-                    color:const Color(0xFFFFFCF6),
-                    child:Text(all.length.toString()+' VERIFIED FESTIVE LISTINGS',style:const TextStyle(fontSize:10,fontWeight:FontWeight.w900,letterSpacing:1)),
-                  )),
+    return SafeArea(child: FutureBuilder<List<Map<String,dynamic>>>(
+      future: listings,
+      builder: (context, snap) {
+        final all = snap.data ?? <Map<String,dynamic>>[];
+        final regions = all.map((e) => (e['region'] ?? '').toString()).where((v) => v.isNotEmpty).toSet().toList()..sort();
+        final cities = all.where((e) => region == 'All' || e['region'] == region)
+          .map((e) => (e['city'] ?? '').toString()).where((v) => v.isNotEmpty).toSet().toList()..sort();
+        final items = filterListings(all, region: region, city: city, category: category,
+          when: when, cost: cost, query: search.text, now: DateTime.now(), chosenDate: chosenDate);
+        final active = region != 'All' || city != 'All' || category != 'All' || when != 'Any time' || cost != 'All' || search.text.isNotEmpty;
+        return RefreshIndicator(onRefresh: () async {
+          final next = load();
+          setState(() => listings = next);
+          await next;
+        }, child: ListView(padding: const EdgeInsets.fromLTRB(20,20,20,28), children: [
+          const Text('EXPLORE YOUR AREA', style: TextStyle(fontSize:10,fontWeight:FontWeight.w900,letterSpacing:1.4,color:Color(0xFF8B6F2E))),
+          const SizedBox(height:4),
+          Text('Christmas Near You', style:Theme.of(context).textTheme.headlineLarge),
+          const SizedBox(height:6),
+          const Text('Find festive things by area, date and category.'),
+          const SizedBox(height:16),
+          TextField(controller:search, onChanged:(_)=>setState((){}),
+            decoration:const InputDecoration(prefixIcon:Icon(Icons.search),hintText:'Search a place, event or address')),
+          const SizedBox(height:12),
+          filterDropdown('Region', regions.contains(region) ? region : 'All', ['All', ...regions],
+            (v) => setState(() { region = v; city = 'All'; })),
+          const SizedBox(height:12),
+          filterDropdown('City / town', cities.contains(city) ? city : 'All', ['All', ...cities],
+            (v) => setState(() => city = v)),
+          const SizedBox(height:12),
+          filterDropdown('Category', category, ['All','Lights','Events / Markets','Santa Visits','Christmas Shops'],
+            (v) => setState(() => category = v)),
+          const SizedBox(height:12),
+          filterDropdown('When', when, ['Any time','Today','This weekend','Choose a date'], chooseWhen),
+          if (when == 'Choose a date') TextButton.icon(onPressed: () => chooseWhen('Choose a date'),
+            icon: const Icon(Icons.calendar_month), label: Text(dateText(chosenDate!))),
+          const SizedBox(height:12),
+          filterDropdown('Entry cost', cost, ['All','Free','Paid'], (v) => setState(() => cost = v)),
+          if (cost != 'All' || when != 'Any time') const Padding(padding: EdgeInsets.only(top:8),
+            child: Text('Only listings with matching recorded dates or entry costs are shown.', style: TextStyle(fontSize:12))),
+          if (active) Align(alignment:Alignment.centerRight, child:TextButton(onPressed: () => setState(() {
+            region='All'; city='All'; category='All'; when='Any time'; cost='All'; chosenDate=null; search.clear();
+          }), child:const Text('Clear filters'))),
+          const SizedBox(height:18),
+          Row(children:[
+            Expanded(child:Text('Festive finds',style:Theme.of(context).textTheme.headlineSmall)),
+            Text('${items.length}',style:const TextStyle(fontWeight:FontWeight.w900,color:Color(0xFF8B6F2E))),
+          ]),
+          const SizedBox(height:10),
+          if (snap.connectionState == ConnectionState.waiting)
+            const Center(child:Padding(padding:EdgeInsets.all(30),child:CircularProgressIndicator()))
+          else if (snap.hasError)
+            Column(children:[const Text('Could not load listings. Please try again.'),
+              TextButton(onPressed:()=>setState(()=>listings=load()),child:const Text('Retry'))])
+          else if (items.isEmpty)
+            const Card(child:Padding(padding:EdgeInsets.all(18),child:Text('No listings match yet. Try another area, date or category.')))
+          else ...items.map((e) {
+            final address = (e['address'] ?? '').toString().trim();
+            final url = (e['website_url'] ?? '').toString().trim();
+            final location = [e['city'],e['region']].where((v)=>v!=null && v.toString().isNotEmpty).join(', ');
+            final entry = (e['cost_text'] ?? '').toString().trim();
+            return Card(margin:const EdgeInsets.only(bottom:12), child:Padding(padding:const EdgeInsets.all(15),
+              child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+                Text(listingCategory(e),style:const TextStyle(fontSize:11,fontWeight:FontWeight.w800,color:Color(0xFF8B6F2E))),
+                const SizedBox(height:5),
+                Text((e['name']??'Christmas listing').toString(),style:const TextStyle(fontWeight:FontWeight.w900,fontSize:18)),
+                const SizedBox(height:8),
+                Text(address.isEmpty ? (location.isEmpty ? 'Address to be confirmed' : location) : '$address${location.isEmpty ? '' : ', $location'}'),
+                const SizedBox(height:5),
+                Text(datesLabel(e)),
+                const SizedBox(height:5),
+                Text(e['_type']=='Store' ? 'Christmas shopping' : entry.isEmpty ? 'Check entry cost with organiser' : entry),
+                if ((e['description']??'').toString().trim().isNotEmpty) Padding(padding:const EdgeInsets.only(top:8),
+                  child:Text(e['description'].toString(),maxLines:3,overflow:TextOverflow.ellipsis)),
+                const SizedBox(height:10),
+                Wrap(spacing:8,runSpacing:4,children:[
+                  if (address.isNotEmpty) OutlinedButton.icon(onPressed:()=>openDirections(e),
+                    icon:const Icon(Icons.directions_outlined,size:18),label:const Text('Get directions')),
+                  if (url.isNotEmpty) TextButton.icon(onPressed:()=>openWebsite(url),
+                    icon:const Icon(Icons.open_in_new,size:16),label:const Text('Details / Website')),
+                  TextButton.icon(onPressed:()=>reportIssue(e),icon:const Icon(Icons.flag_outlined,size:16),label:const Text('Report issue')),
                 ]),
-              ),
-              const SizedBox(height:18),
-              const SizedBox(height:22),
-              Row(children:[
-                Expanded(child:Text('Events, lights & stores',style:Theme.of(context).textTheme.headlineSmall?.copyWith(fontSize:25))),
-                Text(items.length.toString(),style:const TextStyle(fontWeight:FontWeight.w900,color:Color(0xFF8B6F2E))),
-              ]),
-              const SizedBox(height:10),
-              if(snap.connectionState==ConnectionState.waiting)
-                const Center(child:Padding(padding:EdgeInsets.all(30),child:CircularProgressIndicator()))
-              else if(items.isEmpty)
-                Container(
-                  padding:const EdgeInsets.all(18),
-                  decoration:BoxDecoration(color:const Color(0xFFFFFCF6),border:Border.all(color:const Color(0xFFE4DCCF)),borderRadius:BorderRadius.circular(6)),
-                  child:const Text('No listings match those filters yet.'),
-                )
-              else
-                ...items.map((e)=>Container(
-                  margin:const EdgeInsets.only(bottom:9),
-                  padding:const EdgeInsets.all(13),
-                  decoration:BoxDecoration(color:const Color(0xFFFFFCF6),border:Border.all(color:const Color(0xFFE4DCCF)),borderRadius:BorderRadius.circular(6)),
-                  child:Column(children:[
-                    Row(children:[
-                      Container(
-                        width:46,height:46,
-                        color:e['_type']=='Lights'?const Color(0xFFC9A44D):e['_type']=='Store'?const Color(0xFF0F4C45):const Color(0xFF9E1B32),
-                        child:Icon(e['_type']=='Lights'?Icons.lightbulb_outline:e['_type']=='Store'?Icons.shopping_bag_outlined:Icons.celebration_outlined,color:Colors.white),
-                      ),
-                      const SizedBox(width:12),
-                      Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
-                        Text((e['name']??'Christmas listing').toString(),style:const TextStyle(fontWeight:FontWeight.w800)),
-                        const SizedBox(height:3),
-                        Text((e['city']??'').toString()+((e['region']??'').toString().isNotEmpty?', '+(e['region']??'').toString():''),style:const TextStyle(fontSize:12,color:Color(0xFF6B6F6C))),
-                      ])),
-                      Text((e['_type']??'').toString().toUpperCase(),style:const TextStyle(fontSize:9.5,fontWeight:FontWeight.w800,letterSpacing:.8,color:Color(0xFF8B6F2E))),
-                    ]),
-                    const SizedBox(height:6),
-                    Align(
-                      alignment:Alignment.centerRight,
-                      child:TextButton.icon(
-                        onPressed:()=>reportIssue(e),
-                        icon:const Icon(Icons.flag_outlined,size:15),
-                        label:const Text('Report issue'),
-                        style:TextButton.styleFrom(foregroundColor:const Color(0xFF77736D),textStyle:const TextStyle(fontSize:11,fontWeight:FontWeight.w700)),
-                      ),
-                    ),
-                  ]),
-                )),
-            ],
-          );
-        },
-      ),
-    );
+              ])));
+          }),
+        ]));
+      },
+    ));
   }
 }
+
 
 class SavedPage extends StatefulWidget {
   const SavedPage({super.key});
@@ -2762,6 +2792,7 @@ class _SubmissionEditorPageState extends State<SubmissionEditorPage> {
   late final TextEditingController cost;
   late Map<String, dynamic> payload;
   String? region;
+  String eventCategory = 'community';
   DateTime? start;
   DateTime? end;
   bool busy = false;
@@ -2780,6 +2811,7 @@ class _SubmissionEditorPageState extends State<SubmissionEditorPage> {
     address = TextEditingController(text: payload['address']?.toString() ?? '');
     website = TextEditingController(text: payload['website_url']?.toString() ?? '');
     cost = TextEditingController(text: payload['cost_text']?.toString() ?? '');
+    eventCategory = payload['event_type'] == 'santa_visit' ? 'santa_visit' : 'community';
     region = payload['region']?.toString();
     if (region?.isEmpty ?? true) region = null;
     start = DateTime.tryParse((payload[isEvent ? 'start_at' : 'start_date'] ?? '').toString())?.toLocal();
@@ -2828,7 +2860,8 @@ class _SubmissionEditorPageState extends State<SubmissionEditorPage> {
       next[isEvent ? 'end_at' : 'end_date'] = end == null ? null :
         (isEvent ? end!.toUtc().toIso8601String() : end!.toIso8601String().substring(0, 10));
     }
-    if (isEvent) next['cost_text'] = cost.text.trim();
+    if (isEvent || isLights) next['cost_text'] = cost.text.trim();
+    if (isEvent) next['event_type'] = eventCategory;
     try {
       await Supabase.instance.client.from('submissions').update({
         'title': title.text.trim(), 'description': description.text.trim(), 'payload': next,
@@ -2874,6 +2907,14 @@ class _SubmissionEditorPageState extends State<SubmissionEditorPage> {
                 ? null : 'Use a full link starting with https://';
             }),
         ],
+        if (isEvent) ...[
+          const SizedBox(height:12),
+          DropdownButtonFormField<String>(initialValue:eventCategory,
+            decoration:const InputDecoration(labelText:'Event category'),
+            items:const [DropdownMenuItem(value:'community',child:Text('Events / Markets')),
+              DropdownMenuItem(value:'santa_visit',child:Text('Santa Visits'))],
+            onChanged:busy ? null : (v)=>setState(()=>eventCategory=v??'community')),
+        ],
         if (isEvent || isLights) ...[
           const SizedBox(height: 12),
           ListTile(contentPadding: EdgeInsets.zero, title: const Text('Start'), subtitle: Text(dateLabel(start)),
@@ -2883,7 +2924,7 @@ class _SubmissionEditorPageState extends State<SubmissionEditorPage> {
             onTap: busy ? null : () => chooseDate(false),
             trailing: IconButton(onPressed: busy ? null : () => setState(() => end = null), icon: const Icon(Icons.clear))),
         ],
-        if (isEvent) TextFormField(controller: cost, enabled: !busy, decoration: const InputDecoration(labelText: 'Cost / Entry details')),
+        if (isEvent || isLights) TextFormField(controller: cost, enabled: !busy, decoration: const InputDecoration(labelText: 'Cost / Entry details')),
         if (error != null) Padding(padding: const EdgeInsets.only(top: 12), child: Text(error!, style: const TextStyle(color: Colors.red))),
         const SizedBox(height: 20),
         FilledButton(onPressed: busy ? null : save, child: Text(busy ? 'Saving…' : 'Save changes — keep pending')),
