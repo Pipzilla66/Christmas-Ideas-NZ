@@ -1,7 +1,7 @@
 name: christmas_ideas_nz_test
 description: Christmas Ideas NZ Android test build
 publish_to: 'none'
-version: 0.1.0+4
+version: 0.1.0+5
 
 environment:
   sdk: '>=3.4.0 <4.0.0'
@@ -22,6 +22,3 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
-  assets:
-    - assets/cover_photo.jpg
-    - assets/phillie_avatar.jpg
