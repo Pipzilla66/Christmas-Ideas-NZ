@@ -218,7 +218,7 @@ class _OnboardingState extends State<Onboarding> {
               child: Stack(
                 fit: StackFit.expand,
                 children: [
-                  safeEmbeddedImage(_coverPhotoBase64, fit: BoxFit.cover),
+                  Image.asset('assets/cover_photo.jpg',fit:BoxFit.cover,errorBuilder:(_,__,___)=>Container(color:const Color(0xFF173B36),child:const Center(child:Icon(Icons.photo_outlined,color:Colors.white,size:46)))),
                   Container(
                     decoration: const BoxDecoration(
                       gradient: LinearGradient(
