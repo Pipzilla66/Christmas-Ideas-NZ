@@ -1403,11 +1403,25 @@ class NearMePage extends StatelessWidget {
   const NearMePage({super.key});
 
   Future<List<Map<String, dynamic>>> load() async {
-    final events = await Supabase.instance.client.from('events').select('name,city,region,start_at').eq('status','published').limit(20);
-    final lights = await Supabase.instance.client.from('light_displays').select('name,city,region,start_date').eq('status','published').limit(20);
+    final events = await Supabase.instance.client
+      .from('events')
+      .select('name,city,region,address,start_at,website_url')
+      .eq('status','published')
+      .limit(150);
+    final lights = await Supabase.instance.client
+      .from('light_displays')
+      .select('name,city,region,address,start_date,website_url')
+      .eq('status','published')
+      .limit(150);
+    final stores = await Supabase.instance.client
+      .from('businesses')
+      .select('name,city,region,address,website_url,business_type')
+      .eq('status','published')
+      .limit(300);
     return [
       ...List<Map<String,dynamic>>.from(events).map((e) => {...e, '_type':'Event'}),
       ...List<Map<String,dynamic>>.from(lights).map((e) => {...e, '_type':'Lights'}),
+      ...List<Map<String,dynamic>>.from(stores).map((e) => {...e, '_type':'Store'}),
     ];
   }
 
@@ -1440,7 +1454,7 @@ class NearMePage extends StatelessWidget {
             ]),
           ),
           const SizedBox(height:22),
-          Text('Festive finds',style:Theme.of(context).textTheme.headlineSmall?.copyWith(fontSize:25)),
+          Text('Events, lights & Christmas stores',style:Theme.of(context).textTheme.headlineSmall?.copyWith(fontSize:25)),
           const SizedBox(height:10),
           FutureBuilder<List<Map<String,dynamic>>>(
             future:load(),
@@ -1457,7 +1471,22 @@ class NearMePage extends StatelessWidget {
                 padding:const EdgeInsets.all(13),
                 decoration:BoxDecoration(color:const Color(0xFFFFFCF6),border:Border.all(color:const Color(0xFFE4DCCF)),borderRadius:BorderRadius.circular(6)),
                 child:Row(children:[
-                  Container(width:46,height:46,color:e['_type']=='Lights'?const Color(0xFFC9A44D):const Color(0xFF9E1B32),child:Icon(e['_type']=='Lights'?Icons.lightbulb_outline:Icons.storefront_outlined,color:Colors.white)),
+                  Container(
+                    width:46,height:46,
+                    color:e['_type']=='Lights'
+                      ? const Color(0xFFC9A44D)
+                      : e['_type']=='Store'
+                        ? const Color(0xFF0F4C45)
+                        : const Color(0xFF9E1B32),
+                    child:Icon(
+                      e['_type']=='Lights'
+                        ? Icons.lightbulb_outline
+                        : e['_type']=='Store'
+                          ? Icons.shopping_bag_outlined
+                          : Icons.celebration_outlined,
+                      color:Colors.white,
+                    ),
+                  ),
                   const SizedBox(width:12),
                   Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
                     Text((e['name']??'Christmas listing').toString(),style:const TextStyle(fontWeight:FontWeight.w800)),
