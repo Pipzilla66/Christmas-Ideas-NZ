@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 
-import '../elf_search.dart';
+import 'package:christmas_ideas_nz_test/elf_search.dart';
 
 void main() {
   final now = DateTime(2026, 10, 7);
