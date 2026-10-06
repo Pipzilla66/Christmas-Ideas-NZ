@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -56,6 +57,7 @@ Future<void> main() async {
   );
   try {
     await Supabase.initialize(url: supabaseUrl, publishableKey: supabaseKey);
+    await MobileAds.instance.initialize();
     runApp(const ChristmasIdeasNZ());
   } catch (e) {
     runApp(MaterialApp(
@@ -593,6 +595,54 @@ class PhillieGuideCard extends StatelessWidget {
   }
 }
 
+
+class AdMobBannerSlot extends StatefulWidget {
+  const AdMobBannerSlot({super.key});
+  @override
+  State<AdMobBannerSlot> createState()=>_AdMobBannerSlotState();
+}
+
+class _AdMobBannerSlotState extends State<AdMobBannerSlot>{
+  BannerAd? banner;
+  bool loaded=false;
+
+  @override
+  void initState(){
+    super.initState();
+    banner=BannerAd(
+      adUnitId:'ca-app-pub-3940256099942544/6300978111',
+      size:AdSize.banner,
+      request:const AdRequest(),
+      listener:BannerAdListener(
+        onAdLoaded:(ad){if(mounted)setState(()=>loaded=true);},
+        onAdFailedToLoad:(ad,error){ad.dispose();},
+      ),
+    )..load();
+  }
+
+  @override
+  void dispose(){
+    banner?.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context){
+    if(!loaded||banner==null) return const SizedBox.shrink();
+    return Center(
+      child:Column(mainAxisSize:MainAxisSize.min,children:[
+        const Text('ADVERTISEMENT',style:TextStyle(fontSize:8.5,fontWeight:FontWeight.w800,letterSpacing:1,color:Color(0xFF8A857D))),
+        const SizedBox(height:4),
+        SizedBox(
+          width:banner!.size.width.toDouble(),
+          height:banner!.size.height.toDouble(),
+          child:AdWidget(ad:banner!),
+        ),
+      ]),
+    );
+  }
+}
+
 class Shell extends StatefulWidget {
   final String name;
   final XmasTheme theme;
@@ -821,6 +871,8 @@ class HomePage extends StatelessWidget {
               );
             },
           ),
+          const SizedBox(height:24),
+          const AdMobBannerSlot(),
           const SizedBox(height:28),
           _SectionHeading(title:'Featured Gifts', action:'See all', onTap:()=>goTo(1)),
           const SizedBox(height:12),
@@ -1531,6 +1583,8 @@ class _NearMePageState extends State<NearMePage> {
                   )),
                 ]),
               ),
+              const SizedBox(height:18),
+              const AdMobBannerSlot(),
               const SizedBox(height:22),
               Row(children:[
                 Expanded(child:Text('Events, lights & stores',style:Theme.of(context).textTheme.headlineSmall?.copyWith(fontSize:25))),

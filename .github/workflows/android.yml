@@ -35,7 +35,8 @@ jobs:
           rm -rf generated_app
           flutter create generated_app --platforms=android --project-name christmas_ideas_nz_test --org nz.co.christmasideas
           cp test_app/pubspec.yaml generated_app/pubspec.yaml
-          cp test_app/main.dart generated_app/lib/main.dart\n          cp -R test_app/assets generated_app/assets
+          cp test_app/main.dart generated_app/lib/main.dart
+          cp -R test_app/assets generated_app/assets
 
       - name: Ensure release internet permission
         run: |
@@ -46,7 +47,12 @@ jobs:
           perm = '<uses-permission android:name="android.permission.INTERNET"/>'
           if perm not in s:
               s = s.replace('<manifest xmlns:android="http://schemas.android.com/apk/res/android">', '<manifest xmlns:android="http://schemas.android.com/apk/res/android">\n    ' + perm)
-              p.write_text(s)
+          admob = '        <meta-data android:name="com.google.android.gms.ads.APPLICATION_ID" android:value="ca-app-pub-3940256099942544~3347511713"/>\n'
+          if 'com.google.android.gms.ads.APPLICATION_ID' not in s:
+              activity = s.find('        <activity')
+              if activity != -1:
+                  s = s[:activity] + admob + s[activity:]
+          p.write_text(s)
           PY
 
       - name: Get packages

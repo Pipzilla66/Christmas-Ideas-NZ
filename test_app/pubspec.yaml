@@ -14,6 +14,7 @@ dependencies:
   supabase_flutter: ^2.8.0
   url_launcher: ^6.3.1
   image_picker: ^1.1.2
+  google_mobile_ads: ^9.1.0
 
 dev_dependencies:
   flutter_test:
@@ -21,4 +22,7 @@ dev_dependencies:
   flutter_lints: ^5.0.0
 
 flutter:
-  uses-material-design: true\n  assets:\n    - assets/cover_photo.jpg\n    - assets/phillie_avatar.jpg
+  uses-material-design: true
+  assets:
+    - assets/cover_photo.jpg
+    - assets/phillie_avatar.jpg
