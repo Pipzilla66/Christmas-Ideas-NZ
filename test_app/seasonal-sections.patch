@@ -109,29 +109,3 @@
            const SizedBox(height: 18),
            Card(
              child: ListTile(
---- a/test_app/listing_filters.dart
-+++ b/test_app/listing_filters.dart
-@@ -1,6 +1,11 @@
- String listingCategory(Map<String, dynamic> item) {
-   if (item['_type'] == 'Lights') return 'Lights';
--  if (item['_type'] == 'Store') return 'Christmas Shops';
-+  if (item['_type'] == 'Store') {
-+    final businessType = (item['business_type'] ?? '').toString().toLowerCase();
-+    if (businessType == 'charity') return 'Christmas Charities';
-+    if (businessType == 'christmas_tree') return 'Real Christmas Trees';
-+    return 'Christmas Shops';
-+  }
-   final type = (item['event_type'] ?? '').toString().toLowerCase();
-   if (['santa', 'santa_visit', 'santa_visits'].contains(type)) return 'Santa Visits';
-   // Match visits and photos, while keeping Santa parades under events.
-@@ -60,8 +65,8 @@
-   return all.where((item) {
-     final hay = ['name', 'city', 'region', 'address', 'description']
-         .map((key) => item[key] ?? '').join(' ').toLowerCase();
--    return (region == 'All' || item['region'] == region) &&
--      (city == 'All' || item['city'] == city) &&
-+    return (region == 'All' || item['region'] == region || (listingCategory(item) == 'Christmas Charities' && item['region'] == 'Nationwide')) &&
-+      (city == 'All' || item['city'] == city || (listingCategory(item) == 'Christmas Charities' && item['region'] == 'Nationwide')) &&
-       (category == 'All' || listingCategory(item) == category) &&
-       (cost == 'All' || listingCostType(item) == cost) &&
-       (q.isEmpty || hay.contains(q)) && listingMatchesDate(item, when, now, chosenDate);
