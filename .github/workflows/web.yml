@@ -1,0 +1,67 @@
+name: Build Christmas Ideas NZ Web
+on:
+  push:
+    branches: [web-version]
+    paths:
+      - 'test_app/**'
+      - '.github/workflows/web.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build-web:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Install icon tools
+        run: python3 -m pip install Pillow
+      - name: Generate web project
+        run: |
+          flutter create generated_web --platforms=web --project-name christmas_ideas_nz_test
+          cp test_app/pubspec.yaml generated_web/pubspec.yaml
+          cp test_app/*.dart generated_web/lib/
+          rm -rf generated_web/test
+          cp -R test_app/test generated_web/test
+          cp -R test_app/assets generated_web/assets
+          python3 - <<'PYWEB'
+          import json
+          from pathlib import Path
+          from PIL import Image
+          source = Path('generated_web/lib/main.dart')
+          text = source.read_text().replace("import 'dart:io';", '')
+          text = text.replace('.upload(', '.uploadBinary(').replace('File(picked.path)', 'await picked.readAsBytes()')
+          source.write_text(text)
+          web = Path('generated_web/web')
+          image = Image.open('test_app/android_branding/res/drawable-nodpi/app_icon_art.jpg')
+          for name,size in [('Icon-192.png',192),('Icon-512.png',512),('Icon-maskable-192.png',192),('Icon-maskable-512.png',512)]:
+              image.resize((size,size)).save(web/'icons'/name)
+          image.resize((32,32)).save(web/'favicon.png')
+          image.resize((180,180)).save(web/'icons/apple-touch-icon.png')
+          p = web/'manifest.json'
+          manifest = json.loads(p.read_text())
+          manifest.update(name='Christmas Ideas NZ', short_name='Christmas Ideas NZ', background_color='#0F4C45', theme_color='#0F4C45', description='Christmas Ideas NZ — gifts, events, lights and Christmas inspiration.', display='standalone')
+          p.write_text(json.dumps(manifest, indent=2))
+          p = web/'index.html'
+          text = p.read_text().replace('<title>christmas_ideas_nz_test</title>', '<title>Christmas Ideas NZ</title>')
+          text = text.replace('content="christmas_ideas_nz_test"', 'content="Christmas Ideas NZ"')
+          text = text.replace('href="icons/Icon-192.png"', 'href="icons/apple-touch-icon.png"')
+          p.write_text(text)
+          PYWEB
+      - name: Analyze
+        working-directory: generated_web
+        run: flutter analyze lib --no-fatal-infos --no-fatal-warnings
+      - name: Test
+        working-directory: generated_web
+        run: flutter test
+      - name: Build web
+        working-directory: generated_web
+        run: flutter build web --release --pwa-strategy=none
+      - uses: actions/upload-artifact@v4
+        with:
+          name: christmas-ideas-nz-web
+          path: generated_web/build/web/
+          if-no-files-found: error
