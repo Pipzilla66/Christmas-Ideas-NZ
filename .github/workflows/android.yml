@@ -1,0 +1,186 @@
+name: Build Christmas Ideas NZ Android Test APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'test_app/**'
+      - '.github/workflows/android.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  build-android:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Restore permanent Android signing key
+        env:
+          ANDROID_KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_B64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+        run: |
+          python3 - <<'PY'
+          import base64
+          import os
+          from pathlib import Path
+          encoded = os.environ.get("ANDROID_KEYSTORE_B64", "")
+          password = os.environ.get("ANDROID_KEYSTORE_PASSWORD", "")
+          if not encoded or not password:
+              raise SystemExit("Set ANDROID_KEYSTORE_B64 and ANDROID_KEYSTORE_PASSWORD repository secrets before building. Signing never falls back to a new temporary key.")
+          path = Path(os.environ["RUNNER_TEMP"]) / "christmas-ideas-nz.jks"
+          data = base64.b64decode("".join(encoded.split()), validate=True)
+          with os.fdopen(os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600), "wb") as f:
+              f.write(data)
+          PY
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Apply seasonal sections
+        run: git apply test_app/seasonal-sections.patch
+
+      - name: Generate Android host project
+        run: |
+          rm -rf generated_app
+          flutter create generated_app --platforms=android --project-name christmas_ideas_nz_test --org nz.co.christmasideas
+          cp test_app/pubspec.yaml generated_app/pubspec.yaml
+          cp test_app/*.dart generated_app/lib/
+          rm -rf generated_app/test
+          cp -R test_app/test generated_app/test
+          cp -R test_app/assets generated_app/assets
+
+      - name: Apply Christmas Ideas NZ phone name and icon
+        run: |
+          cp -R test_app/android_branding/res/. generated_app/android/app/src/main/res/
+          python3 - <<'PYBRAND'
+          from pathlib import Path
+          import xml.etree.ElementTree as ET
+          android = "http://schemas.android.com/apk/res/android"
+          ET.register_namespace("android", android)
+          path = Path("generated_app/android/app/src/main/AndroidManifest.xml")
+          tree = ET.parse(path)
+          application = tree.getroot().find("application")
+          if application is None:
+              raise SystemExit("Generated Android host has no application element")
+          application.set("{" + android + "}label", "@string/app_name")
+          application.set("{" + android + "}icon", "@mipmap/ic_launcher")
+          application.set("{" + android + "}roundIcon", "@mipmap/ic_launcher")
+          tree.write(path, encoding="utf-8", xml_declaration=True)
+          PYBRAND
+
+      - name: Ensure release internet permission
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path("generated_app/android/app/src/main/AndroidManifest.xml")
+          s = p.read_text()
+          perm = '<uses-permission android:name="android.permission.INTERNET"/>'
+          if perm not in s:
+              s = s.replace('<manifest xmlns:android="http://schemas.android.com/apk/res/android">', '<manifest xmlns:android="http://schemas.android.com/apk/res/android">\n    ' + perm)
+          p.write_text(s)
+          PY
+
+      - name: Get packages
+        working-directory: generated_app
+        run: flutter pub get
+
+      - name: Analyze
+        working-directory: generated_app
+        run: flutter analyze lib --no-fatal-infos --no-fatal-warnings
+
+      - name: Test listing filters
+        working-directory: generated_app
+        run: flutter test
+
+      - name: Build release APK
+        working-directory: generated_app
+        run: flutter build apk --release --split-per-abi --build-number="${{ github.run_number }}"
+
+      - name: Sign APK with permanent key
+        env:
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+        run: |
+          set -euo pipefail
+          apk_signer=$(find "$ANDROID_HOME/build-tools" -mindepth 2 -maxdepth 2 -type f -name apksigner | sort -V | tail -n 1)
+          test -n "$apk_signer"
+          apk_path=generated_app/build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
+          "$apk_signer" sign \
+            --ks "$RUNNER_TEMP/christmas-ideas-nz.jks" \
+            --ks-key-alias christmas-ideas-nz \
+            --ks-pass env:ANDROID_KEYSTORE_PASSWORD \
+            --key-pass env:ANDROID_KEYSTORE_PASSWORD \
+            --out "$RUNNER_TEMP/signed-app.apk" "$apk_path"
+          "$apk_signer" verify --verbose --print-certs "$RUNNER_TEMP/signed-app.apk"
+          mv "$RUNNER_TEMP/signed-app.apk" "$apk_path"
+          "$(dirname "$apk_signer")/aapt" dump badging "$apk_path" > "$RUNNER_TEMP/apk-badging.txt"
+          python3 - "$(dirname "$apk_signer")/aapt" "$apk_path" <<'PYBRANDCHECK'
+          import os
+          import hashlib
+          import subprocess
+          import sys
+          import zipfile
+          from pathlib import Path
+          text = (Path(os.environ["RUNNER_TEMP"]) / "apk-badging.txt").read_text()
+          if "package: name='nz.co.christmasideas.christmas_ideas_nz_test'" not in text:
+              raise SystemExit("Android app identity changed unexpectedly")
+          if "application-label:'Christmas Ideas NZ'" not in text:
+              raise SystemExit("Phone launcher label is incorrect")
+          aapt, apk_path = sys.argv[1:]
+          resources = subprocess.check_output([aapt, "dump", "resources", apk_path], text=True)
+          if "mipmap/ic_launcher" not in resources:
+              raise SystemExit("Launcher icon resource is missing")
+          expected_art = hashlib.sha256(Path("test_app/android_branding/res/drawable-nodpi/app_icon_art.jpg").read_bytes()).digest()
+          with zipfile.ZipFile(apk_path) as apk:
+              if not any(hashlib.sha256(apk.read(name)).digest() == expected_art for name in apk.namelist() if name.endswith(".jpg")):
+                  raise SystemExit("Original icon artwork is missing from APK")
+              adaptive_found = False
+              for name in apk.namelist():
+                  if name.startswith("res/") and name.endswith(".xml"):
+                      xml = subprocess.check_output([aapt, "dump", "xmltree", apk_path, name], text=True)
+                      if "E: adaptive-icon" in xml and "E: background" in xml and "E: foreground" in xml:
+                          adaptive_found = True
+                          print("Verified packaged adaptive icon:", name)
+                          break
+              if not adaptive_found:
+                  raise SystemExit("Custom adaptive launcher icon is missing")
+          print("Verified original cover artwork in APK")
+          for line in text.splitlines():
+              if line.startswith(("package:", "application-label:", "application:")):
+                  print(line)
+          PYBRANDCHECK
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: christmas-ideas-nz-test-apk
+          path: generated_app/build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
+          if-no-files-found: error
+
+      - name: Publish direct APK download
+        uses: ncipollo/release-action@v1
+        with:
+          tag: latest-test
+          name: Christmas Ideas NZ - Latest Test Build
+          body: Latest Android test build for Christmas Ideas NZ.
+          artifacts: generated_app/build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
+          prerelease: true
+          allowUpdates: true
+          replacesArtifacts: true
+          makeLatest: false
+
+      - name: Remove temporary signing key
+        if: always()
+        run: rm -f "$RUNNER_TEMP/christmas-ideas-nz.jks"

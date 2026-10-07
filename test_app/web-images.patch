@@ -1,0 +1,26 @@
+--- a/test_app/main.dart
++++ b/test_app/main.dart
+@@ -758,2 +758,3 @@
+     return Image.network(
++                webHtmlElementStrategy: WebHtmlElementStrategy.fallback,
+       url!,
+@@ -1975,2 +1976,3 @@
+               child: Image.network(
++                webHtmlElementStrategy: WebHtmlElementStrategy.fallback,
+                 image,
+@@ -2113,2 +2115,3 @@
+               child: Image.network(
++                webHtmlElementStrategy: WebHtmlElementStrategy.fallback,
+                 image,
+@@ -3108,2 +3111,3 @@
+                             ? Image.network(
++                webHtmlElementStrategy: WebHtmlElementStrategy.fallback,
+                                 (item['image_url'] ?? '').toString(),
+@@ -3429,2 +3433,3 @@
+                                   ? Image.network(
++                webHtmlElementStrategy: WebHtmlElementStrategy.fallback,
+                                       image,
+@@ -4182,2 +4187,3 @@
+                             ? Image.network(
++                webHtmlElementStrategy: WebHtmlElementStrategy.fallback,
+                                 image,
