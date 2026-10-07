@@ -26,6 +26,7 @@ jobs:
           git apply test_app/web-polish.patch
           git apply test_app/web-images.patch
           git apply test_app/admin-delete.patch
+          git apply test_app/analytics.patch
           flutter create generated_web --platforms=web --project-name christmas_ideas_nz_test
           cp test_app/pubspec.yaml generated_web/pubspec.yaml
           cp test_app/*.dart generated_web/lib/

@@ -1,0 +1,226 @@
+--- a/test_app/main.dart
++++ b/test_app/main.dart
+@@ -3,6 +3,7 @@
+ import 'listing_filters.dart';
+ import 'gift_filters.dart';
+ import 'admin_delete.dart';
++import 'analytics.dart';
+ import 'seasonal_listings.dart';
+ import 'elf_search.dart';
+ 
+@@ -544,7 +545,7 @@
+     if (item['_table'] == 'gift_ideas') {
+       Navigator.push(
+         context,
+-        MaterialPageRoute(builder: (_) => GiftDetailPage(gift: item)),
++        MaterialPageRoute(builder: (_) => trackedGiftDetail(item)),
+       );
+     } else if (item['_table'] == 'content_items') {
+       Navigator.push(
+@@ -757,7 +758,7 @@
+         ],
+       );
+     return Image.network(
+-                webHtmlElementStrategy: WebHtmlElementStrategy.fallback,
++      webHtmlElementStrategy: WebHtmlElementStrategy.fallback,
+       url!,
+       fit: BoxFit.cover,
+       width: width,
+@@ -875,9 +876,23 @@
+   int index = 0;
+ 
+   @override
++  void initState() {
++    super.initState();
++    trackAnalytics('page_view', {'screen_name': 'Home'});
++  }
++
++  void goTo(int i) {
++    if (i == index) return;
++    setState(() => index = i);
++    trackAnalytics('page_view', {
++      'screen_name': ['Home', 'Discover', 'Near Me', 'Saved', 'Me'][i],
++    });
++  }
++
++  @override
+   Widget build(BuildContext context) {
+     final pages = [
+-      HomePage(name: widget.name, goTo: (i) => setState(() => index = i)),
++      HomePage(name: widget.name, goTo: goTo),
+       const DiscoverPage(),
+       const NearMePage(),
+       const SavedPage(),
+@@ -888,7 +903,7 @@
+       floatingActionButton: const PhillieButton(),
+       bottomNavigationBar: BottomNavigationBar(
+         currentIndex: index,
+-        onTap: (i) => setState(() => index = i),
++        onTap: goTo,
+         type: BottomNavigationBarType.fixed,
+         backgroundColor: const Color(0xFFFFFCF6),
+         selectedItemColor: const Color(0xFFA80F24),
+@@ -1273,7 +1288,7 @@
+                   context,
+                   MaterialPageRoute(
+                     builder: (_) => gifts
+-                        ? GiftDetailPage(gift: item)
++                        ? trackedGiftDetail(item)
+                         : ContentDetailPage(item: item),
+                   ),
+                 ),
+@@ -1473,7 +1488,10 @@
+                   ChoiceChip(
+                     label: Text(value),
+                     selected: section == value,
+-                    onSelected: (_) => setState(() => section = value),
++                    onSelected: (_) {
++                      setState(() => section = value);
++                      trackAnalytics('section_view', {'section_name': value});
++                    },
+                   ),
+               ],
+             ),
+@@ -1677,7 +1695,7 @@
+                           onTap: () => Navigator.push(
+                             context,
+                             MaterialPageRoute(
+-                              builder: (_) => GiftDetailPage(gift: g),
++                              builder: (_) => trackedGiftDetail(g),
+                             ),
+                           ),
+                           child: Column(
+@@ -1934,6 +1952,14 @@
+   }
+ }
+ 
++Widget trackedGiftDetail(Map<String, dynamic> gift) {
++  trackAnalytics('view_item', {
++    'item_id': gift['id']?.toString() ?? '',
++    'item_name': gift['title']?.toString() ?? '',
++  });
++  return GiftDetailPage(gift: gift);
++}
++
+ class GiftDetailPage extends StatelessWidget {
+   final Map<String, dynamic> gift;
+   const GiftDetailPage({super.key, required this.gift});
+@@ -1941,6 +1967,13 @@
+   Future<void> openLink(BuildContext context) async {
+     final raw = (gift['affiliate_url'] ?? gift['product_url'] ?? '').toString();
+     final uri = Uri.tryParse(raw);
++    if (uri != null && raw.isNotEmpty) {
++      trackAnalytics('gift_click', {
++        'item_id': gift['id']?.toString() ?? '',
++        'item_name': gift['title']?.toString() ?? '',
++        'retailer_host': uri.host,
++      });
++    }
+     if (uri == null ||
+         raw.isEmpty ||
+         !await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+@@ -2563,6 +2596,7 @@
+                   ],
+                   (v) => setState(() {
+                     category = v;
++                    trackAnalytics('section_view', {'section_name': v});
+                     if (v == 'Christmas Charities' ||
+                         v == 'Real Christmas Trees') {
+                       when = 'Any time';
+@@ -3093,7 +3127,7 @@
+                   context,
+                   MaterialPageRoute(
+                     builder: (_) => isGift
+-                        ? GiftDetailPage(gift: item)
++                        ? trackedGiftDetail(item)
+                         : ContentDetailPage(item: item),
+                   ),
+                 ),
+@@ -3110,7 +3144,8 @@
+                         borderRadius: BorderRadius.circular(4),
+                         child: (item['image_url'] ?? '').toString().isNotEmpty
+                             ? Image.network(
+-                webHtmlElementStrategy: WebHtmlElementStrategy.fallback,
++                                webHtmlElementStrategy:
++                                    WebHtmlElementStrategy.fallback,
+                                 (item['image_url'] ?? '').toString(),
+                                 width: 54,
+                                 height: 54,
+@@ -3432,7 +3467,8 @@
+                               borderRadius: BorderRadius.circular(5),
+                               child: image.isNotEmpty
+                                   ? Image.network(
+-                webHtmlElementStrategy: WebHtmlElementStrategy.fallback,
++                                      webHtmlElementStrategy:
++                                          WebHtmlElementStrategy.fallback,
+                                       image,
+                                       width: 58,
+                                       height: 58,
+@@ -3637,7 +3673,13 @@
+       appBar: AppBar(
+         backgroundColor: const Color(0xFFF7F2E8),
+         title: const Text('Edit gift'),
+-        actions: [AdminDeleteButton(table: 'gift_ideas', item: widget.item, onDeleted: () => Navigator.pop(context))],
++        actions: [
++          AdminDeleteButton(
++            table: 'gift_ideas',
++            item: widget.item,
++            onDeleted: () => Navigator.pop(context),
++          ),
++        ],
+       ),
+       body: ListView(
+         padding: const EdgeInsets.fromLTRB(18, 14, 18, 28),
+@@ -3852,7 +3894,13 @@
+       appBar: AppBar(
+         backgroundColor: const Color(0xFFF7F2E8),
+         title: const Text('Edit idea'),
+-        actions: [AdminDeleteButton(table: 'content_items', item: widget.item, onDeleted: () => Navigator.pop(context))],
++        actions: [
++          AdminDeleteButton(
++            table: 'content_items',
++            item: widget.item,
++            onDeleted: () => Navigator.pop(context),
++          ),
++        ],
+       ),
+       body: ListView(
+         padding: const EdgeInsets.fromLTRB(18, 14, 18, 28),
+@@ -4188,7 +4236,8 @@
+                         borderRadius: BorderRadius.circular(4),
+                         child: image.isNotEmpty
+                             ? Image.network(
+-                webHtmlElementStrategy: WebHtmlElementStrategy.fallback,
++                                webHtmlElementStrategy:
++                                    WebHtmlElementStrategy.fallback,
+                                 image,
+                                 width: 58,
+                                 height: 58,
+@@ -4620,12 +4669,21 @@
+             },
+           ),
+           const SizedBox(height: 18),
+-          Card(child: ListTile(
+-            leading: const Icon(Icons.delete_outline),
+-            title: const Text('Manage & delete content'),
+-            subtitle: const Text('Remove gifts, ideas, events, light displays, shops, charities and trees'),
+-            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminManageContentPage())).then((_) => setState(() {})),
+-          )),
++          Card(
++            child: ListTile(
++              leading: const Icon(Icons.delete_outline),
++              title: const Text('Manage & delete content'),
++              subtitle: const Text(
++                'Remove gifts, ideas, events, light displays, shops, charities and trees',
++              ),
++              onTap: () => Navigator.push(
++                context,
++                MaterialPageRoute(
++                  builder: (_) => const AdminManageContentPage(),
++                ),
++              ).then((_) => setState(() {})),
++            ),
++          ),
+           const SizedBox(height: 10),
+           Card(
+             child: ListTile(

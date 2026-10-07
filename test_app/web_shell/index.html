@@ -24,14 +24,18 @@
     #loading{position:absolute;inset:52px 0 0;display:grid;place-content:center;text-align:center;pointer-events:none;background:#fffaf0;z-index:1;font-size:18px}
     dialog{border:0;border-radius:14px;max-width:440px;width:calc(100% - 32px);padding:24px;color:#173b36;box-shadow:0 10px 50px #0004}
     dialog::backdrop{background:#0007}dialog h2{margin-top:0;font-size:22px}dialog p{line-height:1.6;font-size:16px}dialog button{background:#0f4c45;color:white} [hidden]{display:none!important}
+  #analytics-choice{position:fixed;bottom:42px;left:50%;transform:translateX(-50%);z-index:10;width:calc(100% - 24px);max-width:440px;background:white;border:1px solid #c9d8d0;border-radius:12px;padding:16px;box-shadow:0 4px 24px #0003}#analytics-choice p{font-size:14px;line-height:1.5;margin:0 0 10px}#analytics-choice button{margin-right:8px;background:#0f4c45;color:white}#analytics-settings{position:fixed;bottom:6px;right:6px;z-index:9;font-size:12px;padding:5px 8px;background:#fff;opacity:.85}
   </style>
   <script src="install.js" defer></script>
+  <script src="analytics.js" defer></script>
 </head>
 <body>
   <header id="app-toolbar"><span>Christmas Ideas NZ</span><button id="install-button" type="button">Install app</button></header>
   <main id="flutter-host" aria-label="Christmas Ideas NZ"></main>
   <div id="loading" role="status">Loading Christmas Ideas NZ…</div>
   <dialog id="install-help" aria-labelledby="install-title"><h2 id="install-title">Keep Christmas Ideas NZ handy</h2><p id="install-instructions"></p><p>You can also keep using it in your browser. An internet connection is needed for the latest content.</p><button id="close-install" type="button">Got it</button></dialog>
+  <aside id="analytics-choice" aria-label="Analytics preferences" hidden><p>May we use Google Analytics to understand which Christmas ideas people enjoy? It uses cookies and collects visit, device and approximate location information. You can change your choice anytime.</p><button id="allow-analytics" type="button">Allow analytics</button><button id="decline-analytics" type="button">No thanks</button></aside>
+  <button id="analytics-settings" type="button">Privacy choices</button>
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>
