@@ -123,7 +123,7 @@ class _SeasonalListingEditorState extends State<SeasonalListingEditor> {
   @override
   Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(title: Text(charity ? 'Christmas charity' : 'Real Christmas tree seller')),
-    body: Form(key: form, child: ListView(padding: const EdgeInsets.all(20), children: [
+    body: Form(key: form, child: SingleChildScrollView(padding: const EdgeInsets.all(20), child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
       Text(charity ? 'Link directly to the charity’s own donation page. Include what donations support and any drop-off details.' : 'Include tree prices, sizes, opening dates and hours, collection or delivery details in the description.'),
       const SizedBox(height:16),
       TextFormField(controller:name, decoration: const InputDecoration(labelText:'Name'), validator:(v) => (v??'').trim().isEmpty ? 'Enter a name' : null),
@@ -146,6 +146,6 @@ class _SeasonalListingEditorState extends State<SeasonalListingEditor> {
         onChanged:busy ? null : (v) => setState(() => status = v ?? 'draft')),
       const SizedBox(height:20),
       FilledButton(onPressed:busy ? null : save, child:Text(busy ? 'Please wait…' : 'Save listing')),
-    ])),
+    ]))),
   );
 }
