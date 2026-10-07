@@ -1,0 +1,104 @@
+--- a/test_app/main.dart
++++ b/test_app/main.dart
+@@ -2929,6 +2929,13 @@
+ 
+ class _SavedPageState extends State<SavedPage> {
+   final boardName = TextEditingController();
++  bool creatingBoard = false;
++
++  @override
++  void dispose() {
++    boardName.dispose();
++    super.dispose();
++  }
+ 
+   Future<List<Map<String, dynamic>>> loadBoards() async {
+     final user = Supabase.instance.client.auth.currentUser;
+@@ -2942,23 +2949,41 @@
+   }
+ 
+   Future<void> createBoard() async {
++    if (creatingBoard) return;
+     final user = Supabase.instance.client.auth.currentUser;
+     if (user == null) {
+-      if (mounted)
+-        ScaffoldMessenger.of(
+-          context,
+-        ).showSnackBar(const SnackBar(content: Text('Sign in from Me first.')));
++      ScaffoldMessenger.of(context).showSnackBar(
++        const SnackBar(content: Text('Sign in from Me first.')),
++      );
+       return;
+     }
+     final name = boardName.text.trim();
+-    if (name.isEmpty) return;
+-    await Supabase.instance.client.from('boards').insert({
+-      'user_id': user.id,
+-      'name': name,
+-      'emoji': '✦',
+-    });
+-    boardName.clear();
+-    if (mounted) setState(() {});
++    if (name.isEmpty) {
++      ScaffoldMessenger.of(context).showSnackBar(
++        const SnackBar(content: Text('Enter a name for your board.')),
++      );
++      return;
++    }
++    setState(() => creatingBoard = true);
++    try {
++      await Supabase.instance.client.from('boards').insert({
++        'user_id': user.id,
++        'name': name,
++        'emoji': '✦',
++      }).select('id').single().timeout(const Duration(seconds: 20));
++      if (!mounted) return;
++      boardName.clear();
++      ScaffoldMessenger.of(context).showSnackBar(
++        SnackBar(content: Text('Board “$name” created.')),
++      );
++    } catch (_) {
++      if (!mounted) return;
++      ScaffoldMessenger.of(context).showSnackBar(
++        const SnackBar(content: Text('Could not create your board. Check your connection and try again. If it continues, sign out and sign in from Me.')),
++      );
++    } finally {
++      if (mounted) setState(() => creatingBoard = false);
++    }
+   }
+ 
+   @override
+@@ -3010,6 +3035,8 @@
+                 Expanded(
+                   child: TextField(
+                     controller: boardName,
++                    enabled: !creatingBoard,
++                    onSubmitted: (_) => createBoard(),
+                     decoration: const InputDecoration(
+                       hintText: 'New board name',
+                     ),
+@@ -3017,8 +3044,8 @@
+                 ),
+                 const SizedBox(width: 8),
+                 FilledButton(
+-                  onPressed: createBoard,
+-                  child: const Text('Create'),
++                  onPressed: creatingBoard ? null : createBoard,
++                  child: Text(creatingBoard ? 'Creating…' : 'Create'),
+                 ),
+               ],
+             ),
+@@ -3028,6 +3055,13 @@
+               builder: (context, snap) {
+                 if (snap.connectionState == ConnectionState.waiting)
+                   return const Center(child: CircularProgressIndicator());
++                if (snap.hasError) {
++                  return TextButton.icon(
++                    onPressed: () => setState(() {}),
++                    icon: const Icon(Icons.refresh),
++                    label: const Text('Could not load your boards. Tap to retry.'),
++                  );
++                }
+                 final boards = snap.data ?? [];
+                 if (boards.isEmpty)
+                   return const Text(
