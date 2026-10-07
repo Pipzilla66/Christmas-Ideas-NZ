@@ -1,7 +1,7 @@
 name: Build Christmas Ideas NZ Web
 on:
   push:
-    branches: [web-version]
+    branches: [main, web-version]
     paths:
       - 'test_app/**'
       - '.github/workflows/web.yml'
@@ -21,6 +21,8 @@ jobs:
         run: python3 -m pip install Pillow
       - name: Generate web project
         run: |
+          git apply test_app/seasonal-sections.patch
+          git apply test_app/web-polish.patch
           flutter create generated_web --platforms=web --project-name christmas_ideas_nz_test
           cp test_app/pubspec.yaml generated_web/pubspec.yaml
           cp test_app/*.dart generated_web/lib/
@@ -51,6 +53,8 @@ jobs:
           text = text.replace('href="icons/Icon-192.png"', 'href="icons/apple-touch-icon.png"')
           p.write_text(text)
           PYWEB
+      - name: Add installation and desktop layout
+        run: cp test_app/web_shell/* generated_web/web/
       - name: Analyze
         working-directory: generated_web
         run: flutter analyze lib --no-fatal-infos --no-fatal-warnings
