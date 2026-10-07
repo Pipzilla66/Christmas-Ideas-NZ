@@ -49,6 +49,9 @@ jobs:
           channel: stable
           cache: true
 
+      - name: Apply seasonal sections
+        run: git apply test_app/seasonal-sections.patch
+
       - name: Generate Android host project
         run: |
           rm -rf generated_app
