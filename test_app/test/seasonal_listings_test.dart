@@ -17,8 +17,11 @@ void main() {
     expect(filterListings(all,now:now,category:'Real Christmas Trees',region:'Auckland'),isEmpty);
   });
   testWidgets('Published charity requires name and valid official URL', (tester) async {
+    tester.view.physicalSize = const Size(1000, 1800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
     await tester.pumpWidget(const MaterialApp(home:SeasonalListingEditor(type:'charity',item:{'status':'published','region':'Nationwide'})));
-    await tester.scrollUntilVisible(find.text('Save listing'),300);
     await tester.tap(find.text('Save listing'));
     await tester.pump();
     expect(find.text('Enter a name'),findsOneWidget);
