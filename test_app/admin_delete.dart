@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+
+import 'admin_item_edit.dart';
+
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 const manageableContent = {
@@ -276,7 +279,13 @@ class _AdminManageContentPageState extends State<AdminManageContentPage> {
                     title: Text(
                       (item['title'] ?? item['name'] ?? 'Listing').toString(),
                     ),
-                    subtitle: Text('${item['status']}'),
+                    subtitle: Text('${item['status']} · ${item['city'] ?? ''}'),
+                    onTap: removed
+                        ? null
+                        : () async {
+                            await editAdminItem(context, table, item['id']);
+                            if (mounted) reload();
+                          },
                     trailing: removed
                         ? IconButton(
                             tooltip: 'Restore as draft',
@@ -286,6 +295,18 @@ class _AdminManageContentPageState extends State<AdminManageContentPage> {
                         : Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
+                              IconButton(
+                                tooltip: 'Edit item & photo',
+                                icon: const Icon(Icons.edit_outlined),
+                                onPressed: () async {
+                                  await editAdminItem(
+                                    context,
+                                    table,
+                                    item['id'],
+                                  );
+                                  if (mounted) reload();
+                                },
+                              ),
                               if (item['status'] == 'draft')
                                 IconButton(
                                   tooltip: 'Publish',

@@ -1,0 +1,121 @@
+--- a/test_app/main.dart
++++ b/test_app/main.dart
+@@ -3,6 +3,7 @@
+ import 'listing_filters.dart';
+ import 'gift_filters.dart';
+ import 'admin_delete.dart';
++import 'admin_item_edit.dart';
+ import 'analytics.dart';
+ import 'seasonal_listings.dart';
+ import 'elf_search.dart';
+@@ -1697,7 +1698,7 @@
+                             MaterialPageRoute(
+                               builder: (_) => trackedGiftDetail(g),
+                             ),
+-                          ),
++                          ).then((_) => refreshResults()),
+                           child: Column(
+                             crossAxisAlignment: CrossAxisAlignment.start,
+                             children: [
+@@ -1792,7 +1793,7 @@
+                           MaterialPageRoute(
+                             builder: (_) => ContentDetailPage(item: item),
+                           ),
+-                        ),
++                        ).then((_) => refreshResults()),
+                         child: Container(
+                           margin: const EdgeInsets.only(bottom: 14),
+                           clipBehavior: Clip.antiAlias,
+@@ -1960,9 +1961,15 @@
+   return GiftDetailPage(gift: gift);
+ }
+ 
+-class GiftDetailPage extends StatelessWidget {
++class GiftDetailPage extends StatefulWidget {
+   final Map<String, dynamic> gift;
+   const GiftDetailPage({super.key, required this.gift});
++  @override
++  State<GiftDetailPage> createState() => _GiftDetailPageState();
++}
++
++class _GiftDetailPageState extends State<GiftDetailPage> {
++  Map<String, dynamic> get gift => widget.gift;
+ 
+   Future<void> openLink(BuildContext context) async {
+     final raw = (gift['affiliate_url'] ?? gift['product_url'] ?? '').toString();
+@@ -2004,6 +2011,20 @@
+       body: ListView(
+         padding: EdgeInsets.zero,
+         children: [
++          Padding(
++            padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
++            child: AdminItemActions(
++              table: 'gift_ideas',
++              item: gift,
++              onChanged: () {
++                if (['archived', 'draft'].contains(gift['status'])) {
++                  Navigator.pop(context);
++                } else {
++                  setState(() {});
++                }
++              },
++            ),
++          ),
+           if (image.isNotEmpty)
+             AspectRatio(
+               aspectRatio: 16 / 10,
+@@ -2119,9 +2140,15 @@
+   );
+ }
+ 
+-class ContentDetailPage extends StatelessWidget {
++class ContentDetailPage extends StatefulWidget {
+   final Map<String, dynamic> item;
+   const ContentDetailPage({super.key, required this.item});
++  @override
++  State<ContentDetailPage> createState() => _ContentDetailPageState();
++}
++
++class _ContentDetailPageState extends State<ContentDetailPage> {
++  Map<String, dynamic> get item => widget.item;
+ 
+   Future<void> openExternal() async {
+     final raw = (item['external_url'] ?? '').toString();
+@@ -2143,6 +2170,20 @@
+       body: ListView(
+         padding: EdgeInsets.zero,
+         children: [
++          Padding(
++            padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
++            child: AdminItemActions(
++              table: 'content_items',
++              item: item,
++              onChanged: () {
++                if (['archived', 'draft'].contains(item['status'])) {
++                  Navigator.pop(context);
++                } else {
++                  setState(() {});
++                }
++              },
++            ),
++          ),
+           if (image.isNotEmpty)
+             AspectRatio(
+               aspectRatio: 16 / 10,
+@@ -2731,6 +2772,16 @@
+                               child: ListingPhoto(item: e),
+                             ),
+                             const SizedBox(height: 12),
++                            AdminItemActions(
++                              table: e['_type'] == 'Event'
++                                  ? 'events'
++                                  : e['_type'] == 'Lights'
++                                  ? 'light_displays'
++                                  : 'businesses',
++                              item: e,
++                              onChanged: () =>
++                                  setState(() => listings = load()),
++                            ),
+                             Text(
+                               listingCategory(e),
+                               style: const TextStyle(
