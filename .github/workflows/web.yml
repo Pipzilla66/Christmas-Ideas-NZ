@@ -25,6 +25,7 @@ jobs:
           python3 -c "from pathlib import Path; p=Path('test_app/main.dart'); s=p.read_text().replace(\"import 'dart:io';\", '').replace('.upload(', '.uploadBinary(').replace('File(picked.path)', 'await picked.readAsBytes()'); p.write_text(s)"
           git apply test_app/web-polish.patch
           git apply test_app/web-images.patch
+          git apply test_app/admin-delete.patch
           flutter create generated_web --platforms=web --project-name christmas_ideas_nz_test
           cp test_app/pubspec.yaml generated_web/pubspec.yaml
           cp test_app/*.dart generated_web/lib/
