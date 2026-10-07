@@ -1,0 +1,38 @@
+--- a/test_app/main.dart
++++ b/test_app/main.dart
+@@ -1684,7 +1684,7 @@
+                           : 2,
+                       mainAxisSpacing: 12,
+                       crossAxisSpacing: 12,
+-                      mainAxisExtent: 245,
++                      mainAxisExtent: MediaQuery.sizeOf(context).width >= 700 ? 320 : 245,
+                     ),
+                     itemCount: gifts.length,
+                     itemBuilder: (context, i) {
+@@ -1703,7 +1703,7 @@
+                             crossAxisAlignment: CrossAxisAlignment.start,
+                             children: [
+                               SizedBox(
+-                                height: 145,
++                                height: MediaQuery.sizeOf(context).width >= 700 ? 220 : 145,
+                                 width: double.infinity,
+                                 child: EditorialImage(
+                                   url: g['image_url']?.toString(),
+@@ -1806,7 +1806,7 @@
+                             crossAxisAlignment: CrossAxisAlignment.start,
+                             children: [
+                               SizedBox(
+-                                height: 145,
++                                height: MediaQuery.sizeOf(context).width >= 700 ? 220 : 145,
+                                 width: double.infinity,
+                                 child: EditorialImage(url: image),
+                               ),
+@@ -2768,7 +2768,7 @@
+                           children: [
+                             SizedBox(
+                               width: double.infinity,
+-                              height: 145,
++                              height: MediaQuery.sizeOf(context).width >= 700 ? 220 : 145,
+                               child: ListingPhoto(item: e),
+                             ),
+                             const SizedBox(height: 12),
