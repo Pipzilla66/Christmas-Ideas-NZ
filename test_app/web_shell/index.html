@@ -20,7 +20,10 @@
     #app-toolbar{height:52px;display:flex;align-items:center;justify-content:space-between;padding:6px 16px;background:#0f4c45;color:white;gap:12px}
     #app-toolbar span{font-size:14px;font-weight:650} button{font:inherit;font-size:14px;border:0;border-radius:6px;padding:9px 14px;cursor:pointer;background:#fffaf0;color:#173b36;font-weight:650}
     button:focus-visible{outline:3px solid #e3bd5c;outline-offset:3px}
-    #flutter-host{position:absolute;top:52px;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:1100px;background:#fffaf0}
+    #flutter-host{position:absolute;top:52px;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:780px;background:#fffaf0;overflow:hidden}
+    /* Keep HTML image fallbacks inside the Flutter card frame. */
+    #flutter-host flt-platform-view{overflow:hidden}
+    #flutter-host flt-platform-view img{display:block;width:100%!important;height:100%!important;max-width:100%;max-height:100%;object-fit:contain!important;object-position:center!important;pointer-events:none}
     body.installed #app-toolbar{display:none}body.installed #flutter-host{top:0}
     #loading{position:absolute;inset:52px 0 0;display:grid;place-content:center;text-align:center;pointer-events:none;background:#fffaf0;z-index:1;font-size:18px}
     dialog{border:0;border-radius:14px;max-width:440px;width:calc(100% - 32px);padding:24px;color:#173b36;box-shadow:0 10px 50px #0004}
