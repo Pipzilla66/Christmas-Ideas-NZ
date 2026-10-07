@@ -1,0 +1,39 @@
+--- a/test_app/main.dart
++++ b/test_app/main.dart
+@@ -2629,7 +2629,8 @@
+                   [
+                     'All',
+                     'Light Displays',
+-                    'Events / Markets',
++                    'Events',
++                    'Markets & Workshops',
+                     'Santa Visits',
+                     'Christmas Shops',
+                     'Christmas Charities',
+@@ -4981,8 +4982,8 @@
+       text: payload['website_url']?.toString() ?? '',
+     );
+     cost = TextEditingController(text: payload['cost_text']?.toString() ?? '');
+-    eventCategory = payload['event_type'] == 'santa_visit'
+-        ? 'santa_visit'
++    eventCategory = ['santa_visit', 'market', 'workshop'].contains(payload['event_type'])
++        ? payload['event_type'].toString()
+         : 'community';
+     region = payload['region']?.toString();
+     if (region?.isEmpty ?? true) region = null;
+@@ -5177,12 +5178,14 @@
+                 items: const [
+                   DropdownMenuItem(
+                     value: 'community',
+-                    child: Text('Events / Markets'),
++                    child: Text('Events'),
+                   ),
+                   DropdownMenuItem(
+                     value: 'santa_visit',
+                     child: Text('Santa Visits'),
+                   ),
++                  DropdownMenuItem(value: 'market', child: Text('Christmas Market')),
++                  DropdownMenuItem(value: 'workshop', child: Text('Christmas Workshop')),
+                 ],
+                 onChanged: busy
+                     ? null

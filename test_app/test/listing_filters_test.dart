@@ -158,7 +158,7 @@ void main() {
 
   test('Santa visits and parades use distinct categories', () {
     expect(listingCategory(event('Santa photos')), 'Santa Visits');
-    expect(listingCategory(event('Santa Parade')), 'Events / Markets');
+    expect(listingCategory(event('Santa Parade')), 'Events');
     expect(
       listingCategory({
         ...event('Christmas grotto'),
@@ -167,6 +167,19 @@ void main() {
       'Santa Visits',
     );
     expect(listingCategory({'_type': 'Store'}), 'Christmas Shops');
+  });
+
+  test('Markets and workshops are an Events subset and combine with area filters', () {
+    final all = [
+      event('Christmas Market'),
+      {...event('Make a wreath'), 'event_type': 'workshop'},
+      event('Christmas Concert'),
+      {...event('Auckland workshop'), 'city': 'Auckland', 'region': 'Auckland'},
+      {'_type': 'Store', 'name': 'Market shop'},
+    ];
+    expect(filterListings(all, now: now, category: 'Events').length, 4);
+    expect(filterListings(all, now: now, category: 'Markets & Workshops', region: 'Canterbury').map((e) => e['name']), ['Christmas Market', 'Make a wreath']);
+    expect(listingCategory(event('Santa Parade')), 'Events');
   });
 
   test('UTC timestamps are evaluated on the local calendar date', () {

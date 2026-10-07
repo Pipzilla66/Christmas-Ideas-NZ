@@ -306,6 +306,9 @@ class _AdminItemEditorState extends State<AdminItemEditor> {
         'christmas': 'Christmas event',
         'santa': 'Santa visit',
         'market': 'Christmas market',
+        'workshop': 'Christmas workshop',
+        'santa_visit': 'Santa visit',
+        'community': 'Community event',
       };
     return null;
   }
