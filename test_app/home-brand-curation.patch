@@ -1,0 +1,189 @@
+--- a/test_app/main.dart
++++ b/test_app/main.dart
+@@ -993,18 +993,18 @@
+     return curateGifts(
+       List<Map<String, dynamic>>.from(rows),
+       maxBudget: 50,
+-    ).take(6).toList();
++    ).take(12).toList();
+   }
+ 
+   Future<List<Map<String, dynamic>>> latestIdeas() async {
+     final rows = await Supabase.instance.client
+         .from('content_items')
+         .select(
+-          'id,title,summary,body,image_url,external_url,content_type,featured,sponsored,sponsor_label',
++          'id,title,summary,body,image_url,image_credit,image_source_url,external_url,content_type,featured,sponsored,sponsor_label',
+         )
+         .eq('status', 'published')
+         .order('featured', ascending: false)
+-        .limit(4);
++        .limit(12);
+     return List<Map<String, dynamic>>.from(rows);
+   }
+ 
+@@ -1014,7 +1014,7 @@
+     final scheduled = await Supabase.instance.client
+         .from('content_items')
+         .select(
+-          'id,title,summary,body,image_url,external_url,content_type,featured,sponsored,sponsor_label,idea_of_day_date',
++          'id,title,summary,body,image_url,image_credit,image_source_url,external_url,content_type,featured,sponsored,sponsor_label,idea_of_day_date',
+         )
+         .eq('status', 'published')
+         .eq('idea_of_day_date', date)
+@@ -1025,7 +1025,7 @@
+     final rows = await Supabase.instance.client
+         .from('content_items')
+         .select(
+-          'id,title,summary,body,image_url,external_url,content_type,featured,sponsored,sponsor_label,idea_of_day_date',
++          'id,title,summary,body,image_url,image_credit,image_source_url,external_url,content_type,featured,sponsored,sponsor_label,idea_of_day_date',
+         )
+         .eq('status', 'published')
+         .order('created_at', ascending: true)
+@@ -1068,7 +1068,7 @@
+           ),
+         ),
+         SizedBox(
+-          height: 330,
++          height: MediaQuery.sizeOf(context).width >= 700 ? 370 : 390,
+           child: Stack(
+             fit: StackFit.expand,
+             children: [
+@@ -1087,31 +1087,34 @@
+                 child: Column(
+                   crossAxisAlignment: CrossAxisAlignment.start,
+                   children: [
+-                    const Text(
+-                      '✦  MAKE THIS CHRISTMAS',
+-                      style: TextStyle(
++                    ConstrainedBox(
++                      constraints: const BoxConstraints(maxWidth: 620),
++                      child: Text(
++                        'Christmas Ideas NZ',
++                        style: GoogleFonts.playfairDisplay(
++                          color: Colors.white,
++                          fontWeight: FontWeight.w700,
++                          fontSize: MediaQuery.sizeOf(context).width >= 700 ? 54 : 38,
++                          height: 1.05,
++                        ),
++                      ),
++                    ),
++                    const SizedBox(height: 12),
++                    Text(
++                      'More Meaningful',
++                      style: GoogleFonts.playfairDisplay(
+                         color: Colors.white,
+-                        fontSize: 10,
+-                        letterSpacing: 1.8,
+-                        fontWeight: FontWeight.w700,
++                        fontStyle: FontStyle.italic,
++                        fontSize: MediaQuery.sizeOf(context).width >= 700 ? 30 : 25,
++                        height: 1.1,
+                       ),
+                     ),
+                     const SizedBox(height: 14),
+-                    Text(
+-                      'More\nMeaningful',
+-                      style: GoogleFonts.playfairDisplay(
+-                        color: Colors.white,
+-                        fontStyle: FontStyle.italic,
+-                        fontSize: 46,
+-                        height: 1,
+-                      ),
+-                    ),
+-                    const SizedBox(height: 12),
+                     const SizedBox(
+-                      width: 230,
++                      width: 360,
+                       child: Text(
+                         'Inspiration, gifts, food, events and ideas for a brighter Christmas in New Zealand.',
+-                        style: TextStyle(color: Colors.white, height: 1.3),
++                        style: TextStyle(color: Colors.white, fontSize: 16, height: 1.4),
+                       ),
+                     ),
+                     const Spacer(),
+@@ -1227,7 +1230,7 @@
+         ),
+         const SizedBox(height: 20),
+         _SectionHeading(
+-          title: 'Featured Gifts',
++          title: 'Gifts Curated by Elf Phillie',
+           action: 'See all',
+           onTap: () => goTo(1),
+         ),
+@@ -1289,17 +1292,22 @@
+         padding: EdgeInsets.all(18),
+         child: Text('More Christmas inspiration is on its way.'),
+       );
++    final availableWidth = MediaQuery.sizeOf(context).width - 36;
++    final desktop = availableWidth >= 664;
++    final columns = (availableWidth / 134).floor().clamp(4, 10);
++    final cardWidth = desktop ? (availableWidth - (columns - 1) * 9) / columns : 125.0;
++    final visibleItems = desktop ? items.take(columns).toList() : items;
+     return SizedBox(
+       height: 190,
+       child: ListView.separated(
+         scrollDirection: Axis.horizontal,
+         padding: const EdgeInsets.symmetric(horizontal: 18),
+-        itemCount: items.length,
++        itemCount: visibleItems.length,
+         separatorBuilder: (_, __) => const SizedBox(width: 9),
+         itemBuilder: (context, i) {
+-          final item = items[i];
++          final item = visibleItems[i];
+           return SizedBox(
+-            width: 125,
++            width: cardWidth,
+             child: Card(
+               margin: EdgeInsets.zero,
+               clipBehavior: Clip.antiAlias,
+@@ -1317,7 +1325,7 @@
+                   children: [
+                     EditorialImage(
+                       url: item['image_url']?.toString(),
+-                      width: 125,
++                      width: cardWidth,
+                       height: 116,
+                       kind: gifts ? 'gift' : 'idea',
+                     ),
+@@ -1432,7 +1440,7 @@
+     final rows = await Supabase.instance.client
+         .from('content_items')
+         .select(
+-          'id,title,summary,body,image_url,external_url,content_type,featured,sponsored,sponsor_label',
++          'id,title,summary,body,image_url,image_credit,image_source_url,external_url,content_type,featured,sponsored,sponsor_label',
+         )
+         .eq('status', 'published')
+         .order('featured', ascending: false)
+@@ -2244,6 +2252,13 @@
+                       fontWeight: FontWeight.w700,
+                       height: 1.4,
+                     ),
++                  ),
++                ],
++                if ((item['image_credit'] ?? '').toString().isNotEmpty) ...[
++                  const SizedBox(height: 12),
++                  Text(
++                    'Reference photo: ${item['image_credit']}',
++                    style: const TextStyle(fontSize: 13, color: Color(0xFF655E55)),
+                   ),
+                 ],
+                 const SizedBox(height: 20),
+@@ -3180,7 +3195,7 @@
+         final data = await Supabase.instance.client
+             .from('content_items')
+             .select(
+-              'id,title,summary,body,image_url,external_url,content_type,featured,sponsored,sponsor_label',
++              'id,title,summary,body,image_url,image_credit,image_source_url,external_url,content_type,featured,sponsored,sponsor_label',
+             )
+             .eq('id', itemId)
+             .maybeSingle();
+@@ -3500,7 +3515,7 @@
+     final rows = await Supabase.instance.client
+         .from('content_items')
+         .select(
+-          'id,title,summary,body,image_url,external_url,content_type,featured,sponsored,status,idea_of_day_date',
++          'id,title,summary,body,image_url,image_credit,image_source_url,external_url,content_type,featured,sponsored,status,idea_of_day_date',
+         )
+         .order('title');
+     return List<Map<String, dynamic>>.from(rows);
