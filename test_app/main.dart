@@ -663,7 +663,7 @@ class _PhillieSupportSheetState extends State<PhillieSupportSheet> {
             child: Scrollbar(
               controller: scrollController,
               thumbVisibility: true,
-              child: ListView(
+              child: SingleChildScrollView(
                 key: const ValueKey('elf-support-scroll'),
                 controller: scrollController,
                 physics: const AlwaysScrollableScrollPhysics(
@@ -671,7 +671,9 @@ class _PhillieSupportSheetState extends State<PhillieSupportSheet> {
                 ),
                 keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
                 padding: const EdgeInsets.only(right: 8, bottom: 24),
-                children: [
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
                   const Text(
                     'Your automated Christmas helper. I find gifts, ideas, events and lights from our published guide.',
                   ),
@@ -741,7 +743,8 @@ class _PhillieSupportSheetState extends State<PhillieSupportSheet> {
                           ),
                       ],
                     ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
@@ -750,6 +753,7 @@ class _PhillieSupportSheetState extends State<PhillieSupportSheet> {
     ),
   );
 }
+
 
 class EditorialImage extends StatelessWidget {
   final String? url;
