@@ -566,7 +566,7 @@ class _PhillieSupportSheetState extends State<PhillieSupportSheet> {
     if (item['_table'] == 'gift_ideas') {
       Navigator.push(
         context,
-        MaterialPageRoute(builder: (_) => trackedGiftDetail(item)),
+        MaterialPageRoute(builder: (_) => GiftDetailPage(gift: item)),
       );
     } else if (item['_table'] == 'content_items') {
       Navigator.push(
