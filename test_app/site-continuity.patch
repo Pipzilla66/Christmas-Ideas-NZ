@@ -1,0 +1,288 @@
+--- a/test_app/main.dart
++++ b/test_app/main.dart
+@@ -7,6 +7,7 @@
+ import 'analytics.dart';
+ import 'seasonal_listings.dart';
+ import 'elf_search.dart';
++import 'board_save.dart';
+ 
+ import 'package:shared_preferences/shared_preferences.dart';
+ 
+@@ -1931,63 +1932,39 @@
+     );
+     return;
+   }
+-  final rows = await Supabase.instance.client
+-      .from('boards')
+-      .select('id,name')
+-      .eq('user_id', user.id)
+-      .order('created_at');
+-  final boards = List<Map<String, dynamic>>.from(rows);
+-  if (boards.isEmpty) {
+-    if (context.mounted) {
++  try {
++    final rows = await Supabase.instance.client.from('boards')
++        .select('id,name').eq('user_id', user.id).order('created_at');
++    if (!context.mounted) return;
++    final saved = await showModalBottomSheet<bool>(
++      context: context,
++      isScrollControlled: true,
++      isDismissible: false,
++      enableDrag: false,
++      builder: (_) => BoardSaveSheet(
++        boards: List<Map<String, dynamic>>.from(rows),
++        createBoard: (name) async {
++          final board = await Supabase.instance.client.from('boards').insert({
++            'user_id': user.id, 'name': name, 'emoji': '✦',
++          }).select('id').single();
++          return board['id'].toString();
++        },
++        saveItem: (boardId) async {
++          await Supabase.instance.client.from('board_items').upsert({
++            'board_id': boardId, 'item_type': itemType, 'item_id': itemId,
++          }, onConflict: 'board_id,item_type,item_id', ignoreDuplicates: true);
++        },
++      ),
++    );
++    if (saved == true && context.mounted) {
+       ScaffoldMessenger.of(context).showSnackBar(
+-        const SnackBar(content: Text('Create a Saved board first.')),
++        const SnackBar(content: Text('Saved to board ❤️')),
+       );
+     }
+-    return;
+-  }
+-  if (!context.mounted) return;
+-  final boardId = await showModalBottomSheet<String>(
+-    context: context,
+-    builder: (ctx) => SafeArea(
+-      child: ListView(
+-        shrinkWrap: true,
+-        children: [
+-          const ListTile(
+-            title: Text(
+-              'Save to board',
+-              style: TextStyle(fontWeight: FontWeight.w900),
+-            ),
+-          ),
+-          ...boards.map(
+-            (b) => ListTile(
+-              leading: const Text('🎄'),
+-              title: Text((b['name'] ?? 'Board').toString()),
+-              onTap: () => Navigator.pop(ctx, b['id'].toString()),
+-            ),
+-          ),
+-        ],
+-      ),
+-    ),
+-  );
+-  if (boardId == null) return;
+-  try {
+-    await Supabase.instance.client.from('board_items').insert({
+-      'board_id': boardId,
+-      'item_type': itemType,
+-      'item_id': itemId,
+-    });
+-    if (context.mounted) {
+-      ScaffoldMessenger.of(context)
+-          .showSnackBar(const SnackBar(content: Text('Saved to board ❤️')));
+-    }
+   } catch (_) {
+-    if (context.mounted) {
+-      ScaffoldMessenger.of(context).showSnackBar(
+-        const SnackBar(
+-          content: Text('Already saved, or unable to save right now.'),
+-        ),
+-      );
+-    }
++    if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(
++      const SnackBar(content: Text('Could not load your boards. Please try again.')),
++    );
+   }
+ }
+ 
+@@ -4048,7 +4025,12 @@
+                 .map(
+                   (t) => DropdownMenuItem(
+                     value: t,
+-                    child: Text(t.replaceAll('_', ' ')),
++                    child: Text(
++                      t
++                          .split('_')
++                          .map((word) => '${word[0].toUpperCase()}${word.substring(1)}')
++                          .join(' '),
++                    ),
+                   ),
+                 )
+                 .toList(),
+@@ -5331,9 +5313,68 @@
+ class _MePageState extends State<MePage> {
+   final email = TextEditingController();
+   final password = TextEditingController();
++  final displayName = TextEditingController();
++  final confirmPassword = TextEditingController();
++  bool creatingAccount = false;
+   String? message;
+   Map<String, dynamic>? profile;
+   bool busy = false;
++
++  Future<void> createAccount() async {
++    final address = email.text.trim();
++    if (!RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$').hasMatch(address)) {
++      setState(() => message = 'Enter a valid email address.');
++      return;
++    }
++    if (password.text.length < 8) {
++      setState(() => message = 'Use a password with at least 8 characters.');
++      return;
++    }
++    if (password.text != confirmPassword.text) {
++      setState(() => message = 'Your passwords do not match.');
++      return;
++    }
++    setState(() {
++      busy = true;
++      message = null;
++    });
++    try {
++      final result = await Supabase.instance.client.auth.signUp(
++        email: address,
++        password: password.text,
++        emailRedirectTo: 'https://christmasideasnz.co.nz/',
++        data: displayName.text.trim().isEmpty
++            ? null
++            : {'display_name': displayName.text.trim()},
++      );
++      password.clear();
++      confirmPassword.clear();
++      if (result.session != null) {
++        await loadProfile();
++        if (mounted) setState(() => message = 'Your account is ready. Welcome!');
++      } else if (mounted) {
++        setState(() {
++          creatingAccount = false;
++          message = 'Check your email (including junk) for a confirmation link, then come back and sign in. If you already have an account, sign in with your existing password.';
++        });
++      }
++    } on AuthException catch (e) {
++      if (mounted) setState(() => message = e.message);
++    } catch (_) {
++      if (mounted) setState(() => message = 'Could not create your account. Please try again.');
++    } finally {
++      if (mounted) setState(() => busy = false);
++    }
++  }
++
++  @override
++  void dispose() {
++    email.dispose();
++    password.dispose();
++    displayName.dispose();
++    confirmPassword.dispose();
++    super.dispose();
++  }
+ 
+   Future<void> loadProfile() async {
+     final user = Supabase.instance.client.auth.currentUser;
+@@ -5423,36 +5464,74 @@
+           const SizedBox(height: 22),
+           const SizedBox(height: 8),
+           if (user == null) ...[
+-            const Text(
+-              'Sign in',
+-              style: TextStyle(fontWeight: FontWeight.w900, fontSize: 18),
++            Text(
++              creatingAccount ? 'Create account' : 'Sign in',
++              style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 18),
+             ),
+             const SizedBox(height: 6),
+             const Text(
+-              'Sign in to save boards, submit Christmas finds and access admin tools.',
++              'Create an account or sign in to save boards and submit Christmas finds.',
+             ),
+             const SizedBox(height: 10),
++            if (creatingAccount) ...[
++              TextField(
++                controller: displayName,
++                enabled: !busy,
++                textCapitalization: TextCapitalization.words,
++                decoration: const InputDecoration(labelText: 'Your name (optional)'),
++              ),
++              const SizedBox(height: 10),
++            ],
+             TextField(
+               controller: email,
++              enabled: !busy,
+               keyboardType: TextInputType.emailAddress,
+               decoration: const InputDecoration(labelText: 'Email'),
+             ),
+             const SizedBox(height: 10),
+             TextField(
+               controller: password,
++              enabled: !busy,
+               obscureText: true,
+-              decoration: const InputDecoration(labelText: 'Password'),
+-            ),
++              decoration: InputDecoration(
++                labelText: 'Password',
++                helperText: creatingAccount ? 'At least 8 characters' : null,
++              ),
++            ),
++            if (creatingAccount) ...[
++              const SizedBox(height: 10),
++              TextField(
++                controller: confirmPassword,
++                enabled: !busy,
++                obscureText: true,
++                decoration: const InputDecoration(labelText: 'Confirm password'),
++              ),
++            ],
+             const SizedBox(height: 12),
+             FilledButton(
+-              onPressed: busy ? null : signIn,
+-              child: Text(busy ? 'Signing in…' : 'Sign in'),
++              onPressed: busy ? null : (creatingAccount ? createAccount : signIn),
++              child: Text(
++                busy
++                    ? (creatingAccount ? 'Creating account…' : 'Signing in…')
++                    : (creatingAccount ? 'Create account' : 'Sign in'),
++              ),
++            ),
++            TextButton(
++              onPressed: busy ? null : () => setState(() {
++                creatingAccount = !creatingAccount;
++                message = null;
++                password.clear();
++                confirmPassword.clear();
++              }),
++              child: Text(creatingAccount
++                  ? 'Already have an account? Sign in'
++                  : 'New here? Create an account'),
+             ),
+           ] else ...[
+-            Container(
+-              decoration: BoxDecoration(
+-                color: const Color(0xFFFFFCF6),
+-                border: Border.all(color: const Color(0xFFE4DCCF)),
++            Material(
++              color: const Color(0xFFFFFCF6),
++              shape: RoundedRectangleBorder(
++                side: const BorderSide(color: Color(0xFFE4DCCF)),
+                 borderRadius: BorderRadius.circular(5),
+               ),
+               child: ListTile(
+@@ -5515,11 +5594,9 @@
+               child: Text(message!),
+             ),
+           const SizedBox(height: 20),
+-          Container(
+-            decoration: BoxDecoration(
+-              color: const Color(0xFFEEE6D8),
+-              borderRadius: BorderRadius.circular(5),
+-            ),
++          Material(
++            color: const Color(0xFFEEE6D8),
++            borderRadius: BorderRadius.circular(5),
+             child: ListTile(
+               leading: const Icon(Icons.facebook, color: Color(0xFF0F4C45)),
+               title: const Text('Christmas Ideas NZ on Facebook'),
