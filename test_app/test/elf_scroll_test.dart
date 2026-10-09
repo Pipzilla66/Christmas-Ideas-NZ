@@ -23,7 +23,10 @@ void main() {
     addTearDown(tester.view.resetDevicePixelRatio);
     addTearDown(tester.view.resetViewInsets);
     await tester.pumpWidget(MaterialApp(
-      home: Scaffold(body: PhillieSupportSheet(initialCatalogue: catalogue)),
+      home: Scaffold(
+        resizeToAvoidBottomInset: false,
+        body: PhillieSupportSheet(initialCatalogue: catalogue),
+      ),
     ));
     await tester.pumpAndSettle();
   }
