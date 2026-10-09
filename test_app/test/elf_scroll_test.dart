@@ -30,13 +30,14 @@ void main() {
 
   testWidgets('small mobile screen reveals results and can reach the final card', (tester) async {
     await openSheet(tester, 430);
-    await tester.tap(find.text('Christmas lights'));
-    await tester.pumpAndSettle();
-    expect(find.textContaining('Here are 5 ideas').hitTestable(), findsOneWidget);
     final scrolling = find.descendant(
       of: find.byKey(const ValueKey('elf-support-scroll')),
       matching: find.byType(Scrollable),
     );
+    await tester.scrollUntilVisible(find.text('Christmas lights'), 100, scrollable: scrolling);
+    await tester.tap(find.text('Christmas lights'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('Here are 5 ideas').hitTestable(), findsOneWidget);
     await tester.scrollUntilVisible(find.text('Light display 5'), 120, scrollable: scrolling);
     expect(find.text('Light display 5').hitTestable(), findsOneWidget);
     await tester.tap(find.text('Light display 5'));
@@ -49,7 +50,11 @@ void main() {
     await openSheet(tester, 640);
     tester.view.viewInsets = const FakeViewPadding(bottom: 260);
     await tester.pump();
-    await tester.ensureVisible(find.byType(TextField));
+    final scrolling = find.descendant(
+      of: find.byKey(const ValueKey('elf-support-scroll')),
+      matching: find.byType(Scrollable),
+    );
+    await tester.scrollUntilVisible(find.byType(TextField), 80, scrollable: scrolling);
     await tester.enterText(find.byType(TextField), 'Christmas lights');
     await tester.testTextInput.receiveAction(TextInputAction.done);
     await tester.pumpAndSettle();
