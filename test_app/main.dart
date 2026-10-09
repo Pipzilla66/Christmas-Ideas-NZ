@@ -471,31 +471,43 @@ void showElf(BuildContext context) => showModalBottomSheet(
   context: context,
   isScrollControlled: true,
   useSafeArea: true,
+  enableDrag: false,
   backgroundColor: const Color(0xFFF7F2E8),
   builder: (_) => const PhillieSupportSheet(),
 );
 
 class PhillieSupportSheet extends StatefulWidget {
-  const PhillieSupportSheet({super.key});
+  const PhillieSupportSheet({super.key, this.initialCatalogue});
+  final List<Map<String, dynamic>>? initialCatalogue;
   @override
   State<PhillieSupportSheet> createState() => _PhillieSupportSheetState();
 }
 
 class _PhillieSupportSheetState extends State<PhillieSupportSheet> {
   final question = TextEditingController();
+  final scrollController = ScrollController();
+  final resultsKey = GlobalKey();
   bool busy = false;
   String? answer;
   List<Map<String, dynamic>> matches = [];
   List<Map<String, dynamic>>? catalogue;
   @override
+  void initState() {
+    super.initState();
+    catalogue = widget.initialCatalogue;
+  }
+
+  @override
   void dispose() {
     question.dispose();
+    scrollController.dispose();
     super.dispose();
   }
 
   Future<void> ask([String? prompt]) async {
     if (prompt != null) question.text = prompt;
     if (question.text.trim().isEmpty || busy) return;
+    FocusScope.of(context).unfocus();
     setState(() {
       busy = true;
       answer = null;
@@ -534,7 +546,19 @@ class _PhillieSupportSheetState extends State<PhillieSupportSheet> {
           () => answer = 'I can’t load the Christmas guide right now. Please try again when you’re connected.',
         );
     } finally {
-      if (mounted) setState(() => busy = false);
+      if (mounted) {
+        setState(() => busy = false);
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          final target = resultsKey.currentContext;
+          if (!mounted || target == null) return;
+          Scrollable.ensureVisible(
+            target,
+            alignment: 0,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeOut,
+          );
+        });
+      }
     }
   }
 
@@ -542,7 +566,7 @@ class _PhillieSupportSheetState extends State<PhillieSupportSheet> {
     if (item['_table'] == 'gift_ideas') {
       Navigator.push(
         context,
-        MaterialPageRoute(builder: (_) => GiftDetailPage(gift: item)),
+        MaterialPageRoute(builder: (_) => trackedGiftDetail(item)),
       );
     } else if (item['_table'] == 'content_items') {
       Navigator.push(
@@ -606,22 +630,19 @@ class _PhillieSupportSheetState extends State<PhillieSupportSheet> {
 
   @override
   Widget build(BuildContext context) => SizedBox(
-    height: MediaQuery.sizeOf(context).height * .85,
+    height: MediaQuery.sizeOf(context).height * .9,
     child: Padding(
       padding: EdgeInsets.fromLTRB(
-        20,
-        16,
-        20,
-        MediaQuery.viewInsetsOf(context).bottom + 16,
+        20, 16, 20, MediaQuery.viewInsetsOf(context).bottom + 16,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              CircleAvatar(
+              const CircleAvatar(
                 radius: 28,
-                backgroundImage: const AssetImage('assets/elf_phillie.webp'),
+                backgroundImage: AssetImage('assets/elf_phillie.webp'),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -631,83 +652,97 @@ class _PhillieSupportSheetState extends State<PhillieSupportSheet> {
                 ),
               ),
               IconButton(
+                tooltip: 'Close Elf Phillie',
                 onPressed: () => Navigator.pop(context),
                 icon: const Icon(Icons.close),
               ),
             ],
           ),
           const SizedBox(height: 10),
-          const Text(
-            'Your automated Christmas helper. I find gifts, ideas, events and lights from our published guide.',
-          ),
-          const SizedBox(height: 12),
-          Wrap(
-            spacing: 6,
-            children: [
-              for (final prompt in [
-                'Gifts under \$50',
-                'Christchurch events this weekend',
-                'Free family activities',
-                'Christmas lights',
-                'NZ-made gifts',
-              ])
-                ActionChip(
-                  label: Text(prompt),
-                  onPressed: busy ? null : () => ask(prompt),
-                ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          TextField(
-            controller: question,
-            onSubmitted: busy ? null : (_) => ask(),
-            decoration: const InputDecoration(
-              labelText: 'What are you looking for?',
-              hintText: 'Gifts for Mum under \$50',
-            ),
-          ),
-          const SizedBox(height: 10),
-          FilledButton(
-            onPressed: busy ? null : () => ask(),
-            child: Text(busy ? 'Finding ideas…' : 'Ask Elf Phillie ✨'),
-          ),
-          const SizedBox(height: 12),
           Expanded(
-            child: ListView(
-              children: [
-                if (answer != null)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
-                    child: Text(answer!),
+            child: Scrollbar(
+              controller: scrollController,
+              thumbVisibility: true,
+              child: ListView(
+                key: const ValueKey('elf-support-scroll'),
+                controller: scrollController,
+                physics: const AlwaysScrollableScrollPhysics(
+                  parent: ClampingScrollPhysics(),
+                ),
+                keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+                padding: const EdgeInsets.only(right: 8, bottom: 24),
+                children: [
+                  const Text(
+                    'Your automated Christmas helper. I find gifts, ideas, events and lights from our published guide.',
                   ),
-                for (final item in matches)
-                  Card(
-                    child: ListTile(
-                      leading: SizedBox(
-                        width: 56,
-                        height: 56,
-                        child: EditorialImage(
-                          url: item['image_url']?.toString(),
-                          kind: item['_table'].toString(),
+                  const SizedBox(height: 12),
+                  Wrap(
+                    spacing: 6,
+                    children: [
+                      for (final prompt in [
+                        'Gifts under \$50',
+                        'Christchurch events this weekend',
+                        'Free family activities',
+                        'Christmas lights',
+                        'NZ-made gifts',
+                      ])
+                        ActionChip(
+                          label: Text(prompt),
+                          onPressed: busy ? null : () => ask(prompt),
                         ),
-                      ),
-                      title: Text(
-                        (item['title'] ?? item['name'] ?? 'Christmas idea')
-                            .toString(),
-                      ),
-                      subtitle: Text(
-                        item['_table'] == 'gift_ideas'
-                            ? 'NZ\$${item['price_min'] ?? '—'}'
-                            : (item['city'] ??
-                                      item['content_type'] ??
-                                      'Christmas inspiration')
-                                  .toString(),
-                      ),
-                      trailing: const Icon(Icons.chevron_right),
-                      onTap: () => open(item),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: question,
+                    onSubmitted: busy ? null : (_) => ask(),
+                    decoration: const InputDecoration(
+                      labelText: 'What are you looking for?',
+                      hintText: 'Gifts for Mum under \$50',
                     ),
                   ),
-              ],
+                  const SizedBox(height: 10),
+                  FilledButton(
+                    onPressed: busy ? null : () => ask(),
+                    child: Text(busy ? 'Finding ideas…' : 'Ask Elf Phillie ✨'),
+                  ),
+                  const SizedBox(height: 12),
+                  if (answer != null)
+                    Column(
+                      key: resultsKey,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: Text(answer!),
+                        ),
+                        for (final item in matches)
+                          Card(
+                            child: ListTile(
+                              leading: SizedBox(
+                                width: 56,
+                                height: 56,
+                                child: EditorialImage(
+                                  url: item['image_url']?.toString(),
+                                  kind: item['_table'].toString(),
+                                ),
+                              ),
+                              title: Text(
+                                (item['title'] ?? item['name'] ?? 'Christmas idea').toString(),
+                              ),
+                              subtitle: Text(
+                                item['_table'] == 'gift_ideas'
+                                    ? 'NZ\$${item['price_min'] ?? '—'}'
+                                    : (item['city'] ?? item['content_type'] ?? 'Christmas inspiration').toString(),
+                              ),
+                              trailing: const Icon(Icons.chevron_right),
+                              onTap: () => open(item),
+                            ),
+                          ),
+                      ],
+                    ),
+                ],
+              ),
             ),
           ),
         ],
