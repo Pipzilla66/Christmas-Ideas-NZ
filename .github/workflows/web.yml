@@ -36,6 +36,7 @@ jobs:
           git apply test_app/landing-photo.patch
           git apply test_app/home-brand-curation.patch
           git apply test_app/remove-home-title-bar.patch
+          git apply test_app/site-continuity.patch
           flutter create generated_web --platforms=web --project-name christmas_ideas_nz_test
           cp test_app/pubspec.yaml generated_web/pubspec.yaml
           cp test_app/*.dart generated_web/lib/
