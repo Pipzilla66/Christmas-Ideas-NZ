@@ -35,7 +35,8 @@ void main() {
     await openSheet(tester, 430);
     final scrolling = find.descendant(
       of: find.byKey(const ValueKey('elf-support-scroll')),
-      matching: find.byType(Scrollable),
+      matching: find.byWidgetPredicate((widget) =>
+        widget is Scrollable && widget.axisDirection == AxisDirection.down),
     );
     await tester.scrollUntilVisible(find.text('Christmas lights'), 100, scrollable: scrolling);
     await tester.tap(find.text('Christmas lights'));
@@ -55,7 +56,8 @@ void main() {
     await tester.pump();
     final scrolling = find.descendant(
       of: find.byKey(const ValueKey('elf-support-scroll')),
-      matching: find.byType(Scrollable),
+      matching: find.byWidgetPredicate((widget) =>
+        widget is Scrollable && widget.axisDirection == AxisDirection.down),
     );
     await tester.scrollUntilVisible(find.byType(TextField), 80, scrollable: scrolling);
     await tester.enterText(find.byType(TextField), 'Christmas lights');
