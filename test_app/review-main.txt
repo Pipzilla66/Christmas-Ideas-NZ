@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:async';
 import 'review_features.dart';
 import 'member_insights.dart';
+import 'guest_signup_invite.dart';
 import 'location_bridge.dart';
 
 import 'listing_filters.dart';
@@ -252,24 +253,7 @@ class _ChristmasIdeasNZState extends State<ChristmasIdeasNZ> {
           ),
         ),
       ),
-      home: name == null
-          ? Onboarding(
-              theme: theme,
-              onThemeChanged: (t) => setState(() => theme = t),
-              onContinue: (n) async {
-                final value = n.trim().isEmpty ? 'Christmas Lover' : n.trim();
-                await (await SharedPreferences.getInstance()).setString(
-                  'welcome_name',
-                  value,
-                );
-                if (mounted) setState(() => name = value);
-              },
-            )
-          : Shell(
-              name: name!,
-              theme: theme,
-              onThemeChanged: (t) => setState(() => theme = t),
-            ),
+      home: Shell(name: name ?? 'Christmas Lover', theme: theme, onThemeChanged: (t) => setState(() => theme = t)),
     );
   }
 }
@@ -980,7 +964,11 @@ class _ShellState extends State<Shell> {
       const SavedPage(),
       MePage(theme: widget.theme, onThemeChanged: widget.onThemeChanged),
     ];
-    return Scaffold(
+    return GuestSignupInvite(
+      enabled: index != 4,
+      isSignedIn: () => Supabase.instance.client.auth.currentUser != null,
+      onSignUp: () async { if (mounted) await openAccount(context, create: true); },
+      child: Scaffold(
       body: IndexedStack(index: index, children: pages),
       floatingActionButton: const PhillieButton(),
       bottomNavigationBar: BottomNavigationBar(
@@ -1026,6 +1014,7 @@ class _ShellState extends State<Shell> {
             label: 'Me',
           ),
         ],
+      ),
       ),
     );
   }
@@ -1106,24 +1095,26 @@ class HomePage extends StatelessWidget {
       primary: false,
       padding: EdgeInsets.zero,
       children: [
-        if (Supabase.instance.client.auth.currentUser == null)
-          Padding(padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12), child: Wrap(spacing: 10, runSpacing: 8, crossAxisAlignment: WrapCrossAlignment.center, children: [
-            const Text('Save your Christmas favourites with a free account.'),
-            FilledButton(onPressed: () => openAccount(context, create: true), child: const Text('Create account')),
-            TextButton(onPressed: () => openAccount(context), child: const Text('Sign in')),
-          ])),
         SizedBox(
           height: MediaQuery.sizeOf(context).width >= 700 ? 370 : 390,
           child: Stack(
             fit: StackFit.expand,
             children: [
-              Image.asset('assets/landing_christmas.webp', fit: BoxFit.cover, alignment: const Alignment(.45, 0)),
+              ColorFiltered(
+                colorFilter: const ColorFilter.matrix([
+                  1.12, 0, 0, 0, 8,
+                  0, 1.12, 0, 0, 8,
+                  0, 0, 1.12, 0, 8,
+                  0, 0, 0, 1, 0,
+                ]),
+                child: Image.asset('assets/landing_christmas.webp', fit: BoxFit.cover, alignment: const Alignment(.45, 0)),
+              ),
               Container(
                 decoration: const BoxDecoration(
                   gradient: LinearGradient(
                     begin: Alignment.centerLeft,
                     end: Alignment.centerRight,
-                    colors: [Color(0x99000000), Color(0x11000000)],
+                    colors: [Color(0x33000000), Color(0x00000000)],
                   ),
                 ),
               ),
@@ -1138,6 +1129,7 @@ class HomePage extends StatelessWidget {
                         'Christmas Ideas NZ',
                         style: GoogleFonts.playfairDisplay(
                           color: Colors.white,
+                          shadows: const [Shadow(color: Color(0xCC000000), blurRadius: 8, offset: Offset(0, 1))],
                           fontWeight: FontWeight.w700,
                           fontSize: MediaQuery.sizeOf(context).width >= 700 ? 54 : 38,
                           height: 1.05,
@@ -1149,6 +1141,7 @@ class HomePage extends StatelessWidget {
                       'More Meaningful',
                       style: GoogleFonts.playfairDisplay(
                         color: Colors.white,
+                        shadows: const [Shadow(color: Color(0xCC000000), blurRadius: 8, offset: Offset(0, 1))],
                         fontStyle: FontStyle.italic,
                         fontSize: MediaQuery.sizeOf(context).width >= 700 ? 30 : 25,
                         height: 1.1,
@@ -1159,7 +1152,7 @@ class HomePage extends StatelessWidget {
                       width: 360,
                       child: Text(
                         'Inspiration, gifts, food, events and ideas for a brighter Christmas in New Zealand.',
-                        style: TextStyle(color: Colors.white, fontSize: 16, height: 1.4),
+                        style: TextStyle(color: Colors.white, fontSize: 16, height: 1.4, shadows: [Shadow(color: Color(0xCC000000), blurRadius: 6, offset: Offset(0, 1))]),
                       ),
                     ),
                     const Spacer(),
