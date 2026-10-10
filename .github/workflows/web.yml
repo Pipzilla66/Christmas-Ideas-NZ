@@ -79,6 +79,8 @@ jobs:
       - name: Build web
         working-directory: generated_web
         run: flutter build web --release --pwa-strategy=none
+      - name: Version release URLs and retire old caches
+        run: python3 test_app/version_web.py generated_web/build/web
       - uses: actions/upload-artifact@v4
         with:
           name: christmas-ideas-nz-web
