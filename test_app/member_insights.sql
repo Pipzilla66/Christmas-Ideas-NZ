@@ -85,3 +85,13 @@ begin
 end; $$;
 revoke all on function public.member_usage_statistics() from public,anon;
 grant execute on function public.member_usage_statistics() to authenticated;
+
+-- Keep privileged access in the non-exposed schema; the API wrappers are invokers.
+alter function public.record_member_visit() set schema private;
+alter function public.member_usage_statistics() set schema private;
+grant execute on function private.record_member_visit(), private.member_usage_statistics() to authenticated;
+create function public.record_member_visit() returns void language sql security invoker set search_path='' as $$ select private.record_member_visit(); $$;
+create function public.member_usage_statistics() returns jsonb language sql security invoker set search_path='' as $$ select private.member_usage_statistics(); $$;
+revoke all on function public.record_member_visit(),public.member_usage_statistics() from public,anon;
+grant execute on function public.record_member_visit(),public.member_usage_statistics() to authenticated;
+create policy no_direct_visit_access on public.member_visit_days for select to authenticated using(false);

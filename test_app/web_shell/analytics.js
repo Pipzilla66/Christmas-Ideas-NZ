@@ -3,6 +3,7 @@
   const key = 'christmas-analytics-consent';
   let consent = null;
   try { consent = localStorage.getItem(key); } catch (_) {}
+  window.christmasUsageAllowed = () => consent === 'yes' && document.visibilityState === 'visible';
   let started = false;
   let currentScreen = 'Home';
   let previousLocation = '';
