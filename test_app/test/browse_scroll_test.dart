@@ -37,6 +37,8 @@ void main() {
     await tester.pageBack();
     await tester.pumpAndSettle();
     expect(tester.state<ScrollableState>(scrolling).position.pixels, closeTo(selectedOffset, 1));
+    tester.state<ScrollableState>(scrolling).position.jumpTo(0);
+    await tester.pumpAndSettle();
     expect(tester.widget<ChoiceChip>(find.widgetWithText(ChoiceChip, 'Recipes')).selected, isTrue);
     expect(tester.takeException(), isNull);
   });
