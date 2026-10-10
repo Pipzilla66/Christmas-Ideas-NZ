@@ -40,6 +40,7 @@ jobs:
           flutter create generated_web --platforms=web --project-name christmas_ideas_nz_test
           cp test_app/pubspec.yaml generated_web/pubspec.yaml
           cp test_app/*.dart generated_web/lib/
+          cp test_app/review-main.txt generated_web/lib/main.dart
           rm -rf generated_web/test
           cp -R test_app/test generated_web/test
           cp -R test_app/assets generated_web/assets
