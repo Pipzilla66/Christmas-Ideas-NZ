@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../main.dart';
-import '../review_features.dart';
+import 'package:christmas_ideas_nz_test/main.dart';
+import 'package:christmas_ideas_nz_test/review_features.dart';
 
 void main() {
   setUpAll(() => GoogleFonts.config.allowRuntimeFetching = false);

@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'dart:async';
-import 'package:flutter/services.dart';
 import 'review_features.dart';
 import 'location_bridge.dart';
 
@@ -3504,16 +3503,18 @@ class _SubmissionPageState extends State<SubmissionPage> {
               ),
               DropdownMenuItem(value: 'idea', child: Text('Christmas Idea')),
             ],
-            onChanged: (v) => setState(() => type = v ?? 'event'),
+            onChanged: busy ? null : (v) => setState(() => type = v ?? 'event'),
           ),
           const SizedBox(height: 12),
           TextField(
             controller: title,
+            enabled: !busy,
             decoration: const InputDecoration(labelText: 'Title / Name'),
           ),
           const SizedBox(height: 12),
           TextField(
             controller: description,
+            enabled: !busy,
             maxLines: 4,
             decoration: const InputDecoration(labelText: 'Description'),
           ),
@@ -3538,6 +3539,7 @@ class _SubmissionPageState extends State<SubmissionPage> {
           const SizedBox(height: 12),
           TextField(
             controller: city,
+            enabled: !busy,
             decoration: const InputDecoration(labelText: 'City or town'),
           ),
           const SizedBox(height: 12),
@@ -5421,6 +5423,7 @@ class _MePageState extends State<MePage> {
   final password = TextEditingController();
   final displayName = TextEditingController();
   final confirmPassword = TextEditingController();
+  StreamSubscription<AuthState>? authSubscription;
   bool creatingAccount = false;
   String? message;
   Map<String, dynamic>? profile;
@@ -5475,6 +5478,7 @@ class _MePageState extends State<MePage> {
 
   @override
   void dispose() {
+    authSubscription?.cancel();
     email.dispose();
     password.dispose();
     displayName.dispose();
@@ -5555,6 +5559,7 @@ class _MePageState extends State<MePage> {
     super.initState();
     creatingAccount = widget.initialCreate;
     loadProfile();
+    authSubscription = Supabase.instance.client.auth.onAuthStateChange.listen((_) { loadProfile(); });
   }
 
   @override
