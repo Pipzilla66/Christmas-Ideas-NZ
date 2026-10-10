@@ -7,6 +7,81 @@ import 'package:url_launcher/url_launcher.dart';
 
 final homeAreaRevision = ValueNotifier<int>(0);
 
+/// Keep the original attribution intact, with a compact display and linked
+/// source/licence. Unknown attribution formats remain available in full.
+class PhotoCredit extends StatelessWidget {
+  const PhotoCredit({super.key, required this.credit, this.source = ''});
+  final String credit;
+  final String source;
+
+  String get caption {
+    final creator = credit.split(' — ').first.trim();
+    if (creator.startsWith('Photo and idea:')) {
+      return creator.replaceFirst('Photo and idea:', 'Photo & idea:');
+    }
+    return 'Photo: ${creator.replaceAll(RegExp(r'https?://\S+'), '').trim()}';
+  }
+
+  String? get licenceName =>
+      RegExp(r'CC (?:BY(?:-SA|-NC(?:-SA|-ND)?|-ND)? [0-9.]+|0 [0-9.]+)').firstMatch(credit)?.group(0) ??
+      RegExp(r'CC0 [0-9.]+').firstMatch(credit)?.group(0);
+
+  String get licenceUrl {
+    final supplied = RegExp(r'https://creativecommons\.org/[^\s]+').firstMatch(credit)?.group(0);
+    if (supplied != null) return supplied;
+    final name = licenceName;
+    if (name == null) return '';
+    if (name.startsWith('CC0')) return 'https://creativecommons.org/publicdomain/zero/1.0/';
+    final parts = name.split(' ');
+    return 'https://creativecommons.org/licenses/${parts[1].toLowerCase()}/${parts[2]}/';
+  }
+
+  String get sourceUrl => source.trim().isNotEmpty ? source.trim() :
+      RegExp(r'Source:\s*(https?://\S+)').firstMatch(credit)?.group(1) ?? '';
+
+  Widget link(BuildContext context, String label, VoidCallback action) =>
+      TextButton(
+        style: TextButton.styleFrom(
+          foregroundColor: const Color(0xFF655E55),
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
+          minimumSize: const Size(0, 32),
+          tapTargetSize: MaterialTapTargetSize.padded,
+          textStyle: const TextStyle(fontSize: 12, decoration: TextDecoration.underline),
+        ),
+        onPressed: action,
+        child: Text(label),
+      );
+
+  @override
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text(caption, style: const TextStyle(fontSize: 12, color: Color(0xFF655E55))),
+      Wrap(
+        spacing: 6,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        children: [
+          if (sourceUrl.isNotEmpty)
+            link(context, 'Source', () => openExternalLink(context, sourceUrl)),
+          if (licenceName != null)
+            link(context, licenceName!, () => openExternalLink(context, licenceUrl)),
+          if (credit.toLowerCase().contains('crop'))
+            const Text('Cropped', style: TextStyle(fontSize: 12, color: Color(0xFF655E55))),
+          if (credit.contains(' — ') || credit.contains('http') || credit.length > 80)
+            link(context, 'Credit details', () => showDialog<void>(
+              context: context,
+              builder: (context) => AlertDialog(
+                title: const Text('Photo credit'),
+                content: SingleChildScrollView(child: SelectableText(credit)),
+                actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text('Close'))],
+              ),
+            )),
+        ],
+      ),
+    ],
+  );
+}
+
 Uri? websiteUri(String value) {
   final text = value.trim();
   if (text.isEmpty) return null;

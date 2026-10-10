@@ -5,6 +5,32 @@ import 'package:christmas_ideas_nz_test/main.dart';
 import 'package:christmas_ideas_nz_test/review_features.dart';
 
 void main() {
+  testWidgets('photo credit is compact and retains full attribution on tap', (tester) async {
+    const credit = 'The Berry Dairy — Dessert Board / Wikimedia Commons. CC BY-SA 4.0; cropped in display. Licence: https://creativecommons.org/licenses/by-sa/4.0/';
+    await tester.pumpWidget(const MaterialApp(home: Scaffold(body: PhotoCredit(
+      credit: credit, source: 'https://commons.wikimedia.org/wiki/File:Dessert_Board.jpg',
+    ))));
+    expect(find.text('Photo: The Berry Dairy'), findsOneWidget);
+    expect(find.text('Source'), findsOneWidget);
+    expect(find.text('CC BY-SA 4.0'), findsOneWidget);
+    expect(find.text('Cropped'), findsOneWidget);
+    expect(find.text(credit), findsNothing);
+    await tester.tap(find.text('Credit details'));
+    await tester.pumpAndSettle();
+    expect(find.text(credit), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+  test('photo credits keep source and correct licence for each format', () {
+    const publicDomain = PhotoCredit(credit: 'Grandmaster Huon — Water dispenser / Wikimedia Commons. CC0 1.0 public domain.');
+    expect(publicDomain.licenceName, 'CC0 1.0');
+    expect(publicDomain.licenceUrl, 'https://creativecommons.org/publicdomain/zero/1.0/');
+    const cc = PhotoCredit(credit: 'Anupam — Christmas wreath / Wikimedia Commons. CC BY-SA 3.0; display crop shared under CC BY-SA 3.0. Licence: https://creativecommons.org/licenses/by-sa/3.0/ Source: https://commons.wikimedia.org/wiki/File:Christmas_wreath.jpg');
+    expect(cc.licenceUrl, 'https://creativecommons.org/licenses/by-sa/3.0/');
+    expect(cc.sourceUrl, 'https://commons.wikimedia.org/wiki/File:Christmas_wreath.jpg');
+    const personal = PhotoCredit(credit: 'Photo and idea: Laura Gilmour.');
+    expect(personal.caption, 'Photo & idea: Laura Gilmour.');
+    expect(personal.licenceName, isNull);
+  });
   setUpAll(() => GoogleFonts.config.allowRuntimeFetching = false);
   test('website addresses normalise and unsafe schemes are rejected', () {
     expect(websiteUri('example.co.nz')!.toString(), 'https://example.co.nz');

@@ -2211,18 +2211,18 @@ class _ContentDetailPageState extends State<ContentDetailPage> {
                     ),
                   ),
                 ],
-                if ((item['image_credit'] ?? '').toString().isNotEmpty) ...[
-                  const SizedBox(height: 12),
-                  Text(
-                    'Reference photo: ${item['image_credit']}',
-                    style: const TextStyle(fontSize: 13, color: Color(0xFF655E55)),
-                  ),
-                ],
                 const SizedBox(height: 20),
                 Text(
                   (item['body'] ?? item['summary'] ?? '').toString(),
                   style: Theme.of(context).textTheme.bodyLarge,
                 ),
+                if ((item['image_credit'] ?? '').toString().isNotEmpty) ...[
+                  const SizedBox(height: 18),
+                  PhotoCredit(
+                    credit: item['image_credit'].toString(),
+                    source: (item['image_source_url'] ?? '').toString(),
+                  ),
+                ],
                 const SizedBox(height: 26),
                 Row(
                   children: [
