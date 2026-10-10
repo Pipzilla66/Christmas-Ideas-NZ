@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:async';
 import 'review_features.dart';
+import 'member_insights.dart';
 import 'location_bridge.dart';
 
 import 'listing_filters.dart';
@@ -944,22 +945,27 @@ class Shell extends StatefulWidget {
 class _ShellState extends State<Shell> {
   int index = 0;
   StreamSubscription<AuthState>? authSubscription;
+  Timer? activityTimer;
   @override
-  void dispose() { authSubscription?.cancel(); super.dispose(); }
+  void dispose() { activityTimer?.cancel(); authSubscription?.cancel(); super.dispose(); }
 
   @override
   void initState() {
     super.initState();
     trackAnalytics('page_view', {'screen_name': 'Home'});
+    recordMemberVisit();
+    activityTimer = Timer.periodic(const Duration(minutes: 1), (_) => recordMemberVisit());
     authSubscription = Supabase.instance.client.auth.onAuthStateChange.listen((_) {
       if (mounted) setState(() {});
       homeAreaRevision.value++;
+      recordMemberVisit();
     });
   }
 
   void goTo(int i) {
     if (i == index) return;
     setState(() => index = i);
+    recordMemberVisit();
     trackAnalytics('page_view', {
       'screen_name': ['Home', 'Discover', 'Near Me', 'Saved', 'Me'][i],
     });
@@ -3508,7 +3514,7 @@ class _SubmissionPageState extends State<SubmissionPage> {
       description.clear();
       city.clear();
       address.clear(); website.clear(); photo = null; photoPermission = false;
-      message = 'Thanks — it is now waiting for approval.';
+      message = 'Thanks — it is now waiting for approval. The outcome will appear in Me → Notifications.';
     } catch (e) {
       message = 'Could not confirm your submission. Please check your connection before retrying.';
     } finally {
@@ -3582,7 +3588,7 @@ class _SubmissionPageState extends State<SubmissionPage> {
               onChanged: busy ? null : (v) => setState(() => photoPermission = v ?? false),
               title: const Text('I took this photo or have permission to publish it in the directory.')),
           ],
-          const Text('Submissions and photos are reviewed before appearing in the directory.'),
+          const Text('Submissions and photos are reviewed before appearing in the directory. Check Me → Notifications for the outcome.'),
           const SizedBox(height: 12),
           TextField(
             controller: city,
@@ -4898,6 +4904,11 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 18, 20, 30),
         children: [
+          Card(child: ListTile(
+            leading: const Icon(Icons.insights), title: const Text('Account & usage statistics'),
+            subtitle: const Text('Members, visits, boards and saves'), trailing: const Icon(Icons.chevron_right),
+            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const MemberStatisticsPage())),
+          )),
           FutureBuilder<Map<String, int>>(
             future: counts(),
             builder: (context, snap) {
@@ -5506,7 +5517,14 @@ class _MePageState extends State<MePage> {
       confirmPassword.clear();
       if (result.session != null) {
         await loadProfile();
-        if (mounted) setState(() => message = 'Your account is ready. Welcome!');
+        if (mounted) {
+          setState(() => message = 'Your free member account is ready. Welcome!');
+          await showDialog<void>(context: context, builder: (context) => AlertDialog(
+            title: const Text('Welcome to Christmas Ideas NZ!'),
+            content: const Text('Your free member account has been created. You can now save boards, recommend lights and submit Christmas finds. Your submission outcomes will appear in Me → Notifications.'),
+            actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text('Start exploring'))],
+          ));
+        }
       } else if (mounted) {
         setState(() {
           creatingAccount = false;
@@ -5704,6 +5722,7 @@ class _MePageState extends State<MePage> {
                 subtitle: Text(isAdmin ? 'Owner / Admin' : 'Member'),
               ),
             ),
+            MemberNotificationTile(key: ValueKey('notifications-${user.id}')),
             Card(
               child: ListTile(
                 leading: const CircleAvatar(child: Text('⬆')),

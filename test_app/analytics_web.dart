@@ -11,3 +11,9 @@ void trackAnalytics(String event, Map<String, Object?> parameters) {
     // Analytics must never interrupt browsing or opening a retailer.
   }
 }
+
+@JS('christmasUsageAllowed')
+external JSBoolean _usageAllowed();
+bool memberUsageAllowed() {
+  try { return _usageAllowed().toDart; } catch (_) { return false; }
+}
