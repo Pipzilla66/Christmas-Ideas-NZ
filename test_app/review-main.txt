@@ -1550,7 +1550,6 @@ class _DiscoverPageState extends State<DiscoverPage> {
                   'Decorations',
                   'Recipes',
                   'Elf Ideas',
-                  'Budget Ideas',
                   'All',
                 ])
                   ChoiceChip(
@@ -4026,7 +4025,6 @@ class _AdminIdeaEditPageState extends State<AdminIdeaEditPage>
     'music',
     'activity',
     'decoration',
-    'budget',
     'tradition',
     'work_christmas',
   ];

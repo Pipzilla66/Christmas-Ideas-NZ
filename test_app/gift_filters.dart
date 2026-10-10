@@ -69,7 +69,7 @@ bool contentMatchesSection(Map<String, dynamic> item, String section) {
     'Decorations': 'decoration',
     'Recipes': 'recipe',
     'Elf Ideas': 'elf',
-    'Budget Ideas': 'budget',
   };
-  return section == 'All' || item['content_type'] == types[section];
+  return item['content_type'] != 'budget' &&
+      (section == 'All' || item['content_type'] == types[section]);
 }
