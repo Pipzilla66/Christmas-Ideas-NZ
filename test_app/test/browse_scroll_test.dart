@@ -42,4 +42,34 @@ void main() {
     expect(tester.widget<ChoiceChip>(find.widgetWithText(ChoiceChip, 'Recipes')).selected, isTrue);
     expect(tester.takeException(), isNull);
   });
+  testWidgets('Back restores browsing position and section after opening a gift', (tester) async {
+    await tester.pumpWidget(MaterialApp(home: Scaffold(body: DiscoverPage(
+      initialSection: 'Gifts',
+      initialGifts: List.generate(40, (i) => {
+        'id':'gift-$i', 'title':'Gift $i', 'description':'A Christmas gift.',
+        'price_min':10, 'price_max':10, 'recipient_group':'All',
+      }),
+    ))));
+    await tester.pumpAndSettle();
+    final list = find.byKey(const PageStorageKey('discover-list'));
+    final scrolling = find.descendant(of: list, matching: find.byType(Scrollable)).first;
+    await tester.drag(list, const Offset(0, -1100));
+    await tester.pumpAndSettle();
+    final before = tester.state<ScrollableState>(scrolling).position.pixels;
+    expect(before, greaterThan(500));
+    final target = find.text('Gift 8');
+    await tester.ensureVisible(target);
+    await tester.pumpAndSettle();
+    final selectedOffset = tester.state<ScrollableState>(scrolling).position.pixels;
+    await tester.tap(target);
+    await tester.pumpAndSettle();
+    expect(find.byType(GiftDetailPage), findsOneWidget);
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+    expect(tester.state<ScrollableState>(scrolling).position.pixels, closeTo(selectedOffset, 1));
+    tester.state<ScrollableState>(scrolling).position.jumpTo(0);
+    await tester.pumpAndSettle();
+    expect(tester.widget<ChoiceChip>(find.widgetWithText(ChoiceChip, 'Gifts')).selected, isTrue);
+    expect(tester.takeException(), isNull);
+  });
 }

@@ -1432,13 +1432,15 @@ class _SectionHeading extends StatelessWidget {
 
 class DiscoverPage extends StatefulWidget {
   final List<Map<String,dynamic>>? initialContent;
+  final List<Map<String,dynamic>>? initialGifts;
   final String initialSection;
-  const DiscoverPage({super.key, this.initialContent, this.initialSection = 'Gifts'});
+  const DiscoverPage({super.key, this.initialContent, this.initialGifts, this.initialSection = 'Gifts'});
   @override
   State<DiscoverPage> createState() => _DiscoverPageState();
 }
 
 class _DiscoverPageState extends State<DiscoverPage> {
+  final browseScroll = ScrollController();
   String q = '';
   String recipient = 'All';
   double maxBudget = 50;
@@ -1452,8 +1454,32 @@ class _DiscoverPageState extends State<DiscoverPage> {
   void initState() {
     super.initState();
     section = widget.initialSection;
-    giftsFuture = widget.initialContent == null ? loadGifts() : Future.value([]);
-    contentFuture = widget.initialContent == null ? loadContent() : Future.value(widget.initialContent!);
+    giftsFuture = loadGifts();
+    contentFuture = loadContent();
+  }
+
+  @override
+  void dispose() {
+    browseScroll.dispose();
+    super.dispose();
+  }
+
+  Future<void> openDetail(Map<String, dynamic> item, {required bool gift}) async {
+    final offset = browseScroll.hasClients ? browseScroll.offset : 0.0;
+    final before = jsonEncode(item);
+    await Navigator.push(context, MaterialPageRoute(builder: (_) =>
+        gift ? trackedGiftDetail(item) : ContentDetailPage(item: item)));
+    if (!mounted) return;
+    // Ordinary browsing keeps the existing list. Only admin edits need a reload.
+    if (jsonEncode(item) != before) {
+      try { await refreshResults(); } catch (_) {}
+    }
+    if (!mounted) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !browseScroll.hasClients) return;
+      final position = browseScroll.position;
+      browseScroll.jumpTo(offset.clamp(position.minScrollExtent, position.maxScrollExtent).toDouble());
+    });
   }
 
   Future<void> refreshResults() async {
@@ -1467,6 +1493,7 @@ class _DiscoverPageState extends State<DiscoverPage> {
   bool nzMadeOnly = false;
 
   Future<List<Map<String, dynamic>>> loadGifts() async {
+    if (widget.initialGifts != null) return widget.initialGifts!;
     if (widget.initialContent != null) return [];
     final rows = await Supabase.instance.client
         .from('gift_ideas')
@@ -1481,6 +1508,7 @@ class _DiscoverPageState extends State<DiscoverPage> {
 
   Future<List<Map<String, dynamic>>> loadContent() async {
     if (widget.initialContent != null) return widget.initialContent!;
+    if (widget.initialGifts != null) return [];
     final rows = await Supabase.instance.client
         .from('content_items')
         .select(
@@ -1524,6 +1552,7 @@ class _DiscoverPageState extends State<DiscoverPage> {
         onRefresh: refreshResults,
         child: ListView(
           key: const PageStorageKey('discover-list'),
+          controller: browseScroll,
           primary: false,
           padding: const EdgeInsets.fromLTRB(20, 20, 20, 100),
           children: [
@@ -1765,12 +1794,7 @@ class _DiscoverPageState extends State<DiscoverPage> {
                         margin: EdgeInsets.zero,
                         clipBehavior: Clip.antiAlias,
                         child: InkWell(
-                          onTap: () => Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => trackedGiftDetail(g),
-                            ),
-                          ).then((_) => refreshResults()),
+                          onTap: () => openDetail(g, gift: true),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -1869,7 +1893,7 @@ class _DiscoverPageState extends State<DiscoverPage> {
                     itemBuilder: (context, i) {
                       final item = items[i];
                       return Card(margin: EdgeInsets.zero, clipBehavior: Clip.antiAlias, child: InkWell(
-                        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ContentDetailPage(item: item))).then((_) => refreshResults()),
+                        onTap: () => openDetail(item, gift: false),
                         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                           SizedBox(height: MediaQuery.sizeOf(context).width >= 700 ? 200 : 145, width: double.infinity,
                             child: EditorialImage(url: (item['image_url'] ?? '').toString(), compactOnDesktop: true)),
