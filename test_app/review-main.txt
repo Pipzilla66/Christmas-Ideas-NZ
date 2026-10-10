@@ -1096,6 +1096,8 @@ class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) => SafeArea(
     child: ListView(
+      key: const PageStorageKey('home-list'),
+      primary: false,
       padding: EdgeInsets.zero,
       children: [
         if (Supabase.instance.client.auth.currentUser == null)
@@ -1465,6 +1467,7 @@ class _DiscoverPageState extends State<DiscoverPage> {
   bool nzMadeOnly = false;
 
   Future<List<Map<String, dynamic>>> loadGifts() async {
+    if (widget.initialContent != null) return [];
     final rows = await Supabase.instance.client
         .from('gift_ideas')
         .select(
@@ -1477,6 +1480,7 @@ class _DiscoverPageState extends State<DiscoverPage> {
   }
 
   Future<List<Map<String, dynamic>>> loadContent() async {
+    if (widget.initialContent != null) return widget.initialContent!;
     final rows = await Supabase.instance.client
         .from('content_items')
         .select(
@@ -1519,6 +1523,8 @@ class _DiscoverPageState extends State<DiscoverPage> {
       child: RefreshIndicator(
         onRefresh: refreshResults,
         child: ListView(
+          key: const PageStorageKey('discover-list'),
+          primary: false,
           padding: const EdgeInsets.fromLTRB(20, 20, 20, 100),
           children: [
             Text('Discover', style: Theme.of(context).textTheme.headlineLarge),
@@ -1719,7 +1725,7 @@ class _DiscoverPageState extends State<DiscoverPage> {
               FutureBuilder<List<Map<String, dynamic>>>(
                 future: giftsFuture,
                 builder: (context, snap) {
-                  if (snap.connectionState == ConnectionState.waiting)
+                  if (snap.connectionState == ConnectionState.waiting && !snap.hasData)
                     return const LinearProgressIndicator();
                   if (snap.hasError)
                     return const Text(
@@ -1829,7 +1835,7 @@ class _DiscoverPageState extends State<DiscoverPage> {
               FutureBuilder<List<Map<String, dynamic>>>(
                 future: contentFuture,
                 builder: (context, snap) {
-                  if (snap.connectionState == ConnectionState.waiting)
+                  if (snap.connectionState == ConnectionState.waiting && !snap.hasData)
                     return const LinearProgressIndicator();
                   if (snap.hasError)
                     return const Text(
@@ -1993,6 +1999,8 @@ class _GiftDetailPageState extends State<GiftDetailPage> {
         title: const Text('Gift idea'),
       ),
       body: ListView(
+        key: PageStorageKey('gift-detail-${gift['id']}'),
+        primary: false,
         padding: EdgeInsets.zero,
         children: [
           Padding(
@@ -2152,6 +2160,8 @@ class _ContentDetailPageState extends State<ContentDetailPage> {
         title: const Text('Christmas idea'),
       ),
       body: ListView(
+        key: PageStorageKey('idea-detail-${item['id']}'),
+        primary: false,
         padding: EdgeInsets.zero,
         children: [
           Padding(
@@ -2611,6 +2621,8 @@ class _NearMePageState extends State<NearMePage> {
               await next;
             },
             child: ListView(
+              key: const PageStorageKey('near-me-list'),
+              primary: false,
               padding: const EdgeInsets.fromLTRB(20, 20, 20, 100),
               children: [
                 const Text(
@@ -2773,7 +2785,7 @@ class _NearMePageState extends State<NearMePage> {
                   ],
                 ),
                 const SizedBox(height: 10),
-                if (snap.connectionState == ConnectionState.waiting)
+                if (snap.connectionState == ConnectionState.waiting && !snap.hasData)
                   const Center(
                     child: Padding(
                       padding: EdgeInsets.all(30),
@@ -3023,6 +3035,8 @@ class _SavedPageState extends State<SavedPage> {
     final user = Supabase.instance.client.auth.currentUser;
     return SafeArea(
       child: ListView(
+        key: const PageStorageKey('saved-boards-list'),
+        primary: false,
         padding: const EdgeInsets.fromLTRB(20, 20, 20, 100),
         children: [
           const Text(
@@ -3183,6 +3197,14 @@ class BoardDetailPage extends StatefulWidget {
 }
 
 class _BoardDetailPageState extends State<BoardDetailPage> {
+  late final Future<List<Map<String, dynamic>>> itemsFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    itemsFuture = loadItems();
+  }
+
   Future<List<Map<String, dynamic>>> loadItems() async {
     final rows = await Supabase.instance.client
         .from('board_items')
@@ -3240,7 +3262,7 @@ class _BoardDetailPageState extends State<BoardDetailPage> {
         title: Text((widget.board['name'] ?? 'Saved board').toString()),
       ),
       body: FutureBuilder<List<Map<String, dynamic>>>(
-        future: loadItems(),
+        future: itemsFuture,
         builder: (context, snap) {
           if (snap.connectionState == ConnectionState.waiting)
             return const Center(child: CircularProgressIndicator());
@@ -3254,6 +3276,8 @@ class _BoardDetailPageState extends State<BoardDetailPage> {
               ),
             );
           return ListView.separated(
+            key: PageStorageKey('board-items-${widget.board['id']}'),
+            primary: false,
             padding: const EdgeInsets.all(20),
             itemCount: items.length,
             separatorBuilder: (_, __) => const SizedBox(height: 10),
