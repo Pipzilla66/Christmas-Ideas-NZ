@@ -1,0 +1,82 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:christmas_ideas_nz_test/main.dart';
+
+void main() {
+  final catalogue = [
+    for (var i = 1; i <= 5; i++)
+      <String, dynamic>{
+        'id': 'light-$i',
+        '_table': 'light_displays',
+        'name': 'Light display $i',
+        'city': 'Christchurch',
+        'description': 'Christmas lights for families.',
+      },
+  ];
+
+  Future<void> openSheet(WidgetTester tester, double height) async {
+    GoogleFonts.config.allowRuntimeFetching = false;
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = Size(360, height);
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    addTearDown(tester.view.resetViewInsets);
+    await tester.pumpWidget(MaterialApp(
+      home: Scaffold(
+        resizeToAvoidBottomInset: false,
+        body: PhillieSupportSheet(initialCatalogue: catalogue),
+      ),
+    ));
+    await tester.pumpAndSettle();
+  }
+
+  testWidgets('small mobile screen reveals results and can reach the final card', (tester) async {
+    await openSheet(tester, 430);
+    final scrolling = find.descendant(
+      of: find.byKey(const ValueKey('elf-support-scroll')),
+      matching: find.byWidgetPredicate((widget) =>
+        widget is Scrollable && widget.axisDirection == AxisDirection.down),
+    );
+    await tester.scrollUntilVisible(find.text('Christmas lights'), 100, scrollable: scrolling);
+    await tester.tap(find.text('Christmas lights'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('Here are 5 ideas').hitTestable(), findsOneWidget);
+    await tester.scrollUntilVisible(find.text('Light display 5'), 120, scrollable: scrolling);
+    expect(find.text('Light display 5').hitTestable(), findsOneWidget);
+    await tester.tap(find.text('Light display 5'));
+    await tester.pumpAndSettle();
+    expect(find.byType(AlertDialog), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('keyboard inset keeps the form scrollable and submission reveals results', (tester) async {
+    await openSheet(tester, 640);
+    tester.view.viewInsets = const FakeViewPadding(bottom: 260);
+    await tester.pump();
+    final scrolling = find.descendant(
+      of: find.byKey(const ValueKey('elf-support-scroll')),
+      matching: find.byWidgetPredicate((widget) =>
+        widget is Scrollable && widget.axisDirection == AxisDirection.down),
+    );
+    await tester.scrollUntilVisible(find.byType(TextField), 80, scrollable: scrolling);
+    await tester.enterText(find.byType(TextField), 'Christmas lights');
+    await tester.testTextInput.receiveAction(TextInputAction.done);
+    await tester.pumpAndSettle();
+    expect(find.textContaining('Here are 5 ideas').hitTestable(), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+  testWidgets('keyword instructions explain how to retry a sentence', (tester) async {
+    await openSheet(tester, 800);
+    expect(find.text('Search with keywords'), findsOneWidget);
+    expect(find.textContaining('rather than a full sentence'), findsOneWidget);
+    await tester.enterText(find.byType(TextField), 'I am looking for a secret santa present for a work mate who is male 60');
+    await tester.testTextInput.receiveAction(TextInputAction.done);
+    await tester.pumpAndSettle();
+    expect(find.textContaining('No matches for those keywords.'), findsOneWidget);
+    expect(find.textContaining('Try fewer words'), findsOneWidget);
+    expect(find.text('Search the guide'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+}

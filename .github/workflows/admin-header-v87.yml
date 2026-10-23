@@ -1,0 +1,62 @@
+name: Isolated v87 Admin header check
+on:
+  push:
+    branches: ['build/admin-header-v87']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: admin-header-v87-check
+  cancel-in-progress: false
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      CI: 'true'
+      FLUTTER_SUPPRESS_ANALYTICS: 'true'
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - name: Block production and instance-metadata access
+        run: |
+          echo '127.0.0.1 ocrwnkeqemcsklsnbufq.supabase.co metadata.google.internal metadata.google' | sudo tee -a /etc/hosts >/dev/null
+          sudo iptables -A OUTPUT -d 169.254.169.254 -j REJECT
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2
+        with:
+          flutter-version: '3.47.7'
+          channel: stable
+          cache: false
+      - name: Prepare verified v87 source and preview
+        run: |
+          flutter create generated_web --platforms=web --project-name christmas_ideas_nz_test --no-pub
+          python3 isolated-build/prepare.py
+          cd generated_web
+          flutter pub get --enforce-lockfile
+          cmp pubspec.lock ../isolated-source/app/pubspec.lock
+      - name: Run all tests with mocked accounts
+        shell: bash
+        run: |
+          set -o pipefail
+          cd generated_web
+          flutter test --reporter expanded 2>&1 | tee ../tests.log
+      - name: Build production candidate without deployment
+        shell: bash
+        run: |
+          set -o pipefail
+          cd generated_web
+          flutter build web --release --pwa-strategy=none 2>&1 | tee ../build.log
+          cd ..
+          python3 -c "from pathlib import Path; assert 'deb287481e3ce9468f3434937ced4240a70539ca' in Path('generated_web/build/web/flutter_bootstrap.js').read_text()"
+          cp -R generated_web/build/web production-build
+      - name: Build isolated Admin preview with fake data
+        shell: bash
+        run: |
+          set -o pipefail
+          cd generated_web
+          flutter build web --release --pwa-strategy=none --target=lib/admin_preview.dart 2>&1 | tee ../preview-build.log
+      - name: Return build output through job log without billed artifact storage
+        if: always()
+        run: python3 isolated-build/export.py
+

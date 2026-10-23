@@ -1,0 +1,197 @@
+[
+  {
+    "path": "christmas_brand_logo_v3.webp",
+    "sha256": "8fc4e0c20c0d2946d6eaac679bfe7ab71c2e4da8c8eea4c59dd0ae1c5abdfebb",
+    "url": "https://christmasideasnz.co.nz/assets/assets/christmas_brand_logo_v3.webp"
+  },
+  {
+    "path": "christmas_brand_logo_v2.webp",
+    "sha256": "b944b59f7c0714087ddbf7c0c44adf7642ab066e299c729c27c4940610e1e836",
+    "url": "https://christmasideasnz.co.nz/assets/assets/christmas_brand_logo_v2.webp"
+  },
+  {
+    "path": "kiwi_christmas_hero_v1.webp",
+    "sha256": "221aeb7c58dc7dd885c84797ed858da736d7da6737824f0f47b08c0c68de4edf",
+    "url": "https://christmasideasnz.co.nz/assets/assets/kiwi_christmas_hero_v1.webp"
+  },
+  {
+    "path": "elf_phillie.webp",
+    "sha256": "3d4f502cbfdf120a0b2d80deb971223caf226d5211c81abe8c764e7abc47ce91",
+    "url": "https://christmasideasnz.co.nz/assets/assets/elf_phillie.webp"
+  },
+  {
+    "path": "farmers_logo.png",
+    "sha256": "1797129789f7286bed6b2116d1985a29b9fff3436098fe6b33cc38428a81cf87",
+    "url": "https://christmasideasnz.co.nz/assets/assets/farmers_logo.png"
+  },
+  {
+    "path": "landing_christmas.webp",
+    "sha256": "5d8fdd31ef938d44aa572fe8c310d482b96be779b2bc79a14d397b678dfa0cf4",
+    "url": "https://christmasideasnz.co.nz/assets/assets/landing_christmas.webp"
+  },
+  {
+    "path": "christmas_hero.webp",
+    "sha256": "e761021dfbbcd53e10ea546538d04acc45ddfd17b51bd1463c466923378a8898",
+    "url": "https://christmasideasnz.co.nz/assets/assets/christmas_hero.webp"
+  },
+  {
+    "path": "christmas_brand_logo_v1.webp",
+    "sha256": "73cbf96e7336028097361d9ef4ea8e696f48b6b8e8684a29efeb29042c7b6b7e",
+    "url": "https://christmasideasnz.co.nz/assets/assets/christmas_brand_logo_v1.webp"
+  },
+  {
+    "path": "kmart_logo.png",
+    "sha256": "4c986f71d8e1443cbb2ae60d211a43052be442af8d72b5db848068924081b67d",
+    "url": "https://christmasideasnz.co.nz/assets/assets/kmart_logo.png"
+  },
+  {
+    "path": "cover_photo.jpg",
+    "sha256": "5fd01f94901c42a6b60515ada77f2739bdca42fa02dd7707cb74171ad9220462",
+    "url": "https://christmasideasnz.co.nz/assets/assets/cover_photo.jpg"
+  },
+  {
+    "path": "phillie_avatar.jpg",
+    "sha256": "404d47da292beec40fabbb9a51935df60d193ac5c4467f1c4a03c8da0ac66dbb",
+    "url": "https://christmasideasnz.co.nz/assets/assets/phillie_avatar.jpg"
+  },
+  {
+    "path": "typo_logo.png",
+    "sha256": "e2913e8f77c856889aa8b7f2e1f6f0e583a181ed84cd64e7ce4236817aedcd78",
+    "url": "https://christmasideasnz.co.nz/assets/assets/typo_logo.png"
+  },
+  {
+    "path": "warehouse_logo.png",
+    "sha256": "04eb96e549b4f7d4b32402f55dad219ec5506d38d90831cc8d43b97be1e76f7e",
+    "url": "https://christmasideasnz.co.nz/assets/assets/warehouse_logo.png"
+  },
+  {
+    "path": "placeholders/prompts.json",
+    "sha256": "81574f7b0c449143d3b0f2e6bcaec2612413c7b454f0bbbc4ffa17e4392600d6",
+    "url": "https://christmasideasnz.co.nz/assets/assets/placeholders/prompts.json"
+  },
+  {
+    "path": "placeholders/charity-gifts.webp",
+    "sha256": "922d69b6f45a6329f2b017db341954f79fd8f13239d4f0a79e434297bfb87b96",
+    "url": "https://christmasideasnz.co.nz/assets/assets/placeholders/charity-gifts.webp"
+  },
+  {
+    "path": "placeholders/events-market.webp",
+    "sha256": "11d6cc2715a1e2dc045e2d162ebfa8a07db717dd640f9130a45267588bcd5e85",
+    "url": "https://christmasideasnz.co.nz/assets/assets/placeholders/events-market.webp"
+  },
+  {
+    "path": "placeholders/events-market-v2.webp",
+    "sha256": "b92c735bcd8d69d2b356ac4c2b9d526ed88dcaac075e5795c551f636c45ef28e",
+    "url": "https://christmasideasnz.co.nz/assets/assets/placeholders/events-market-v2.webp"
+  },
+  {
+    "path": "placeholders/recipes-baking.webp",
+    "sha256": "22ff8ff009d100b51243bdc93b432095f5240f38a75331f00802a36b2a4a22a6",
+    "url": "https://christmasideasnz.co.nz/assets/assets/placeholders/recipes-baking.webp"
+  },
+  {
+    "path": "placeholders/events-santa-v2.webp",
+    "sha256": "6a9708cd49104e22529f0577807e57c4b81948cacc223c6af2f79e91e869978e",
+    "url": "https://christmasideasnz.co.nz/assets/assets/placeholders/events-santa-v2.webp"
+  },
+  {
+    "path": "placeholders/lights-house.webp",
+    "sha256": "025009e777342bed1adbecab3d297c0d1000966c947bb6b48a82013433c46e3b",
+    "url": "https://christmasideasnz.co.nz/assets/assets/placeholders/lights-house.webp"
+  },
+  {
+    "path": "placeholders/gifts-hamper.webp",
+    "sha256": "63409c437fd4f3899ad749a3f2240149df322b4ff3d6b67b472addbd8b25f82f",
+    "url": "https://christmasideasnz.co.nz/assets/assets/placeholders/gifts-hamper.webp"
+  },
+  {
+    "path": "placeholders/ideas-crafts.webp",
+    "sha256": "8debb2d069f06b8ec030274e027adcd9bc59b52a99775b7b6c95fe958e5c49c5",
+    "url": "https://christmasideasnz.co.nz/assets/assets/placeholders/ideas-crafts.webp"
+  },
+  {
+    "path": "placeholders/events-craft-v2.webp",
+    "sha256": "1a3e634b2b385849fb380eaa7e74fd2f6beb49c2ec416f722341f75b6dbfc3f8",
+    "url": "https://christmasideasnz.co.nz/assets/assets/placeholders/events-craft-v2.webp"
+  },
+  {
+    "path": "placeholders/gifts-green.webp",
+    "sha256": "0ac8ad09840c0c4535163251d5327495d5d81d2a5315b8f9330f43c3053c59b5",
+    "url": "https://christmasideasnz.co.nz/assets/assets/placeholders/gifts-green.webp"
+  },
+  {
+    "path": "placeholders/lights-garden.webp",
+    "sha256": "2f7b23e52dc4dc5b6c3963d1d94a6dcf37c49af95964c74c0bef848968b83e19",
+    "url": "https://christmasideasnz.co.nz/assets/assets/placeholders/lights-garden.webp"
+  },
+  {
+    "path": "placeholders/trees-farm.webp",
+    "sha256": "930f23b2cabdb18811e5e9434aab366be3e8c5bf744472bbbf502adea60f9f3a",
+    "url": "https://christmasideasnz.co.nz/assets/assets/placeholders/trees-farm.webp"
+  },
+  {
+    "path": "placeholders/shops-ornaments.webp",
+    "sha256": "bf9b84bc3cc248d4bebfc94f6a4d90532278d4f112041b79e969fe425ed32c32",
+    "url": "https://christmasideasnz.co.nz/assets/assets/placeholders/shops-ornaments.webp"
+  },
+  {
+    "path": "placeholders/events-festive.webp",
+    "sha256": "abe3463485aacdc26d16e401143f4b67b668d0db6d7e79129a88ad522c3dfc71",
+    "url": "https://christmasideasnz.co.nz/assets/assets/placeholders/events-festive.webp"
+  },
+  {
+    "path": "placeholders/gifts-red.webp",
+    "sha256": "56f554d23fc7f76c5da773951de9b6d3ead4999c32bee1f9456400ca10783b9c",
+    "url": "https://christmasideasnz.co.nz/assets/assets/placeholders/gifts-red.webp"
+  },
+  {
+    "path": "placeholders/events-celebration-v2.webp",
+    "sha256": "6dd327aebcc861b76f5bf844487df0e80a85c61e70628daf89423eab1a747515",
+    "url": "https://christmasideasnz.co.nz/assets/assets/placeholders/events-celebration-v2.webp"
+  },
+  {
+    "path": "crafts/8535172.jpg",
+    "sha256": "7f291b544fd1f8b73b9c9619c537f8cea7d8080a39edfc5358d85d7fd98195bf",
+    "url": "https://christmasideasnz.co.nz/assets/assets/crafts/8535172.jpg"
+  },
+  {
+    "path": "crafts/5709742.jpg",
+    "sha256": "807bfdf415c416001048e31e7a874d52fe478c1d49d4270a1ccabdc81d416660",
+    "url": "https://christmasideasnz.co.nz/assets/assets/crafts/5709742.jpg"
+  },
+  {
+    "path": "crafts/sources.json",
+    "sha256": "1e12649a0d29df813eb3ff381a0115b7c61c9a7558a03d852a7a98e33dd01ddb",
+    "url": "https://christmasideasnz.co.nz/assets/assets/crafts/sources.json"
+  },
+  {
+    "path": "crafts/1666067.jpg",
+    "sha256": "3aa472ddc037d4b7e2426569d981cb289a433ae5091e76f2a107dbf96e1e6bfc",
+    "url": "https://christmasideasnz.co.nz/assets/assets/crafts/1666067.jpg"
+  },
+  {
+    "path": "crafts/6305931.jpg",
+    "sha256": "527411ff276505116fb1afab79bd89f681827255907a7ca689049349d93b76b8",
+    "url": "https://christmasideasnz.co.nz/assets/assets/crafts/6305931.jpg"
+  },
+  {
+    "path": "crafts/9016508.jpg",
+    "sha256": "d0a3b8cb97eeca9ef029c4d8ce20bbc8e4f5d9e8d42afa8c89a1a49925485052",
+    "url": "https://christmasideasnz.co.nz/assets/assets/crafts/9016508.jpg"
+  },
+  {
+    "path": "crafts/6212328.jpg",
+    "sha256": "53d9fef02aa593e07f10d334df537bca5d7b45c503cec1c484391d441f662a03",
+    "url": "https://christmasideasnz.co.nz/assets/assets/crafts/6212328.jpg"
+  },
+  {
+    "path": "crafts/6072435.jpg",
+    "sha256": "10c7d6ea90d985c23a60f67d5579b9aa94e9418d219c5332ab19205f55863413",
+    "url": "https://christmasideasnz.co.nz/assets/assets/crafts/6072435.jpg"
+  },
+  {
+    "path": "crafts/6156889.jpg",
+    "sha256": "269bcc7fb38d1896264573a2d3008c9505ac994453aebaadb25b83a1e7bfb7a0",
+    "url": "https://christmasideasnz.co.nz/assets/assets/crafts/6156889.jpg"
+  }
+]
