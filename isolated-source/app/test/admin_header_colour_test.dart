@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -9,13 +10,30 @@ import 'package:christmas_ideas_nz_test/main.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+  bool pendingFixture = false;
+  bool failProfiles = false;
+  setUp(() { pendingFixture = false; failProfiles = false; });
   setUpAll(() async {
     GoogleFonts.config.allowRuntimeFetching = false;
     SharedPreferences.setMockInitialValues({});
     await Supabase.initialize(url: 'https://example.supabase.co', anonKey: 'test-only',
       authOptions: const FlutterAuthClientOptions(autoRefreshToken: false),
-      httpClient: MockClient((_) async => http.Response('[]', 200,
-        headers: {'content-type': 'application/json'})));
+      httpClient: MockClient((request) async {
+        dynamic data = [];
+        if (pendingFixture && request.url.path.endsWith('/submissions') &&
+            (request.url.queryParameters['select'] ?? '').contains('user_id')) {
+          data = [{'id': 'fixture-submission', 'user_id': 'fixture-user',
+            'title': 'Fixture craft', 'submission_type': 'idea',
+            'description': 'Test only', 'payload': {}, 'status': 'pending'}];
+        }
+        if (request.url.path.endsWith('/profiles')) {
+          if (failProfiles) return http.Response('{"message":"Test denied"}',403,request:request);
+          data = [{'id': 'fixture-user', 'display_name': 'Test Contributor',
+            'email': 'contributor@example.com'}];
+        }
+        return http.Response(jsonEncode(data), 200, request: request,
+          headers: {'content-type': 'application/json'});
+      }));
   });
   testWidgets('Admin header overrides pale title and Back colours on cream', (tester) async {
     await tester.pumpWidget(MaterialApp(
@@ -68,5 +86,23 @@ void main() {
     await tester.pumpWidget(const MaterialApp(home: Scaffold(body:
       SubmissionSenderDetails(item: {'user_id': 'fixture-user', 'submitter_lookup_failed': true}))));
     expect(find.textContaining('could not be loaded'), findsOneWidget);
+  });
+  testWidgets('Pending moderation resolves sender from existing profile', (tester) async {
+    pendingFixture = true;
+    await tester.pumpWidget(const MaterialApp(home: AdminDashboardPage()));
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(find.text('Submitted by: Test Contributor'),350,maxScrolls:35);
+    expect(find.text('contributor@example.com'),findsOneWidget);
+    expect(find.text('Fixture craft'),findsOneWidget);
+    expect(tester.takeException(),isNull);
+  });
+  testWidgets('A profile error keeps the pending submission available', (tester) async {
+    pendingFixture = true;
+    failProfiles = true;
+    await tester.pumpWidget(const MaterialApp(home: AdminDashboardPage()));
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(find.text('Fixture craft'),350,maxScrolls:35);
+    expect(find.textContaining('Submitter details could not be loaded'),findsOneWidget);
+    expect(tester.takeException(),isNull);
   });
 }
