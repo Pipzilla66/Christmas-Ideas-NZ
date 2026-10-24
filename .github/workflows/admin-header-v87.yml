@@ -1,4 +1,4 @@
-name: Isolated v87 Admin header check
+name: Isolated v88 Traditions saved-state fix
 on:
   push:
     branches: ['build/admin-header-v87']
@@ -28,13 +28,15 @@ jobs:
           flutter-version: '3.47.7'
           channel: stable
           cache: false
-      - name: Prepare verified v87 source and preview
+      - name: Prepare verified v88 source and preview
         run: |
           flutter create generated_web --platforms=web --project-name christmas_ideas_nz_test --no-pub
           python3 isolated-build/prepare.py
           cd generated_web
           flutter pub get --enforce-lockfile
           cmp pubspec.lock ../isolated-source/app/pubspec.lock
+      - name: Confirm regression fails on unmodified live widget
+        run: python3 isolated-build/exercise_baseline.py
       - name: Run all tests with mocked accounts
         shell: bash
         run: |
@@ -50,7 +52,7 @@ jobs:
           cd ..
           python3 -c "from pathlib import Path; assert 'deb287481e3ce9468f3434937ced4240a70539ca' in Path('generated_web/build/web/flutter_bootstrap.js').read_text()"
           cp -R generated_web/build/web production-build
-      - name: Build isolated Admin preview with fake data
+      - name: Build isolated Traditions preview without database writes
         shell: bash
         run: |
           set -o pipefail
@@ -59,4 +61,3 @@ jobs:
       - name: Return build output through job log without billed artifact storage
         if: always()
         run: python3 isolated-build/export.py
-

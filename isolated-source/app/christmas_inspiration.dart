@@ -127,7 +127,7 @@ class _ChristmasInspirationPageState extends State<ChristmasInspirationPage>{
  Image.asset(photo.asset,height:220,width:double.infinity,fit:BoxFit.cover,semanticLabel:photo.caption,errorBuilder:(_,__,___)=>const SizedBox(height:180,child:Center(child:Icon(Icons.palette_outlined,size:48)))),
  Padding(padding:const EdgeInsets.fromLTRB(16,8,16,0),child:Text(photo.caption,style:Theme.of(context).textTheme.bodySmall)),
  ],
- ExpansionTile(leading:Icon(icon,color:const Color(0xFF0F4C45)),title:Text(title,style:const TextStyle(fontWeight:FontWeight.w700)),subtitle:Text('$subtitle\nTap for materials & steps'),children:[Padding(padding:const EdgeInsets.fromLTRB(18,0,18,18),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[if(materials.isNotEmpty)...[Text('You’ll need: $materials'),const SizedBox(height:12)],for(var i=0;i<steps.length;i++)Padding(padding:const EdgeInsets.only(bottom:8),child:Text('${i+1}. ${steps[i]}')),
+ ExpansionTile(key:PageStorageKey<String>('tradition-card:$title'),leading:Icon(icon,color:const Color(0xFF0F4C45)),title:Text(title,style:const TextStyle(fontWeight:FontWeight.w700)),subtitle:Text('$subtitle\nTap for materials & steps'),children:[Padding(padding:const EdgeInsets.fromLTRB(18,0,18,18),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[if(materials.isNotEmpty)...[Text('You’ll need: $materials'),const SizedBox(height:12)],for(var i=0;i<steps.length;i++)Padding(padding:const EdgeInsets.only(bottom:8),child:Text('${i+1}. ${steps[i]}')),
  if(!widget.traditions)OwnIdeaButton(onPressed:share),
  if(photo!=null)TextButton(onPressed:()=>launchUrl(Uri.parse(photo.source),mode:LaunchMode.externalApplication),child:Text('Photo: ${photo.photographer} / Pexels')),
  ]))]),

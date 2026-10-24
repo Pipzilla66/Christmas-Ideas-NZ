@@ -25,21 +25,19 @@ s=s.replace("publishableKey: supabaseKey,", "publishableKey: 'test-only',\n     
 s=s.replace('FlutterAuthClientOptions(autoRefreshToken: true)', 'FlutterAuthClientOptions(autoRefreshToken: false, detectSessionInUri: false)')
 home="home: Shell(name: name ?? 'Christmas Lover', theme: theme, onThemeChanged: (t) => setState(() => theme = t)),"
 assert home in s
-s=s.replace(home,'home: const AdminPreviewEntry(),')
+s=s.replace(home,'home: const TraditionsPreviewEntry(),')
 s+='''
-Future<preview_http.Response> previewResponse(preview_http.Request request) async {
- dynamic data = [];
- if (request.method != 'GET') return preview_http.Response('{}', 403, request: request);
- if (request.url.path.endsWith('/submissions') && (request.url.queryParameters['select'] ?? '').contains('user_id')) data = [{'id':'preview-submission','user_id':'preview-member','title':'Preview craft (test data)','submission_type':'idea','description':'Fictional content for this isolated check only.','payload':{},'status':'pending','created_at':'2026-10-24T00:00:00Z'}];
- if (request.url.path.endsWith('/profiles')) data = [{'id':'preview-member','display_name':'Test Contributor','email':'contributor@example.com'}];
- return preview_http.Response(jsonEncode(data), 200, request: request, headers:{'content-type':'application/json'});
+Future<preview_http.Response> previewResponse(preview_http.Request request) async => preview_http.Response(request.method == 'GET' ? '[]' : '{}', request.method == 'GET' ? 200 : 403, request:request, headers:{'content-type':'application/json'});
+class TraditionsPreviewEntry extends StatefulWidget {
+ const TraditionsPreviewEntry({super.key});
+ @override State<TraditionsPreviewEntry> createState()=>_TraditionsPreviewEntryState();
 }
-class AdminPreviewEntry extends StatelessWidget {
- const AdminPreviewEntry({super.key});
- @override Widget build(BuildContext context) => Scaffold(body: Center(child: Column(mainAxisSize:MainAxisSize.min, children:[
- FilledButton(onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminDashboardPage())), child: const Text('Preview Admin header')),
- FilledButton(onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SubmissionPage(initialSection:'Elf Ideas'))), child: const Text('Preview submission header')),
- ])));
+class _TraditionsPreviewEntryState extends State<TraditionsPreviewEntry> {
+ final bucket=PageStorageBucket();
+ @override Widget build(BuildContext context)=>Scaffold(body:PageStorage(bucket:bucket,child:KeyedSubtree(key:const PageStorageKey<String>('traditions-list'),child:Builder(builder:(seedContext){
+ bucket.writeState(seedContext,150.16666666666669);
+ return Center(child:FilledButton(onPressed:()=>Navigator.push(context,MaterialPageRoute(builder:(_)=>PageStorage(bucket:bucket,child:ChristmasInspirationPage(traditions:true,loader:()async=>[],onIdea:(_){})))),child:const Text('Open Traditions with saved scroll position')));
+ }))));
 }
 '''
 (dst/'lib/admin_preview.dart').write_text(s)
