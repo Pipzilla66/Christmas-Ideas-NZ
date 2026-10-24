@@ -10,14 +10,13 @@ src=Path('isolated-source/app');dst=Path('generated_web')
 for p in src.glob('*.dart'):shutil.copy2(p,dst/'lib'/p.name)
 for name in ['pubspec.yaml','pubspec.lock']:shutil.copy2(src/name,dst/name)
 shutil.rmtree(dst/'test');shutil.copytree(src/'test',dst/'test')
-# Download only publicly served, declared assets; never transfer unpublished photos.
-import urllib.request,concurrent.futures
+# Build-only neutral placeholders: no existing photographs are published to GitHub.
+# The release packager preserves every original live image locally.
 assets=json.loads(Path('isolated-build/public-assets.json').read_text())
-def asset(item):
- with urllib.request.urlopen(item['url'],timeout=30) as r:b=r.read()
- assert hashlib.sha256(b).hexdigest()==item['sha256'],item['path']
- p=dst/'assets'/item['path'];p.parent.mkdir(parents=True,exist_ok=True);p.write_bytes(b)
-with concurrent.futures.ThreadPoolExecutor(max_workers=4) as pool:list(pool.map(asset,assets))
+pixel=base64.b64decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jK1sAAAAASUVORK5CYII=')
+for item in assets:
+ p=dst/'assets'/item['path'];p.parent.mkdir(parents=True,exist_ok=True)
+ p.write_bytes(b'{}' if p.suffix=='.json' else pixel)
 # A separate preview entrypoint uses the same theme/dashboard with dummy data.
 s=(dst/'lib/main.dart').read_text()
 s=s.replace("import 'dart:convert';", "import 'dart:convert';\nimport 'package:http/http.dart' as preview_http;\nimport 'package:http/testing.dart';")

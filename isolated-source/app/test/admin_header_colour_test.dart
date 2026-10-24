@@ -8,6 +8,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:christmas_ideas_nz_test/main.dart';
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
   setUpAll(() async {
     GoogleFonts.config.allowRuntimeFetching = false;
     SharedPreferences.setMockInitialValues({});
@@ -33,5 +34,39 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Open Admin'), findsOneWidget);
     expect(tester.takeException(), isNull);
+  });
+  testWidgets('Submission form overrides white header and Back colours', (tester) async {
+    await tester.pumpWidget(MaterialApp(
+      theme: ThemeData(appBarTheme: const AppBarTheme(foregroundColor: Colors.white)),
+      home: Builder(builder: (context) => Scaffold(body: TextButton(
+        onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SubmissionPage(initialSection: 'Elf Ideas'))),
+        child: const Text('Share an idea'))))));
+    await tester.tap(find.text('Share an idea'));
+    await tester.pumpAndSettle();
+    final bar = tester.widget<AppBar>(find.byType(AppBar));
+    expect(bar.foregroundColor, const Color(0xFF0F4C45));
+    expect(bar.backgroundColor, const Color(0xFFF7F2E8));
+    expect(find.byType(BackButton), findsOneWidget);
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+    expect(find.text('Share an idea'), findsOneWidget);
+  });
+  testWidgets('Moderation sender details show both name and email', (tester) async {
+    await tester.pumpWidget(const MaterialApp(home: Scaffold(body:
+      SubmissionSenderDetails(item: {'user_id': 'fixture-user',
+        'submitter_name': 'Test Contributor', 'submitter_email': 'contributor@example.com'}))));
+    expect(find.text('Submitted by: Test Contributor'), findsOneWidget);
+    expect(find.text('contributor@example.com'), findsOneWidget);
+  });
+  testWidgets('Missing profile does not invent a sender', (tester) async {
+    await tester.pumpWidget(const MaterialApp(home: Scaffold(body:
+      SubmissionSenderDetails(item: {'user_id': 'fixture-user'}))));
+    expect(find.text('Submitted by: Submitting account details unavailable.'), findsOneWidget);
+    expect(find.textContaining('Anonymous'), findsNothing);
+  });
+  testWidgets('Profile lookup failure is explicit', (tester) async {
+    await tester.pumpWidget(const MaterialApp(home: Scaffold(body:
+      SubmissionSenderDetails(item: {'user_id': 'fixture-user', 'submitter_lookup_failed': true}))));
+    expect(find.textContaining('could not be loaded'), findsOneWidget);
   });
 }

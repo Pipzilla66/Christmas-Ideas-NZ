@@ -3349,6 +3349,7 @@ class _BoardDetailPageState extends State<BoardDetailPage> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: const Color(0xFFF7F2E8),
+        foregroundColor: const Color(0xFF0F4C45),
         title: Text((widget.board['name'] ?? 'Saved board').toString()),
         actions: [IconButton(onPressed: rename, icon: const Icon(Icons.edit_outlined), tooltip: 'Rename board')],
       ),
@@ -3578,6 +3579,7 @@ class _SubmissionPageState extends State<SubmissionPage> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: const Color(0xFFF7F2E8),
+        foregroundColor: const Color(0xFF0F4C45),
         elevation: 0,
         title: Text(widget.initialSection == 'Secret Santa' ? 'Share Secret Santa ideas' : 'Submit a Christmas find'),
       ),
@@ -3711,6 +3713,7 @@ class _AdminContentEditorPageState extends State<AdminContentEditorPage> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: const Color(0xFFF7F2E8),
+        foregroundColor: const Color(0xFF0F4C45),
         title: const Text('Content Editor'),
       ),
       body: Column(
@@ -3978,6 +3981,7 @@ class _AdminGiftEditPageState extends State<AdminGiftEditPage>
     return Scaffold(
       appBar: AppBar(
         backgroundColor: const Color(0xFFF7F2E8),
+        foregroundColor: const Color(0xFF0F4C45),
         title: const Text('Edit gift'),
         actions: [
           AdminDeleteButton(
@@ -4198,6 +4202,7 @@ class _AdminIdeaEditPageState extends State<AdminIdeaEditPage>
     return Scaffold(
       appBar: AppBar(
         backgroundColor: const Color(0xFFF7F2E8),
+        foregroundColor: const Color(0xFF0F4C45),
         title: const Text('Edit idea'),
         actions: [
           AdminDeleteButton(
@@ -4492,6 +4497,7 @@ class _AdminMediaManagerPageState extends State<AdminMediaManagerPage> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: const Color(0xFFF7F2E8),
+        foregroundColor: const Color(0xFF0F4C45),
         title: const Text('Photos & Logos'),
       ),
       body: Column(
@@ -4618,6 +4624,7 @@ class _AdminCorrectionsPageState extends State<AdminCorrectionsPage> {
   Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(
       backgroundColor: const Color(0xFFF7F2E8),
+      foregroundColor: const Color(0xFF0F4C45),
       title: const Text('Listing Corrections'),
     ),
     body: FutureBuilder<List<Map<String, dynamic>>>(
@@ -4770,6 +4777,7 @@ class _AdminSupportPageState extends State<AdminSupportPage> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: const Color(0xFFF7F2E8),
+        foregroundColor: const Color(0xFF0F4C45),
         title: const Text('Archived support messages'),
       ),
       body: FutureBuilder<List<Map<String, dynamic>>>(
@@ -4867,14 +4875,40 @@ class AdminDashboardPage extends StatefulWidget {
 
 class _AdminDashboardPageState extends State<AdminDashboardPage> {
   Future<List<Map<String, dynamic>>> pending() async {
-    final rows = await Supabase.instance.client
-        .from('submissions')
-        .select(
-          'id,submission_type,title,description,payload,status,created_at',
-        )
-        .eq('status', 'pending')
-        .order('created_at', ascending: true);
-    return List<Map<String, dynamic>>.from(rows);
+    final db = Supabase.instance.client;
+    final rows = await db.from('submissions').select(
+      'id,user_id,submission_type,title,description,payload,status,created_at',
+    ).eq('status', 'pending').order('created_at', ascending: true);
+    final items = List<Map<String, dynamic>>.from(rows);
+    final ids = items.map((item) => item['user_id']?.toString())
+        .whereType<String>().where((id) => id.isNotEmpty).toSet().toList();
+    final profiles = <String, Map<String, dynamic>>{};
+    bool lookupFailed = false;
+    if (ids.isNotEmpty) {
+      try {
+        // Existing RLS permits administrators to read profiles. No wider access.
+        for (var offset = 0; offset < ids.length; offset += 200) {
+          final batch = ids.skip(offset).take(200).toList();
+          final result = await db.from('profiles')
+              .select('id,display_name,email').inFilter('id', batch);
+          for (final profile in result) {
+            profiles[profile['id'].toString()] = Map<String, dynamic>.from(profile);
+          }
+        }
+      } catch (_) {
+        // A profile lookup must never hide submissions or block moderation.
+        lookupFailed = true;
+      }
+    }
+    return items.map((item) {
+      final profile = profiles[item['user_id']?.toString()];
+      return <String, dynamic>{
+        ...item,
+        'submitter_name': profile?['display_name'],
+        'submitter_email': profile?['email'],
+        'submitter_lookup_failed': lookupFailed && profile == null,
+      };
+    }).toList();
   }
 
   final Set<String> reviewing = {};
@@ -5161,6 +5195,8 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                                   fontSize: 16,
                                 ),
                               ),
+                              const SizedBox(height: 6),
+                              SubmissionSenderDetails(item: item),
                               if ((item['description'] ?? '')
                                   .toString()
                                   .isNotEmpty) ...[
@@ -5223,6 +5259,31 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// Private moderation details; public idea pages never render this widget.
+class SubmissionSenderDetails extends StatelessWidget {
+  final Map<String, dynamic> item;
+  const SubmissionSenderDetails({super.key, required this.item});
+
+  @override
+  Widget build(BuildContext context) {
+    final name = (item['submitter_name'] ?? '').toString().trim();
+    final email = (item['submitter_email'] ?? '').toString().trim();
+    final account = (item['user_id'] ?? '').toString().trim();
+    final unavailable = item['submitter_lookup_failed'] == true
+        ? 'Submitter details could not be loaded. Reopen Admin to try again.'
+        : account.isEmpty ? 'No submitting account recorded.'
+        : 'Submitting account details unavailable.';
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Submitted by: ${name.isNotEmpty ? name : email.isNotEmpty ? email : unavailable}',
+          style: const TextStyle(fontWeight: FontWeight.w600)),
+        if (name.isNotEmpty && email.isNotEmpty) SelectableText(email),
+      ],
     );
   }
 }
