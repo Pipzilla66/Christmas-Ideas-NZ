@@ -19,7 +19,7 @@ for item in assets:
  p.write_bytes(b'{}' if p.suffix=='.json' else pixel)
 # A separate preview entrypoint uses the same theme/dashboard with dummy data.
 s=(dst/'lib/main.dart').read_text()
-s=s.replace("import 'dart:convert';", "import 'dart:convert';\nimport 'package:http/http.dart' as preview_http;\nimport 'package:http/testing.dart';")
+s=s.replace("import 'dart:convert';", "import 'dart:convert';\nimport 'package:http/http.dart' as preview_http;\nimport 'package:http/testing.dart';\nimport 'christmas_inspiration.dart' as inspiration;")
 s=s.replace("url: supabaseUrl,", "url: 'https://example.supabase.co',")
 s=s.replace("publishableKey: supabaseKey,", "publishableKey: 'test-only',\n      httpClient: MockClient(previewResponse),")
 s=s.replace('FlutterAuthClientOptions(autoRefreshToken: true)', 'FlutterAuthClientOptions(autoRefreshToken: false, detectSessionInUri: false)')
@@ -36,7 +36,7 @@ class _TraditionsPreviewEntryState extends State<TraditionsPreviewEntry> {
  final bucket=PageStorageBucket();
  @override Widget build(BuildContext context)=>Scaffold(body:PageStorage(bucket:bucket,child:KeyedSubtree(key:const PageStorageKey<String>('traditions-list'),child:Builder(builder:(seedContext){
  bucket.writeState(seedContext,150.16666666666669);
- return Center(child:FilledButton(onPressed:()=>Navigator.push(context,MaterialPageRoute(builder:(_)=>PageStorage(bucket:bucket,child:ChristmasInspirationPage(traditions:true,loader:()async=>[],onIdea:(_){})))),child:const Text('Open Traditions with saved scroll position')));
+ return Center(child:FilledButton(onPressed:()=>Navigator.push(context,MaterialPageRoute(builder:(_)=>PageStorage(bucket:bucket,child:inspiration.ChristmasInspirationPage(traditions:true,loader:()async=>[],onIdea:(_){})))),child:const Text('Open Traditions with saved scroll position')));
  }))));
 }
 '''
